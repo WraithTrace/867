@@ -4,13 +4,14 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>거래내역</title>
+    <title>2026 스마트 가계부 & 자산 대시보드</title>
     <meta name="description" content="2026 거래내역, 지출 및 수입 분석, 자산 포트폴리오 관리 스마트 대시보드">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
         href="https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap"
         rel="stylesheet">
+    <!-- Chart.js CDN for beautiful interactive charts -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
@@ -26,18 +27,23 @@
             --primary: #6366f1;
             --primary-light: #818cf8;
             --primary-glow: rgba(99, 102, 241, 0.25);
+
             --income-color: #10b981;
             --income-bg: rgba(16, 185, 129, 0.12);
             --income-border: rgba(16, 185, 129, 0.25);
+
             --expense-color: #f43f5e;
             --expense-bg: rgba(244, 63, 94, 0.12);
             --expense-border: rgba(244, 63, 94, 0.25);
+
             --savings-color: #06b6d4;
             --savings-bg: rgba(6, 182, 212, 0.12);
             --savings-border: rgba(6, 182, 212, 0.25);
+
             --invest-color: #a855f7;
             --invest-bg: rgba(168, 85, 247, 0.12);
             --invest-border: rgba(168, 85, 247, 0.25);
+
             --radius-xl: 20px;
             --radius-lg: 14px;
             --radius-md: 10px;
@@ -47,7 +53,11 @@
             --font-mono: 'JetBrains Mono', monospace;
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
         body {
             background-color: var(--bg-primary);
@@ -64,331 +74,1147 @@
             padding: 24px 20px 60px;
         }
 
-        .container { max-width: 1540px; margin: 0 auto; }
+        .container {
+            max-width: 1540px;
+            margin: 0 auto;
+        }
 
-        /* Google Login Screen Overlay */
-        #auth-overlay {
-            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-            background: var(--bg-primary); z-index: 9999;
-            display: flex; align-items: center; justify-content: center;
-            flex-direction: column; gap: 20px;
-        }
-        .auth-card {
-            background: var(--bg-card); border: 1px solid var(--border-color);
-            padding: 40px; border-radius: var(--radius-xl); text-align: center;
-            box-shadow: var(--shadow-glow); backdrop-filter: blur(20px); max-width: 400px; width: 90%;
-        }
-        .auth-card h2 { font-size: 20px; margin-bottom: 10px; color: #fff; }
-        .auth-card p { font-size: 13px; color: var(--text-muted); margin-bottom: 24px; }
-        .btn-google {
-            background: #fff; color: #1e293b; border: none; padding: 12px 20px;
-            border-radius: var(--radius-md); font-weight: 700; font-size: 14px;
-            cursor: pointer; display: inline-flex; align-items: center; gap: 10px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.2); transition: transform 0.2s;
-        }
-        .btn-google:hover { transform: translateY(-2px); background: #f8fafc; }
-
+        /* Header */
         header {
-            display: flex; align-items: center; justify-content: space-between;
-            flex-wrap: wrap; gap: 16px; margin-bottom: 24px; padding-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 16px;
+            margin-bottom: 24px;
+            padding-bottom: 20px;
             border-bottom: 1px solid var(--border-color);
         }
-        .logo-area { display: flex; align-items: center; gap: 14px; }
+
+        .logo-area {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
         .logo-icon {
-            width: 46px; height: 46px; background: linear-gradient(135deg, #6366f1, #a855f7);
-            border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center;
-            font-size: 22px; box-shadow: 0 4px 16px rgba(99, 102, 241, 0.4);
+            width: 46px;
+            height: 46px;
+            background: linear-gradient(135deg, #6366f1, #a855f7);
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            box-shadow: 0 4px 16px rgba(99, 102, 241, 0.4);
         }
+
         .logo-title h1 {
-            font-size: 22px; font-weight: 800; letter-spacing: -0.5px;
+            font-size: 22px;
+            font-weight: 800;
+            letter-spacing: -0.5px;
             background: linear-gradient(90deg, #ffffff, #cbd5e1);
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
-        .logo-title p { font-size: 12.5px; color: var(--text-muted); margin-top: 2px; display: flex; align-items: center; gap: 8px; }
+
+        .logo-title p {
+            font-size: 12.5px;
+            color: var(--text-muted);
+            margin-top: 2px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
         .storage-status {
-            display: inline-flex; align-items: center; gap: 5px;
-            background: rgba(16, 185, 129, 0.15); color: #34d399;
-            padding: 2px 8px; border-radius: 20px; font-size: 11px; font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            background: rgba(16, 185, 129, 0.15);
+            color: #34d399;
+            padding: 2px 8px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
         }
-        .storage-dot { width: 6px; height: 6px; background: #10b981; border-radius: 50%; box-shadow: 0 0 8px #10b981; }
-        .header-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+
+        .storage-dot {
+            width: 6px;
+            height: 6px;
+            background: #10b981;
+            border-radius: 50%;
+            box-shadow: 0 0 8px #10b981;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
         .btn {
-            display: inline-flex; align-items: center; gap: 7px; padding: 8px 14px;
-            border-radius: var(--radius-sm); font-size: 13px; font-weight: 600; cursor: pointer;
-            transition: all 0.2s ease; border: 1px solid var(--border-color);
-            background: rgba(255, 255, 255, 0.05); color: var(--text-main); backdrop-filter: blur(8px);
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            padding: 8px 14px;
+            border-radius: var(--radius-sm);
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: 1px solid var(--border-color);
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-main);
+            backdrop-filter: blur(8px);
         }
-        .btn:hover { background: rgba(255, 255, 255, 0.1); border-color: rgba(255, 255, 255, 0.2); transform: translateY(-1px); }
+
+        .btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.2);
+            transform: translateY(-1px);
+        }
+
         .btn-primary {
-            background: linear-gradient(135deg, #6366f1, #4f46e5); border-color: #6366f1; color: #fff;
+            background: linear-gradient(135deg, #6366f1, #4f46e5);
+            border-color: #6366f1;
+            color: #fff;
             box-shadow: 0 4px 14px rgba(99, 102, 241, 0.35);
         }
-        .btn-primary:hover { background: linear-gradient(135deg, #4f46e5, #4338ca); }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #4f46e5, #4338ca);
+            box-shadow: 0 6px 18px rgba(99, 102, 241, 0.5);
+        }
+
+        .btn-danger {
+            background: rgba(244, 63, 94, 0.12);
+            border-color: rgba(244, 63, 94, 0.25);
+            color: #fb7185;
+        }
+
+        .btn-danger:hover {
+            background: rgba(244, 63, 94, 0.2);
+            border-color: #f43f5e;
+        }
 
         /* KPI Cards */
-        .kpi-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; margin-bottom: 24px; }
-        @media (max-width: 1300px) { .kpi-grid { grid-template-columns: repeat(3, 1fr); } }
-        @media (max-width: 800px) { .kpi-grid { grid-template-columns: repeat(2, 1fr); } }
-        @media (max-width: 520px) { .kpi-grid { grid-template-columns: 1fr; } }
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 14px;
+            margin-bottom: 24px;
+        }
+
+        @media (max-width: 1300px) {
+            .kpi-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        @media (max-width: 800px) {
+            .kpi-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 520px) {
+            .kpi-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
         .kpi-card {
-            background: var(--bg-card); backdrop-filter: blur(16px); border: 1px solid var(--border-color);
-            border-radius: var(--radius-lg); padding: 16px 18px; position: relative; overflow: hidden;
-            transition: all 0.25s ease; box-shadow: var(--shadow-glow);
-        }
-        .kpi-card:hover { transform: translateY(-2px); border-color: var(--border-active); }
-        .kpi-card::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 3px; }
-        .kpi-net::before { background: var(--primary); }
-        .kpi-expense::before { background: var(--expense-color); }
-        .kpi-income::before { background: var(--income-color); }
-        .kpi-savings::before { background: var(--savings-color); }
-        .kpi-invest::before { background: var(--invest-color); }
-        .kpi-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
-        .kpi-title { font-size: 12.5px; font-weight: 600; color: var(--text-muted); }
-        .kpi-badge { font-size: 11px; font-weight: 700; padding: 2px 7px; border-radius: 12px; }
-        .kpi-net .kpi-badge { background: rgba(99, 102, 241, 0.15); color: #818cf8; }
-        .kpi-expense .kpi-badge { background: var(--expense-bg); color: var(--expense-color); }
-        .kpi-income .kpi-badge { background: var(--income-bg); color: var(--income-color); }
-        .kpi-savings .kpi-badge { background: var(--savings-bg); color: var(--savings-color); }
-        .kpi-invest .kpi-badge { background: var(--invest-bg); color: var(--invest-color); }
-        .kpi-amount { font-family: var(--font-mono); font-size: 21px; font-weight: 700; letter-spacing: -0.5px; margin-bottom: 4px; }
-        .kpi-sub { font-size: 11px; color: var(--text-dim); display: flex; justify-content: space-between; }
-
-        /* Charts Section */
-        .charts-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 18px; margin-bottom: 24px; }
-        @media (max-width: 1040px) { .charts-grid { grid-template-columns: 1fr; } }
-        .card { background: var(--bg-card); backdrop-filter: blur(16px); border: 1px solid var(--border-color); border-radius: var(--radius-lg); padding: 20px; box-shadow: var(--shadow-glow); }
-        .card-title { font-size: 15px; font-weight: 700; display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
-        .chart-container-box { position: relative; width: 100%; height: 290px; }
-        .cat-list { display: flex; flex-direction: column; gap: 11px; margin-top: 12px; max-height: 270px; overflow-y: auto; padding-right: 4px; }
-        .cat-item { display: flex; flex-direction: column; gap: 4px; font-size: 12.5px; cursor: pointer; padding: 4px 6px; border-radius: 6px; transition: background 0.15s; }
-        .cat-item:hover { background: rgba(255, 255, 255, 0.04); }
-        .cat-top { display: flex; justify-content: space-between; align-items: center; }
-        .cat-name { color: var(--text-muted); font-weight: 500; display: flex; align-items: center; gap: 6px; }
-        .cat-amount { font-family: var(--font-mono); font-weight: 600; color: var(--text-main); }
-        .cat-progress { height: 6px; background: rgba(255, 255, 255, 0.06); border-radius: 4px; overflow: hidden; }
-        .cat-bar { height: 100%; border-radius: 4px; transition: width 0.5s ease; }
-
-        /* Controls Bar & Tables */
-        .controls-bar { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px; margin-bottom: 16px; }
-        .tabs { display: flex; background: rgba(15, 23, 42, 0.85); border: 1px solid var(--border-color); padding: 4px; border-radius: var(--radius-md); gap: 3px; flex-wrap: wrap; }
-        .tab-btn { padding: 8px 14px; border-radius: var(--radius-sm); border: none; background: transparent; color: var(--text-muted); font-weight: 700; font-size: 13.5px; cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; gap: 6px; }
-        .tab-btn:hover { color: var(--text-main); background: rgba(255, 255, 255, 0.04); }
-        .tab-btn.active { background: var(--bg-card-hover); color: #fff; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3); }
-        .tab-btn .count { font-size: 11px; background: rgba(255, 255, 255, 0.1); padding: 1px 6px; border-radius: 10px; font-family: var(--font-mono); }
-        .filters { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-        .search-box { position: relative; display: flex; align-items: center; }
-        .search-box input { background: rgba(22, 30, 49, 0.8); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 8px 12px 8px 32px; color: var(--text-main); font-size: 13px; outline: none; width: 200px; transition: all 0.2s ease; }
-        .search-box input:focus { border-color: var(--primary); width: 240px; box-shadow: 0 0 0 2px var(--primary-glow); }
-        .search-icon { position: absolute; left: 10px; fill: var(--text-dim); pointer-events: none; }
-        select, input[type="text"], input[type="date"] {
-            background: rgba(22, 30, 49, 0.8); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 8px 12px; color: var(--text-main); font-size: 13px; outline: none; cursor: pointer;
+            background: var(--bg-card);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 16px 18px;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.25s ease;
+            box-shadow: var(--shadow-glow);
         }
 
-        .table-card { background: var(--bg-card); backdrop-filter: blur(16px); border: 1px solid var(--border-color); border-radius: var(--radius-lg); overflow: hidden; box-shadow: var(--shadow-glow); }
-        .table-responsive { width: 100%; overflow-x: auto; max-height: 620px; }
-        table { width: 100%; border-collapse: collapse; text-align: left; }
-        th { background: rgba(15, 23, 42, 0.92); padding: 12px 16px; font-size: 12px; font-weight: 700; text-transform: uppercase; color: var(--text-muted); border-bottom: 1px solid var(--border-color); position: sticky; top: 0; z-index: 10; }
-        td { padding: 11px 16px; font-size: 13.5px; border-bottom: 1px solid rgba(255, 255, 255, 0.04); color: var(--text-main); }
-        tbody tr:hover td { background-color: var(--bg-card-hover); }
-        .td-date { font-family: var(--font-mono); font-size: 12.5px; color: var(--text-muted); white-space: nowrap; }
-        .td-amount { font-family: var(--font-mono); font-weight: 700; white-space: nowrap; }
-        .amount-income { color: var(--income-color); }
-        .amount-expense { color: var(--expense-color); }
-        .amount-savings { color: var(--savings-color); }
-        .amount-invest { color: var(--invest-color); }
-        .badge-tag { display: inline-block; font-size: 11px; font-weight: 600; padding: 2px 7px; border-radius: 5px; border: 1px solid transparent; white-space: nowrap; }
-        .tag-income { background: var(--income-bg); color: var(--income-color); border-color: var(--income-border); }
-        .tag-expense { background: var(--expense-bg); color: var(--expense-color); border-color: var(--expense-border); }
-        .tag-savings { background: var(--savings-bg); color: var(--savings-color); border-color: var(--savings-border); }
-        .tag-invest { background: var(--invest-bg); color: var(--invest-color); border-color: var(--invest-border); }
-        .tag-kind { background: rgba(255, 255, 255, 0.06); color: var(--text-muted); border-color: var(--border-color); }
-        .action-btns { display: flex; align-items: center; justify-content: center; gap: 6px; }
-        .btn-icon { background: none; border: none; color: var(--text-dim); cursor: pointer; font-size: 14px; padding: 4px; border-radius: 4px; }
-        .btn-icon:hover { color: var(--text-main); background: rgba(255, 255, 255, 0.08); }
-        .btn-icon-del:hover { color: #f43f5e; background: var(--expense-bg); }
-        .table-footer { display: flex; justify-content: space-between; align-items: center; padding: 12px 18px; font-size: 12.5px; color: var(--text-dim); border-top: 1px solid var(--border-color); background: rgba(15, 23, 42, 0.7); }
+        .kpi-card:hover {
+            transform: translateY(-2px);
+            border-color: var(--border-active);
+        }
+
+        .kpi-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+        }
+
+        .kpi-net::before {
+            background: var(--primary);
+        }
+
+        .kpi-expense::before {
+            background: var(--expense-color);
+        }
+
+        .kpi-income::before {
+            background: var(--income-color);
+        }
+
+        .kpi-savings::before {
+            background: var(--savings-color);
+        }
+
+        .kpi-invest::before {
+            background: var(--invest-color);
+        }
+
+        .kpi-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+
+        .kpi-title {
+            font-size: 12.5px;
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .kpi-badge {
+            font-size: 11px;
+            font-weight: 700;
+            padding: 2px 7px;
+            border-radius: 12px;
+        }
+
+        .kpi-net .kpi-badge {
+            background: rgba(99, 102, 241, 0.15);
+            color: #818cf8;
+        }
+
+        .kpi-expense .kpi-badge {
+            background: var(--expense-bg);
+            color: var(--expense-color);
+        }
+
+        .kpi-income .kpi-badge {
+            background: var(--income-bg);
+            color: var(--income-color);
+        }
+
+        .kpi-savings .kpi-badge {
+            background: var(--savings-bg);
+            color: var(--savings-color);
+        }
+
+        .kpi-invest .kpi-badge {
+            background: var(--invest-bg);
+            color: var(--invest-color);
+        }
+
+        .kpi-amount {
+            font-family: var(--font-mono);
+            font-size: 21px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            margin-bottom: 4px;
+        }
+
+        .kpi-sub {
+            font-size: 11px;
+            color: var(--text-dim);
+            display: flex;
+            justify-content: space-between;
+        }
+
+        /* 2-Column Main Dashboard Layout (Left: Transactions, Right: Charts) */
+        .main-layout-grid {
+            display: grid;
+            grid-template-columns: 1.4fr 1fr;
+            gap: 20px;
+            align-items: start;
+            margin-bottom: 24px;
+        }
+
+        .transactions-column {
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .charts-sidebar {
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        @media (max-width: 1200px) {
+            .main-layout-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .card {
+            background: var(--bg-card);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 20px;
+            box-shadow: var(--shadow-glow);
+        }
+
+        .card-title {
+            font-size: 15px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+
+        .chart-container-box {
+            position: relative;
+            width: 100%;
+            height: 290px;
+        }
+
+        /* Category Breakdown & Progress */
+        .cat-list {
+            display: flex;
+            flex-direction: column;
+            gap: 11px;
+            margin-top: 12px;
+            max-height: 270px;
+            overflow-y: auto;
+            padding-right: 4px;
+        }
+
+        .cat-item {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            font-size: 12.5px;
+            cursor: pointer;
+            padding: 4px 6px;
+            border-radius: 6px;
+            transition: background 0.15s;
+        }
+
+        .cat-item:hover {
+            background: rgba(255, 255, 255, 0.04);
+        }
+
+        .cat-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .cat-name {
+            color: var(--text-muted);
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .cat-amount {
+            font-family: var(--font-mono);
+            font-weight: 600;
+            color: var(--text-main);
+        }
+
+        .cat-progress {
+            height: 6px;
+            background: rgba(255, 255, 255, 0.06);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .cat-bar {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.5s ease;
+        }
+
+        /* Tabs & Controls */
+        .controls-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 14px;
+            margin-bottom: 16px;
+        }
+
+        .tabs {
+            display: flex;
+            background: rgba(15, 23, 42, 0.85);
+            border: 1px solid var(--border-color);
+            padding: 4px;
+            border-radius: var(--radius-md);
+            gap: 3px;
+            flex-wrap: wrap;
+        }
+
+        .tab-btn {
+            padding: 8px 14px;
+            border-radius: var(--radius-sm);
+            border: none;
+            background: transparent;
+            color: var(--text-muted);
+            font-weight: 700;
+            font-size: 13.5px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .tab-btn:hover {
+            color: var(--text-main);
+            background: rgba(255, 255, 255, 0.04);
+        }
+
+        .tab-btn.active {
+            background: var(--bg-card-hover);
+            color: #fff;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .tab-btn#tab-all.active {
+            border-bottom: 2px solid var(--primary);
+            color: #818cf8;
+        }
+
+        .tab-btn#tab-expense.active {
+            border-bottom: 2px solid var(--expense-color);
+            color: #fb7185;
+        }
+
+        .tab-btn#tab-income.active {
+            border-bottom: 2px solid var(--income-color);
+            color: #34d399;
+        }
+
+        .tab-btn#tab-savings.active {
+            border-bottom: 2px solid var(--savings-color);
+            color: #38bdf8;
+        }
+
+        .tab-btn#tab-invest.active {
+            border-bottom: 2px solid var(--invest-color);
+            color: #c084fc;
+        }
+
+        .tab-btn .count {
+            font-size: 11px;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 1px 6px;
+            border-radius: 10px;
+            font-family: var(--font-mono);
+        }
+
+        .filters {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .search-box {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .search-box input {
+            background: rgba(22, 30, 49, 0.8);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            padding: 8px 12px 8px 32px;
+            color: var(--text-main);
+            font-size: 13px;
+            outline: none;
+            width: 200px;
+            transition: all 0.2s ease;
+        }
+
+        .search-box input:focus {
+            border-color: var(--primary);
+            width: 240px;
+            background: rgba(22, 30, 49, 0.98);
+            box-shadow: 0 0 0 2px var(--primary-glow);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 10px;
+            fill: var(--text-dim);
+            pointer-events: none;
+        }
+
+        select {
+            background: rgba(22, 30, 49, 0.8);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            padding: 8px 12px;
+            color: var(--text-main);
+            font-size: 13px;
+            outline: none;
+            cursor: pointer;
+            transition: border-color 0.2s;
+        }
+
+        select:focus {
+            border-color: var(--primary);
+        }
+
+        /* Table Area */
+        .table-card {
+            background: var(--bg-card);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            box-shadow: var(--shadow-glow);
+        }
+
+        .table-responsive {
+            width: 100%;
+            overflow-x: auto;
+            max-height: 720px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+
+        th {
+            background: rgba(15, 23, 42, 0.92);
+            padding: 12px 16px;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            border-bottom: 1px solid var(--border-color);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            backdrop-filter: blur(8px);
+        }
+
+        td {
+            padding: 11px 16px;
+            font-size: 13.5px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+            color: var(--text-main);
+            transition: background-color 0.15s ease;
+        }
+
+        tbody tr:hover td {
+            background-color: var(--bg-card-hover);
+        }
+
+        .td-date {
+            font-family: var(--font-mono);
+            font-size: 12.5px;
+            color: var(--text-muted);
+            white-space: nowrap;
+        }
+
+        .td-amount {
+            font-family: var(--font-mono);
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .amount-income {
+            color: var(--income-color);
+        }
+
+        .amount-expense {
+            color: var(--expense-color);
+        }
+
+        .amount-savings {
+            color: var(--savings-color);
+        }
+
+        .amount-invest {
+            color: var(--invest-color);
+        }
+
+        .badge-tag {
+            display: inline-block;
+            font-size: 11px;
+            font-weight: 600;
+            padding: 2px 7px;
+            border-radius: 5px;
+            border: 1px solid transparent;
+            white-space: nowrap;
+        }
+
+        .tag-income {
+            background: var(--income-bg);
+            color: var(--income-color);
+            border-color: var(--income-border);
+        }
+
+        .tag-expense {
+            background: var(--expense-bg);
+            color: var(--expense-color);
+            border-color: var(--expense-border);
+        }
+
+        .tag-savings {
+            background: var(--savings-bg);
+            color: var(--savings-color);
+            border-color: var(--savings-border);
+        }
+
+        .tag-invest {
+            background: var(--invest-bg);
+            color: var(--invest-color);
+            border-color: var(--invest-border);
+        }
+
+        .tag-kind {
+            background: rgba(255, 255, 255, 0.06);
+            color: var(--text-muted);
+            border-color: var(--border-color);
+        }
+
+        .action-btns {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .btn-icon {
+            background: none;
+            border: none;
+            color: var(--text-dim);
+            cursor: pointer;
+            font-size: 14px;
+            padding: 4px;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+
+        .btn-icon:hover {
+            color: var(--text-main);
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .btn-icon-del:hover {
+            color: #f43f5e;
+            background: var(--expense-bg);
+        }
+
+        .table-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 18px;
+            font-size: 12.5px;
+            color: var(--text-dim);
+            border-top: 1px solid var(--border-color);
+            background: rgba(15, 23, 42, 0.7);
+        }
 
         /* Modals */
-        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.75); backdrop-filter: blur(8px); display: none; align-items: center; justify-content: center; z-index: 1000; }
-        .modal-overlay.open { display: flex; }
-        .modal-content { background: #151d2f; border: 1px solid var(--border-color); border-radius: var(--radius-xl); padding: 24px; width: 90%; max-width: 500px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7); }
-        .modal-title { font-size: 17px; font-weight: 700; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between; }
-        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-        .form-col-2 { grid-column: span 2; }
-        .form-group { margin-bottom: 12px; }
-        .form-group label { display: block; font-size: 12px; font-weight: 600; color: var(--text-muted); margin-bottom: 5px; }
-        .form-group input, .form-group select { width: 100%; background: rgba(9, 13, 22, 0.85); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 9px 12px; color: var(--text-main); font-size: 13.5px; }
-        .modal-buttons { display: flex; justify-content: flex-end; gap: 8px; margin-top: 18px; border-top: 1px solid var(--border-color); padding-top: 14px; }
-        .cat-chip-list { display: flex; flex-wrap: wrap; gap: 8px; max-height: 220px; overflow-y: auto; padding: 8px; background: rgba(9, 13, 22, 0.6); border-radius: var(--radius-sm); border: 1px solid var(--border-color); }
-        .cat-chip { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; background: rgba(255, 255, 255, 0.08); border: 1px solid var(--border-color); border-radius: 16px; font-size: 12px; }
-        .cat-chip-del { cursor: pointer; color: var(--text-dim); font-weight: bold; }
-        .cat-chip-del:hover { color: #f43f5e; }
-        .toast { position: fixed; bottom: 24px; right: 24px; background: #1e293b; color: #fff; padding: 10px 18px; border-radius: var(--radius-md); border: 1px solid var(--border-active); font-size: 13px; font-weight: 500; z-index: 2000; transform: translateY(100px); opacity: 0; transition: all 0.3s; }
-        .toast.show { transform: translateY(0); opacity: 1; }
-        .guide-banner { background: linear-gradient(90deg, rgba(99, 102, 241, 0.1), rgba(168, 85, 247, 0.1)); border: 1px dashed rgba(99, 102, 241, 0.35); border-radius: var(--radius-md); padding: 12px 18px; margin-bottom: 22px; display: flex; align-items: center; justify-content: space-between; font-size: 12.5px; color: var(--text-muted); flex-wrap: wrap; gap: 10px; }
-        .guide-banner strong { color: #a5b4fc; }
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(8px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+
+        .modal-overlay.open {
+            display: flex;
+            opacity: 1;
+        }
+
+        .modal-content {
+            background: #151d2f;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-xl);
+            padding: 24px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+            transform: scale(0.96);
+            transition: transform 0.2s ease;
+        }
+
+        .modal-overlay.open .modal-content {
+            transform: scale(1);
+        }
+
+        .modal-title {
+            font-size: 17px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .form-col-2 {
+            grid-column: span 2;
+        }
+
+        .form-group {
+            margin-bottom: 12px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-muted);
+            margin-bottom: 5px;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            background: rgba(9, 13, 22, 0.85);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            padding: 9px 12px;
+            color: var(--text-main);
+            font-size: 13.5px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px var(--primary-glow);
+        }
+
+        .category-select-wrap {
+            display: flex;
+            gap: 6px;
+        }
+
+        .category-quick-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-color);
+            color: var(--text-muted);
+            border-radius: var(--radius-sm);
+            padding: 0 10px;
+            cursor: pointer;
+            font-size: 12px;
+            white-space: nowrap;
+        }
+
+        .category-quick-btn:hover {
+            color: var(--text-main);
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .modal-buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+            margin-top: 18px;
+            border-top: 1px solid var(--border-color);
+            padding-top: 14px;
+        }
+
+        /* Category Manager Modal */
+        .cat-chip-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            max-height: 220px;
+            overflow-y: auto;
+            padding: 8px;
+            background: rgba(9, 13, 22, 0.6);
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border-color);
+        }
+
+        .cat-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            font-size: 12px;
+        }
+
+        .cat-chip-del {
+            cursor: pointer;
+            color: var(--text-dim);
+            font-weight: bold;
+            font-size: 13px;
+        }
+
+        .cat-chip-del:hover {
+            color: #f43f5e;
+        }
+
+        /* Toast notification */
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: #1e293b;
+            color: #fff;
+            padding: 10px 18px;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border-active);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+            font-size: 13px;
+            font-weight: 500;
+            z-index: 2000;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        /* Guide / Cloud sync banner */
+        .guide-banner {
+            background: linear-gradient(90deg, rgba(99, 102, 241, 0.1), rgba(168, 85, 247, 0.1));
+            border: 1px dashed rgba(99, 102, 241, 0.35);
+            border-radius: var(--radius-md);
+            padding: 12px 18px;
+            margin-bottom: 22px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 12.5px;
+            color: var(--text-muted);
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .guide-banner strong {
+            color: #a5b4fc;
+        }
+
+        .guide-btn-group {
+            display: flex;
+            gap: 8px;
+        }
     </style>
 </head>
 
 <body>
 
-    <!-- Google Login Screen Overlay -->
-    <div id="auth-overlay">
-        <div class="auth-card">
-            <div class="logo-icon" style="margin: 0 auto 16px;">📊</div>
-            <h2>보안 로그인 필요</h2>
-            <p>내 자산 및 소비 내역을 안전하게 보호하기 위해<br>구글 계정으로 로그인해주세요.</p>
-            <button class="btn-google" onclick="loginWithGoogle()">
-                <svg width="18" height="18" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.63-.06-1.25-.16-1.84H9v3.49h4.84c-.21 1.12-.84 2.07-1.78 2.71v2.25h2.87c1.68-1.55 2.71-3.83 2.71-6.61z"/><path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.87-2.25c-.81.54-1.85.86-3.09.86-2.37 0-4.38-1.6-5.1-3.76H.92v2.33C2.41 15.98 5.42 18 9 18z"/><path fill="#FBBC05" d="M3.9 10.67c-.19-.54-.3-1.12-.3-1.67s.11-1.13.3-1.67V4.99H.92C.33 6.15 0 7.46 0 9s.33 2.85.92 4.01l2.98-2.34z"/><path fill="#EA4335" d="M9 3.58c1.32 0 2.5.45 3.44 1.35l2.58-2.58C13.46.89 11.43 0 9 0 5.42 0 2.41 2.02.92 4.99l2.98 2.33c.72-2.16 2.73-3.74 5.1-3.74z"/></svg>
-                구글 계정으로 로그인
-            </button>
-        </div>
-    </div>
-
-    <div class="container" id="main-app" style="display:none;">
+    <div class="container">
+        <!-- Header -->
         <header>
             <div class="logo-area">
                 <div class="logo-icon">📊</div>
                 <div class="logo-title">
-                    <h1>거래내역</h1>
+                    <h1>2026 스마트 거래내역 & 자산 대시보드</h1>
                     <p>
                         수입 · 지출 · 저축 · 투자 올인원 관리
                         <span class="storage-status" id="storage-status-tag">
-                            <span class="storage-dot"></span> 클라우드 실시간 동기화
+                            <span class="storage-dot"></span> 로컬 자동저장 활성
                         </span>
                     </p>
                 </div>
             </div>
             <div class="header-actions">
-                <span id="user-email-display" style="font-size: 12px; color: var(--text-muted);"></span>
-                <button class="btn" onclick="logoutGoogle()" title="로그아웃">로그아웃</button>
-                <button class="btn" onclick="openCategoryModal()">🏷️ 카테고리 관리</button>
-                <button class="btn" onclick="exportJSON()">💾 백업(JSON)</button>
-                <button class="btn" onclick="exportToCSV()">📥 CSV 내보내기</button>
+                <button class="btn" onclick="openCategoryModal()" title="카테고리 목록을 관리합니다">🏷️ 카테고리 관리</button>
+                <button class="btn" onclick="exportJSON()" title="데이터 백업 파일 저장">💾 백업(JSON)</button>
+                <button class="btn" onclick="document.getElementById('import-file').click()" title="저장된 백업 불러오기">📂
+                    복원</button>
+                <input type="file" id="import-file" style="display:none" accept=".json" onchange="importJSON(event)" />
+                <button class="btn" onclick="exportToCSV()" title="엑셀 호환 CSV 파일 내보내기">📥 CSV 내보내기</button>
                 <button class="btn btn-primary" onclick="openAddModal()">➕ 내역 추가</button>
             </div>
         </header>
 
+        <!-- Cloud & Access Guide Banner -->
         <div class="guide-banner">
             <div>
-                🔒 <strong>구글 클라우드 보안 연동 완료:</strong> 개인 거래 내역 데이터는 소스코드에 포함되지 않고 로그인한 본인의 파이어베이스 데이터베이스에만 안전하게 암호화되어 저장됩니다.
+                🌐 <strong>언제 어디서든 모바일·웹에서 접속하려면?</strong>
+                이 HTML 단일 파일을 <strong>GitHub Pages</strong>, <strong>Vercel</strong> 또는 <strong>Google Drive / 개인
+                    서버</strong>에 업로드하면 별도 서버 설치 없이 PC/스마트폰 어디서든 즉시 접속 및 관리가 가능합니다.
+            </div>
+            <div class="guide-btn-group">
+                <button class="btn" style="padding: 4px 10px; font-size: 11.5px;" onclick="resetToInitialData()">🔄 데이터
+                    초기화</button>
             </div>
         </div>
 
+        <!-- KPI Overview (순수익, 지출, 수입, 저축, 투자) -->
         <div class="kpi-grid">
             <div class="kpi-card kpi-net">
-                <div class="kpi-header"><span class="kpi-title">순 잔여 흐름 (Net)</span><span class="kpi-badge">수입 - 지출</span></div>
+                <div class="kpi-header">
+                    <span class="kpi-title">순 잔여 흐름 (Net)</span>
+                    <span class="kpi-badge">수입 - 지출</span>
+                </div>
                 <div class="kpi-amount" id="kpi-net-amount">₩0</div>
-                <div class="kpi-sub"><span id="kpi-net-rate">저축·투자 여력</span><span id="kpi-net-sub">실현 잉여금</span></div>
+                <div class="kpi-sub">
+                    <span id="kpi-net-rate">저축·투자 여력</span>
+                    <span id="kpi-net-sub">실현 잉여금</span>
+                </div>
             </div>
+
             <div class="kpi-card kpi-expense">
-                <div class="kpi-header"><span class="kpi-title">총 지출 (Expense)</span><span class="kpi-badge">지출</span></div>
+                <div class="kpi-header">
+                    <span class="kpi-title">총 지출 (Expense)</span>
+                    <span class="kpi-badge">지출</span>
+                </div>
                 <div class="kpi-amount" id="kpi-total-expense">₩0</div>
-                <div class="kpi-sub" id="kpi-expense-count">0건</div>
+                <div class="kpi-sub" id="kpi-expense-count">0건의 지출 내역</div>
             </div>
+
             <div class="kpi-card kpi-income">
-                <div class="kpi-header"><span class="kpi-title">총 수입 (Income)</span><span class="kpi-badge">수입</span></div>
+                <div class="kpi-header">
+                    <span class="kpi-title">총 수입 (Income)</span>
+                    <span class="kpi-badge">수입</span>
+                </div>
                 <div class="kpi-amount" id="kpi-total-income">₩0</div>
-                <div class="kpi-sub" id="kpi-income-count">0건</div>
+                <div class="kpi-sub" id="kpi-income-count">0건의 수입 내역</div>
             </div>
+
             <div class="kpi-card kpi-savings">
-                <div class="kpi-header"><span class="kpi-title">총 저축 (Savings)</span><span class="kpi-badge">예적금</span></div>
+                <div class="kpi-header">
+                    <span class="kpi-title">총 저축 (Savings)</span>
+                    <span class="kpi-badge">예적금</span>
+                </div>
                 <div class="kpi-amount" id="kpi-total-savings">₩0</div>
-                <div class="kpi-sub" id="kpi-savings-count">0건</div>
+                <div class="kpi-sub" id="kpi-savings-count">0건 (예적금)</div>
             </div>
+
             <div class="kpi-card kpi-invest">
-                <div class="kpi-header"><span class="kpi-title">총 투자 (Investment)</span><span class="kpi-badge">투자·자산</span></div>
+                <div class="kpi-header">
+                    <span class="kpi-title">총 투자 (Investment)</span>
+                    <span class="kpi-badge">투자·자산</span>
+                </div>
                 <div class="kpi-amount" id="kpi-total-invest">₩0</div>
-                <div class="kpi-sub" id="kpi-invest-count">0건</div>
+                <div class="kpi-sub" id="kpi-invest-count">0건 (ISA·연금·가상화폐)</div>
             </div>
         </div>
 
-        <div class="charts-grid">
-            <div class="card">
-                <div class="card-title">
-                    <span>📈 월별 재정 흐름</span>
-                    <select id="chart-metric-select" onchange="renderCharts()" style="font-size:12px; padding:4px 8px;">
-                        <option value="all">전체 흐름 비교</option>
-                        <option value="expense-only">지출 vs 수입</option>
-                    </select>
-                </div>
-                <div class="chart-container-box"><canvas id="monthlyTrendChart"></canvas></div>
-            </div>
-            <div class="card">
-                <div class="card-title">
-                    <span>🍩 지출 카테고리 TOP 분석</span>
-                    <span style="font-size: 11px; color: var(--text-dim);">전체 기간</span>
-                </div>
-                <div class="chart-container-box" style="height: 140px;"><canvas id="categoryDoughnutChart"></canvas></div>
-                <div class="cat-list" id="top-categories"></div>
-            </div>
-        </div>
+        <!-- Main 2-Column Layout (Left: 거래내역, Right: 월별 재정흐름 & 지출 카테고리 TOP) -->
+        <div class="main-layout-grid">
+            <!-- 좌측: 거래내역 전체 영역 -->
+            <section class="transactions-column">
+                <!-- Controls Bar: [전체], [지출], [수입], [저축], [투자] -->
+                <div class="controls-bar">
+                    <div class="tabs">
+                        <button class="tab-btn active" onclick="switchTab('all')" id="tab-all">
+                            전체 <span class="count" id="count-all">0</span>
+                        </button>
+                        <button class="tab-btn" onclick="switchTab('expense')" id="tab-expense">
+                            지출 <span class="count" id="count-expense">0</span>
+                        </button>
+                        <button class="tab-btn" onclick="switchTab('income')" id="tab-income">
+                            수입 <span class="count" id="count-income">0</span>
+                        </button>
+                        <button class="tab-btn" onclick="switchTab('savings')" id="tab-savings">
+                            저축 <span class="count" id="count-savings">0</span>
+                        </button>
+                        <button class="tab-btn" onclick="switchTab('invest')" id="tab-invest">
+                            투자 <span class="count" id="count-invest">0</span>
+                        </button>
+                    </div>
 
-        <div class="controls-bar">
-            <div class="tabs">
-                <button class="tab-btn active" onclick="switchTab('all')" id="tab-all">전체 <span class="count" id="count-all">0</span></button>
-                <button class="tab-btn" onclick="switchTab('expense')" id="tab-expense">지출 <span class="count" id="count-expense">0</span></button>
-                <button class="tab-btn" onclick="switchTab('income')" id="tab-income">수입 <span class="count" id="count-income">0</span></button>
-                <button class="tab-btn" onclick="switchTab('savings')" id="tab-savings">저축 <span class="count" id="count-savings">0</span></button>
-                <button class="tab-btn" onclick="switchTab('invest')" id="tab-invest">투자 <span class="count" id="count-invest">0</span></button>
-            </div>
-            <div class="filters">
-                <div class="search-box">
-                    <svg class="search-icon" width="14" height="14" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
-                    <input type="text" id="search-input" placeholder="내용, 거래처 검색..." oninput="handleFilter()" />
-                </div>
-                <select id="filter-month" onchange="handleFilter()">
-                    <option value="all">전체 월</option>
-                    <option value="1">1월</option><option value="2">2월</option><option value="3">3월</option><option value="4">4월</option><option value="5">5월</option><option value="6">6월</option><option value="7">7월</option><option value="8">8월</option><option value="9">9월</option><option value="10">10월</option><option value="11">11월</option><option value="12">12월</option>
-                </select>
-                <select id="filter-category" onchange="handleFilter()"><option value="all">전체 카테고리</option></select>
-                <select id="filter-sort" onchange="handleFilter()">
-                    <option value="date-desc">최신 날짜순</option><option value="date-asc">과거 날짜순</option><option value="amount-desc">높은 금액순</option><option value="amount-asc">낮은 금액순</option>
-                </select>
-            </div>
-        </div>
+                    <div class="filters">
+                        <div class="search-box">
+                            <svg class="search-icon" width="14" height="14" viewBox="0 0 24 24">
+                                <path
+                                    d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" />
+                            </svg>
+                            <input type="text" id="search-input" placeholder="내용, 거래처, 카테고리 검색..." oninput="handleFilter()" />
+                        </div>
 
-        <div class="table-card">
-            <div class="table-responsive">
-                <table id="transaction-table">
-                    <thead>
-                        <tr>
-                            <th style="width: 140px;">날짜</th><th style="width: 90px;">구분</th><th style="width: 150px;">카테고리</th><th style="width: 150px; text-align: right;">금액</th><th>내용 / 설명</th><th style="width: 150px;">결제수단</th><th style="width: 80px; text-align: center;">관리</th>
-                        </tr>
-                    </thead>
-                    <tbody id="table-body"></tbody>
-                </table>
-            </div>
-            <div class="table-footer">
-                <span id="table-summary-info">조회 결과: 0건</span>
-                <span id="table-sum-info" style="font-weight:700; color:var(--text-main);">합계: ₩0</span>
-            </div>
+                        <select id="filter-month" onchange="handleFilter()">
+                            <option value="all">전체 월</option>
+                            <option value="1">1월</option>
+                            <option value="2">2월</option>
+                            <option value="3">3월</option>
+                            <option value="4">4월</option>
+                            <option value="5">5월</option>
+                            <option value="6">6월</option>
+                            <option value="7">7월</option>
+                            <option value="8">8월</option>
+                            <option value="9">9월</option>
+                            <option value="10">10월</option>
+                            <option value="11">11월</option>
+                            <option value="12">12월</option>
+                        </select>
+
+                        <select id="filter-category" onchange="handleFilter()">
+                            <option value="all">전체 카테고리</option>
+                        </select>
+
+                        <select id="filter-sort" onchange="handleFilter()">
+                            <option value="date-desc">최신 날짜순</option>
+                            <option value="date-asc">과거 날짜순</option>
+                            <option value="amount-desc">높은 금액순</option>
+                            <option value="amount-asc">낮은 금액순</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Table View: 순서 [날짜], [구분], [카테고리], [금액], [내용], [결제수단], [관리] -->
+                <div class="table-card">
+                    <div class="table-responsive">
+                        <table id="transaction-table">
+                            <thead>
+                                <tr>
+                                    <th style="width: 140px;">날짜</th>
+                                    <th style="width: 90px;">구분</th>
+                                    <th style="width: 140px;">카테고리</th>
+                                    <th style="width: 140px; text-align: right;">금액</th>
+                                    <th>내용 / 설명</th>
+                                    <th style="width: 140px;">결제수단 / 종류</th>
+                                    <th style="width: 80px; text-align: center;">관리</th>
+                                </tr>
+                            </thead>
+                            <tbody id="table-body">
+                                <!-- Rendered dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="table-footer">
+                        <span id="table-summary-info">조회 결과: 0건</span>
+                        <span id="table-sum-info" style="font-weight:700; color:var(--text-main);">합계: ₩0</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 우측: 사이드바 차트 영역 (위: 월별 재정흐름, 아래: 지출 카테고리 TOP) -->
+            <aside class="charts-sidebar">
+                <!-- 1. 월별 재정 흐름 카드 -->
+                <div class="card">
+                    <div class="card-title">
+                        <span>📈 2026 월별 재정 흐름</span>
+                        <select id="chart-metric-select" onchange="renderCharts()" style="font-size:12px; padding:4px 8px;">
+                            <option value="all">전체 흐름 비교</option>
+                            <option value="expense-only">지출 vs 수입</option>
+                        </select>
+                    </div>
+                    <div class="chart-container-box">
+                        <canvas id="monthlyTrendChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- 2. 지출 카테고리 TOP 분석 카드 (그 아래로 맞춤) -->
+                <div class="card">
+                    <div class="card-title">
+                        <span>🍩 지출 카테고리 TOP 분석</span>
+                        <span style="font-size: 11px; color: var(--text-dim);" id="cat-analyzed-month">전체 기간</span>
+                    </div>
+                    <div class="chart-container-box" style="height: 140px;">
+                        <canvas id="categoryDoughnutChart"></canvas>
+                    </div>
+                    <div class="cat-list" id="top-categories">
+                        <!-- Rendered by JS -->
+                    </div>
+                </div>
+            </aside>
         </div>
     </div>
 
-    <!-- Modals -->
+    <!-- Modal for Add / Edit Transaction -->
     <div class="modal-overlay" id="tx-modal">
         <div class="modal-content">
-            <div class="modal-title"><span id="modal-title-text">새 내역 추가</span><button class="btn-icon" onclick="closeTxModal()">✕</button></div>
+            <div class="modal-title">
+                <span id="modal-title-text">새 내역 추가</span>
+                <button class="btn-icon" onclick="closeTxModal()">✕</button>
+            </div>
             <input type="hidden" id="edit-id" value="" />
+
             <div class="form-grid">
                 <div class="form-group">
                     <label>구분</label>
                     <select id="modal-type" onchange="syncModalCategoryOptions()">
-                        <option value="expense">지출</option><option value="income">수입</option><option value="savings">저축 (예적금)</option><option value="invest">투자 (자산/투자)</option>
+                        <option value="expense">지출</option>
+                        <option value="income">수입</option>
+                        <option value="savings">저축 (예적금)</option>
+                        <option value="invest">투자 (자산/투자)</option>
                     </select>
                 </div>
-                <div class="form-group"><label>날짜</label><input type="date" id="modal-date" /></div>
+                <div class="form-group">
+                    <label>날짜</label>
+                    <input type="date" id="modal-date" />
+                </div>
+
                 <div class="form-group form-col-2">
                     <label>카테고리</label>
-                    <div style="display: flex; gap: 6px;">
-                        <select id="modal-category" style="flex:1;"></select>
+                    <div class="category-select-wrap">
+                        <select id="modal-category" style="flex:1;">
+                            <!-- Populated dynamically -->
+                        </select>
+                        <input type="text" id="modal-custom-category" placeholder="새 카테고리 직접 입력"
+                            style="display:none; flex:1;" />
+                        <button type="button" class="category-quick-btn" id="btn-toggle-custom-cat"
+                            onclick="toggleCustomCategoryInput()">직접입력</button>
                     </div>
                 </div>
-                <div class="form-group form-col-2"><label>금액 (원)</label><input type="text" id="modal-amount" placeholder="0" oninput="handleAmountInput(this)" /></div>
-                <div class="form-group form-col-2"><label>내용 / 설명</label><input type="text" id="modal-desc" placeholder="예: 점심 식사, 급여 등" /></div>
-                <div class="form-group form-col-2"><label>결제수단 / 종류</label><input type="text" id="modal-kind" placeholder="예: 삼성카드, 현금 등" /></div>
+
+                <div class="form-group form-col-2">
+                    <label>금액 (원)</label>
+                    <input type="text" id="modal-amount" placeholder="0" oninput="handleAmountInput(this)" />
+                </div>
+
+                <div class="form-group form-col-2">
+                    <label>내용 / 설명</label>
+                    <input type="text" id="modal-desc" placeholder="예: 점심 식사, 급여, 삼성전자 배당 등" />
+                </div>
+
+                <div class="form-group form-col-2">
+                    <label>결제수단 / 종류 (선택)</label>
+                    <input type="text" id="modal-kind" list="payment-kind-list"
+                        placeholder="예: 삼성카드(신용), 우리카드, 현금, 계좌이체 등" />
+                    <datalist id="payment-kind-list">
+                        <option value="삼성카드(신용)">
+                        <option value="우리카드(신용)">
+                        <option value="토스카드(체크)">
+                        <option value="현금">
+                        <option value="계좌이체">
+                    </datalist>
+                </div>
             </div>
+
             <div class="modal-buttons">
                 <button class="btn" onclick="closeTxModal()">취소</button>
                 <button class="btn btn-primary" onclick="saveTransaction()">저장 완료</button>
@@ -396,40 +1222,42 @@
         </div>
     </div>
 
+    <!-- Modal for Category Manager -->
     <div class="modal-overlay" id="category-modal">
         <div class="modal-content">
-            <div class="modal-title"><span>카테고리 관리</span><button class="btn-icon" onclick="closeCategoryModal()">✕</button></div>
+            <div class="modal-title">
+                <span>카테고리 관리</span>
+                <button class="btn-icon" onclick="closeCategoryModal()">✕</button>
+            </div>
+            <div style="font-size: 12.5px; color: var(--text-muted); margin-bottom: 12px;">
+                자주 사용하는 카테고리를 등록하고 불필요한 항목은 삭제할 수 있습니다.
+            </div>
+
             <div class="form-group" style="display:flex; gap:8px;">
-                <input type="text" id="new-cat-name" placeholder="추가할 카테고리명..." />
+                <input type="text" id="new-cat-name" placeholder="추가할 카테고리명 입력..." />
                 <button class="btn btn-primary" onclick="addNewCategory()">등록</button>
             </div>
-            <div style="margin-top: 14px;"><div class="cat-chip-list" id="cat-chip-container"></div></div>
-            <div class="modal-buttons"><button class="btn" onclick="closeCategoryModal()">닫기</button></div>
+
+            <div style="margin-top: 14px;">
+                <div style="font-size: 12px; font-weight: 600; color: var(--text-muted); margin-bottom: 6px;">현재 등록된
+                    카테고리 목록</div>
+                <div class="cat-chip-list" id="cat-chip-container">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+
+            <div class="modal-buttons">
+                <button class="btn" onclick="closeCategoryModal()">닫기</button>
+            </div>
         </div>
     </div>
 
-    <div class="toast" id="toast-msg">알림</div>
+    <!-- Toast Notification -->
+    <div class="toast" id="toast-msg">알림 메시지</div>
 
-    <!-- Firebase SDKs & App Logic -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getFirestore, collection, getDocs, setDoc, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-
-        const firebaseConfig = {
-            apiKey: "AIzaSyBC_VzTRSGzt4Seq7TWwwIYV65t1DwiQzk",
-            authDomain: "information-ff70a.firebaseapp.com",
-            projectId: "information-ff70a",
-            storageBucket: "information-ff70a.firebasestorage.app",
-            messagingSenderId: "138612781096",
-            appId: "1:138612781096:web:362d37f450a36c9bff851d",
-            measurementId: "G-1Y4XM506W1"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
-        const provider = new GoogleAuthProvider();
+    <script>
+        const LOCAL_STORAGE_KEY = 'AGY_SMART_LEDGER_2026_DATA';
+        const CATEGORIES_KEY = 'AGY_SMART_LEDGER_CATEGORIES';
 
         const DEFAULT_CATEGORIES = [
             '食(식)', '住(주)', '衣(의)', '생활', '취미', '교통', '배달', '보험',
@@ -438,76 +1266,575 @@
             'ISA계좌', '연금계좌', '기타'
         ];
 
-        window.transactions = [];
-        window.categories = [...DEFAULT_CATEGORIES];
-        let currentTab = 'all';
+        const RAW_DATA = {
+            "incomes": [
+                { "date": "2026년 1월 1일", "amount": "₩18,229", "desc": "삼성증권", "category": "배당" },
+                { "date": "2026년 1월 29일", "amount": "₩600,000", "desc": "취업지원서비스", "category": "지원금" },
+                { "date": "2026년 2월 1일", "amount": "₩11,219", "desc": "삼성증권", "category": "배당" },
+                { "date": "2026년 2월 26일", "amount": "₩600,000", "desc": "취업지원서비스", "category": "지원금" },
+                { "date": "2026년 3월 1일", "amount": "₩25,986", "desc": "삼성증권", "category": "배당" },
+                { "date": "2026년 3월 26일", "amount": "₩600,000", "desc": "취업지원서비스", "category": "지원금" },
+                { "date": "2026년 4월 1일", "amount": "₩45,794", "desc": "삼성증권", "category": "배당" },
+                { "date": "2026년 4월 10일", "amount": "₩134,160", "desc": "굿링크 연말정산금", "category": "인센티브" },
+                { "date": "2026년 4월 10일", "amount": "₩30,560", "desc": "문배철강", "category": "배당" },
+                { "date": "2026년 4월 14일", "amount": "₩70,900", "desc": "네이버 - 무무익선, 뇌울림 (3.0 PRO T)(반품)", "category": "판매내역" },
+                { "date": "2026년 4월 16일", "amount": "₩30,025", "desc": "삼성증권", "category": "배당" },
+                { "date": "2026년 4월 16일", "amount": "₩131,500", "desc": "네이버 - 서린씨앤아이몰, 브라켓(반품)", "category": "판매내역" },
+                { "date": "2026년 4월 16일", "amount": "₩51,300", "desc": "네이버 - NSR태릉점-자전거쇼팡몰, 빕숏(반품)", "category": "판매내역" },
+                { "date": "2026년 4월 24일", "amount": "₩600,000", "desc": "취업지원서비스", "category": "지원금" },
+                { "date": "2026년 4월 30일", "amount": "₩1,000,000", "desc": "문동국 - 이자", "category": "이자" },
+                { "date": "2026년 4월 30일", "amount": "₩2,722,930", "desc": "4월 급여(연휴로 일찎받음 기존 5월 5일)", "category": "급여" },
+                { "date": "2026년 5월 1일", "amount": "₩25,523", "desc": "배당 - 삼성증권", "category": "배당" },
+                { "date": "2026년 5월 3일", "amount": "₩380,000", "desc": "당근마켓 - 뱅앤올룹슨 베오플레이 HX 골드", "category": "판매내역" },
+                { "date": "2026년 5월 7일", "amount": "₩380,000", "desc": "당근마켓 - S23 512GB 그라파이트", "category": "판매내역" },
+                { "date": "2026년 5월 13일", "amount": "₩650,000", "desc": "에센코어 KLEVV DDR5 PC5-6000 CL30 CRAS V 32GB", "category": "판매내역" },
+                { "date": "2026년 5월 14일", "amount": "₩50,000", "desc": "선영이 생리대 값", "category": "지원금" },
+                { "date": "2026년 5월 19일", "amount": "₩12,000", "desc": "중고나라 - 아즈라 이어팁 MS 사이즈", "category": "판매내역" },
+                { "date": "2026년 5월 21일", "amount": "₩150,000", "desc": "고유가 지원금 2차", "category": "지원금" },
+                { "date": "2026년 5월 22일", "amount": "₩12,000", "desc": "중고나라 - 아즈라 이어팁 ML 사이즈", "category": "판매내역" },
+                { "date": "2026년 6월 1일", "amount": "₩34,565", "desc": "배당 - 삼성증권", "category": "배당" },
+                { "date": "2026년 6월 1일", "amount": "₩30,000", "desc": "진주탑마취통증의학 - 보험청구 - 정액", "category": "보험금" },
+                { "date": "2026년 6월 2일", "amount": "₩280,000", "desc": "아정당 - 얼음정수기 렌탈 지원금", "category": "지원금" },
+                { "date": "2026년 6월 2일", "amount": "₩195,700", "desc": "진주탑마취통증의학 - 보험청구 - 실비", "category": "보험금" },
+                { "date": "2026년 6월 2일", "amount": "₩25,000", "desc": "아정당 - 얼음정수기 렌탈 지원금", "category": "지원금" },
+                { "date": "2026년 6월 5일", "amount": "₩30,000", "desc": "아정당 - 얼음정수기 렌탈 지원금", "category": "지원금" },
+                { "date": "2026년 6월 5일", "amount": "₩2,496,500", "desc": "5월 급여", "category": "급여" },
+                { "date": "2026년 6월 6일", "amount": "₩83,250", "desc": "롯데마트(옥포점) - 장보기", "category": "판매내역" },
+                { "date": "2026년 6월 19일", "amount": "₩229,000", "desc": "아디다스 아디제로 SL ATR 반품", "category": "판매내역" },
+                { "date": "2026년 7월 1일", "amount": "₩75,430", "desc": "배당 - 삼성증권", "category": "배당" },
+                { "date": "2026년 7월 2일", "amount": "₩5,287,847", "desc": "적금 - 신한은행 만기", "category": "적금" },
+                { "date": "2026년 7월 3일", "amount": "₩2,496,300", "desc": "윤이엔지 - 6월 급여", "category": "급여" },
+                { "date": "2026년 7월 5일", "amount": "₩100,000", "desc": "김선영", "category": "판매내역" },
+                { "date": "2026년 7월 6일", "amount": "₩15,000", "desc": "당근 - 머슬정근 더블백 판매", "category": "판매내역" },
+                { "date": "2026년 7월 15일", "amount": "₩10,000", "desc": "삼성증권 - 이벤트", "category": "지원금" },
+                { "date": "2026년 7월 17일", "amount": "₩650,000", "desc": "에센코어 클레브 DDR5 16X2", "category": "판매내역" },
+                { "date": "2026년 7월 19일", "amount": "₩1,150,000", "desc": "갤럭시탭 S9 울트라 16GB, 1TB 그라파이트", "category": "판매내역" },
+                { "date": "2026년 7월 24일", "amount": "₩3,000,000", "desc": "적금 - 월컴저축은행 만기", "category": "적금" },
+                { "date": "2026년 7월 24일", "amount": "₩12,000", "desc": "당근 - 러닉스 러닝밸트", "category": "판매내역" },
+                { "date": "2026년 7월 25일", "amount": "₩12,000", "desc": "당근 - 모나미 터치 펜", "category": "판매내역" },
+                { "date": "2026년 7월 26일", "amount": "₩14,000", "desc": "토스 - 포인트 현금화", "category": "판매내역" },
+                { "date": "2026년 7월 27일", "amount": "₩17,113,021", "desc": "적금 - KB청년도약계좌 특별해지", "category": "적금" },
+                { "date": "2026년 8월 1일", "amount": "₩100,000", "desc": "장보기 금액 받음", "category": "판매내역" },
+                { "date": "2026년 8월 2일", "amount": "₩100,000", "desc": "신일 좌식 선풍기", "category": "판매내역" },
+                { "date": "2026년 8월 2일", "amount": "₩40,000", "desc": "삼성 크리에이터 S펜", "category": "판매내역" },
+                { "date": "2026년 8월 5일", "amount": "₩2,496,300", "desc": "7월 급여", "category": "급여" },
+                { "date": "2026년 8월 5일", "amount": "₩150,000", "desc": "갤럭시 버즈4 Pro = 버즈3 Pro + 150,000", "category": "판매내역" },
+                { "date": "2026년 8월 11일", "amount": "₩20,000", "desc": "갤럭시탭 S9 Ultra 러기드 케이스", "category": "판매내역" },
+                { "date": "2026년 8월 11일", "amount": "₩20,000", "desc": "제주항공권 이용권", "category": "판매내역" },
+                { "date": "2026년 8월 14일", "amount": "₩350,000", "desc": "갤럭시 호프 2080 SUPER 10주년 화이트", "category": "판매내역" },
+                { "date": "2026년 8월 14일", "amount": "₩120,000", "desc": "갤럭시 버즈 3 프로 실버", "category": "판매내역" },
+                { "date": "2026년 8월 17일", "amount": "₩60,000", "desc": "삼성 EVO Plus SDCard 512GB", "category": "판매내역" },
+                { "date": "2026년 8월 24일", "amount": "₩27,000", "desc": "신세계상품권 10,000원 × 3", "category": "판매내역" },
+                { "date": "2026년 8월 26일", "amount": "₩2,496,300", "desc": "8월 급여(선입금)", "category": "급여" },
+                { "date": "2026년 8월 29일", "amount": "₩330,000", "desc": "삼성 갤럭시 S23 플러스 512GB 자급제", "category": "판매내역" },
+                { "date": "2026년 8월 31일", "amount": "₩650,000", "desc": "SK하이닉스 P51 2TB", "category": "판매내역" },
+                { "date": "2026년 9월 1일", "amount": "₩1,179,000", "desc": "삼성 갤럭시탭 S9 Ultra 16GB 1TB 셀룰러", "category": "판매내역" },
+                { "date": "2026년 9월 2일", "amount": "₩4,000", "desc": "샥즈 오픈닷2 배송오류 택비비", "category": "판매내역" },
+                { "date": "2026년 9월 13일", "amount": "₩1,300,000", "desc": "리안리 케이스, CPU쿨러, 시스템쿨러", "category": "판매내역" },
+                { "date": "2026년 9월 13일", "amount": "₩25,000", "desc": "바디건조기 판매", "category": "판매내역" },
+                { "date": "2026년 9월 18일", "amount": "₩230,000", "desc": "샥즈 오픈닷2 판매", "category": "판매내역" },
+                { "date": "2026년 9월 20일", "amount": "₩8,000", "desc": "데오드란트", "category": "판매내역" }
+            ],
+            "expenses": [
+                { "date": "2026년 1월 11일", "amount": "₩470,000", "desc": "1월 임대료", "category": "住(주)", "kind": "" },
+                { "date": "2026년 1월 12일", "amount": "₩40,900", "desc": "정수기", "category": "렌탈", "kind": "" },
+                { "date": "2026년 1월 13일", "amount": "₩17,354", "desc": "신한라이프생명보험", "category": "보험", "kind": "" },
+                { "date": "2026년 1월 16일", "amount": "₩34,707", "desc": "DB생명보험", "category": "보험", "kind": "" },
+                { "date": "2026년 1월 23일", "amount": "₩30,870", "desc": "라이나손해보험", "category": "보험", "kind": "" },
+                { "date": "2026년 1월 26일", "amount": "₩78,750", "desc": "우정사업본부", "category": "보험", "kind": "" },
+                { "date": "2026년 2월 11일", "amount": "₩40,900", "desc": "정수기", "category": "렌탈", "kind": "" },
+                { "date": "2026년 2월 11일", "amount": "₩470,000", "desc": "2월 임대료", "category": "住(주)", "kind": "" },
+                { "date": "2026년 2월 13일", "amount": "₩17,354", "desc": "신한라이프생명보험", "category": "보험", "kind": "" },
+                { "date": "2026년 2월 16일", "amount": "₩34,707", "desc": "DB생명보험", "category": "보험", "kind": "" },
+                { "date": "2026년 2월 23일", "amount": "₩30,870", "desc": "라이나손해보험", "category": "보험", "kind": "" },
+                { "date": "2026년 2월 26일", "amount": "₩78,750", "desc": "우정사업본부", "category": "보험", "kind": "" },
+                { "date": "2026년 3월 11일", "amount": "₩40,900", "desc": "정수기", "category": "렌탈", "kind": "" },
+                { "date": "2026년 3월 11일", "amount": "₩470,000", "desc": "3월 임대로", "category": "住(주)", "kind": "" },
+                { "date": "2026년 3월 13일", "amount": "₩17,354", "desc": "신한라이프생명보험", "category": "보험", "kind": "" },
+                { "date": "2026년 3월 16일", "amount": "₩34,707", "desc": "DB생명보험", "category": "보험", "kind": "" },
+                { "date": "2026년 3월 23일", "amount": "₩30,870", "desc": "라이나손해보험", "category": "보험", "kind": "" },
+                { "date": "2026년 3월 26일", "amount": "₩78,750", "desc": "우정사업본부", "category": "보험", "kind": "" },
+                { "date": "2026년 4월 2일", "amount": "₩261,900", "desc": "네이버 - 헬스헬퍼", "category": "생활", "kind": "" },
+                { "date": "2026년 4월 3일", "amount": "₩59,000", "desc": "네이버 - 2DITOR 투디터", "category": "취미", "kind": "" },
+                { "date": "2026년 4월 7일", "amount": "₩4,675,000", "desc": "네이버 - 스페셜라이즈드 써밋바이크, 자전거", "category": "취미", "kind": "" },
+                { "date": "2026년 4월 10일", "amount": "₩114,200", "desc": "네이버 - 어반바이커스, 젤큰 - ZELKN", "category": "취미", "kind": "" },
+                { "date": "2026년 4월 10일", "amount": "₩226,000", "desc": "네이버 - 스페셜라이즈드 써밋바이크, 헬멧, 페달, 속도계", "category": "취미", "kind": "" },
+                { "date": "2026년 4월 11일", "amount": "₩470,000", "desc": "4월 임대로", "category": "住(주)", "kind": "" },
+                { "date": "2026년 4월 12일", "amount": "₩22,640", "desc": "네이버-투로켓, 족집게", "category": "생활", "kind": "" },
+                { "date": "2026년 4월 12일", "amount": "₩18,500", "desc": "네이버-중고나라, Window11 Pro", "category": "취미", "kind": "" },
+                { "date": "2026년 4월 12일", "amount": "₩61,700", "desc": "네이버-무무익선, 뇌울림 + 안심플랜 (3.0 PRO)", "category": "취미", "kind": "" },
+                { "date": "2026년 4월 12일", "amount": "₩24,690", "desc": "네이버-컨트롤알트. 젤리 푸딩 크리스탈 반투명 키캡", "category": "취미", "kind": "" },
+                { "date": "2026년 4월 13일", "amount": "₩17,354", "desc": "신한라이프생명보험", "category": "보험", "kind": "" },
+                { "date": "2026년 4월 13일", "amount": "₩40,900", "desc": "정수기", "category": "렌탈", "kind": "" },
+                { "date": "2026년 4월 13일", "amount": "₩7,890", "desc": "쿠팡", "category": "생활", "kind": "" },
+                { "date": "2026년 4월 13일", "amount": "₩20,000", "desc": "네이버-옐로바이크, 자전거 덥개", "category": "취미", "kind": "" },
+                { "date": "2026년 4월 13일", "amount": "₩19,980", "desc": "네이버-롯데칠성음료(공식), 해피즈 혼합패키지 18EA", "category": "食(식)", "kind": "" },
+                { "date": "2026년 4월 15일", "amount": "₩34,707", "desc": "DB생명보험", "category": "보험", "kind": "" },
+                { "date": "2026년 4월 15일", "amount": "₩30,000", "desc": "상조 - 온오프코리아", "category": "보험", "kind": "" },
+                { "date": "2026년 4월 23일", "amount": "₩30,870", "desc": "라이나손해보험", "category": "보험", "kind": "" },
+                { "date": "2026년 4월 26일", "amount": "₩78,750", "desc": "우정사업본부", "category": "보험", "kind": "" },
+                { "date": "2026년 4월 20일", "amount": "₩389,900", "desc": "네이버 - 샤크닌자 코리아, 샤크 터보블래이드 선풍기", "category": "생활", "kind": "" },
+                { "date": "2026년 4월 21일", "amount": "₩19,400", "desc": "쿠팡 - 락브로스 조절식 자전거 거대치", "category": "취미", "kind": "" },
+                { "date": "2026년 4월 22일", "amount": "₩32,600", "desc": "네이버 - 머슬정글, 2026042294020221 더블백", "category": "衣(의)", "kind": "" },
+                { "date": "2026년 5월 3일", "amount": "₩1,100,000", "desc": "번개장터 - 자급제, S25 울트라 512GB, 실버블루 + AI구독", "category": "취미", "kind": "" },
+                { "date": "2026년 5월 5일", "amount": "₩69,975", "desc": "통합사회보험료", "category": "공과금", "kind": "" },
+                { "date": "2026년 5월 8일", "amount": "₩18,900", "desc": "네이버 - 카파클락, 자명종 알람 탁상시계 T913", "category": "생활", "kind": "" },
+                { "date": "2026년 5월 9일", "amount": "₩68,160", "desc": "롯데마트 - 식품구매", "category": "食(식)", "kind": "" },
+                { "date": "2026년 5월 10일", "amount": "₩106,070", "desc": "쿠팡 - 세제, 물티슈, 세정티슈, 섬유탈취제, 휴지, 폰 케이스", "category": "생활", "kind": "" },
+                { "date": "2026년 5월 11일", "amount": "₩470,000", "desc": "5월 임대료", "category": "住(주)", "kind": "" },
+                { "date": "2026년 5월 14일", "amount": "₩55,000", "desc": "네이버 - Rael, 팬티형 유기농 순면커버 입는 오버나이트 8x7", "category": "생활", "kind": "" },
+                { "date": "2026년 5월 14일", "amount": "₩34,900", "desc": "네이버 - 아즈라, 아즈라 맥스 버즈3프로 이어캡", "category": "취미", "kind": "" },
+                { "date": "2026년 5월 14일", "amount": "₩28,500", "desc": "네이버 - 리빙엔터82, 황동 15M 고압 물 분사기 워터건 호스", "category": "생활", "kind": "" },
+                { "date": "2026년 5월 14일", "amount": "₩167,360", "desc": "네이버 - 레이저플레이스, Razer Cobra Pro 유무선 마우스 화이트", "category": "취미", "kind": "" },
+                { "date": "2026년 5월 15일", "amount": "₩31,000", "desc": "배달의민족 - 갓 튀긴 두마리 치킨", "category": "배달", "kind": "" },
+                { "date": "2026년 5월 16일", "amount": "₩28,100", "desc": "네이버 - 아이오페, 맨 XMD 클리니컬 리커버리 올인원 포맨 120g", "category": "뷰티", "kind": "" },
+                { "date": "2026년 5월 16일", "amount": "₩36,900", "desc": "네이버 - CJ제일제당, 햇반 흑미밥 30개 기획팩 (210g, 24개 + 130g, 6개)", "category": "食(식)", "kind": "" },
+                { "date": "2026년 5월 16일", "amount": "₩9,600", "desc": "네이버 - 애경본사직영몰, 2080 닥터크리닉 치석 고불소 치약, 칫솔", "category": "생활", "kind": "" },
+                { "date": "2026년 5월 16일", "amount": "₩16,800", "desc": "네이버 - 김치명가 운림가 - 50년전통 국산 배추 김치 2kg 주문", "category": "食(식)", "kind": "" },
+                { "date": "2026년 5월 16일", "amount": "₩10,400", "desc": "네이버 - 떙큐파머스, 구운계란 맥반석 훈제 대란 구운란 30구", "category": "食(식)", "kind": "" },
+                { "date": "2026년 5월 16일", "amount": "₩22,000", "desc": "배달의민족 - 사이젠스페셜 1개", "category": "배달", "kind": "" },
+                { "date": "2026년 5월 19일", "amount": "₩28,500", "desc": "배달의민족 - 열정국밥 1+1, 얼큰이모듬국밥", "category": "배달", "kind": "" },
+                { "date": "2026년 5월 21일", "amount": "₩23,800", "desc": "네이버 - SLBS 블랙 임프레션 클리어 케이스 Galaxy S25, Buds3 pro CASE", "category": "취미", "kind": "" },
+                { "date": "2026년 5월 22일", "amount": "₩15,100", "desc": "쿠팡이츠 - 맥도날드 맥모닝 세트 1개, 단품 2개", "category": "배달", "kind": "" },
+                { "date": "2026년 6월 1일", "amount": "₩4,500", "desc": "GS25 - 담배", "category": "생활", "kind": "" },
+                { "date": "2026년 6월 1일", "amount": "₩8,400", "desc": "GS25 - 담배, 커피, 라이터", "category": "생활", "kind": "" },
+                { "date": "2026년 6월 2일", "amount": "₩27,300", "desc": "배달의민족 - 김치찜", "category": "배달", "kind": "" },
+                { "date": "2026년 6월 2일", "amount": "₩4,000", "desc": "카카오T - 택시(출근)", "category": "교통", "kind": "" },
+                { "date": "2026년 6월 2일", "amount": "₩4,500", "desc": "CU - 담배", "category": "생활", "kind": "" },
+                { "date": "2026년 6월 2일", "amount": "₩9,200", "desc": "시외버스터미널 - 부산", "category": "교통", "kind": "" },
+                { "date": "2026년 6월 2일", "amount": "₩5,800", "desc": "CU - 담배, 간식", "category": "생활", "kind": "" },
+                { "date": "2026년 6월 2일", "amount": "₩1,300", "desc": "충전 - SNS", "category": "생활", "kind": "" },
+                { "date": "2026년 6월 2일", "amount": "₩52,800", "desc": "네이버 - 러닉스, 러닝 벨트 / 3개월", "category": "취미", "kind": "" },
+                { "date": "2026년 6월 3일", "amount": "₩4,500", "desc": "GS25 - 담배", "category": "생활", "kind": "" },
+                { "date": "2026년 6월 3일", "amount": "₩5,200", "desc": "택시 - 시외버스터미널", "category": "교통", "kind": "" },
+                { "date": "2026년 6월 3일", "amount": "₩9,200", "desc": "시외버스터미널 - 진주", "category": "교통", "kind": "" },
+                { "date": "2026년 6월 3일", "amount": "₩4,000", "desc": "10% - 커피", "category": "食(식)", "kind": "" },
+                { "date": "2026년 6월 3일", "amount": "₩4,500", "desc": "CU - 담배", "category": "생활", "kind": "" },
+                { "date": "2026년 6월 3일", "amount": "₩18,200", "desc": "배달의민족 - 베스킨라빈스31", "category": "배달", "kind": "" },
+                { "date": "2026년 6월 4일", "amount": "₩8,600", "desc": "CU - 담배, 커피", "category": "생활", "kind": "" },
+                { "date": "2026년 6월 4일", "amount": "₩16,810", "desc": "메가타운약국 - 무좀. 진통, 해결제, 근이완제", "category": "의료", "kind": "" },
+                { "date": "2026년 6월 4일", "amount": "₩14,000", "desc": "배달의민족 - 이삭토스트", "category": "배달", "kind": "" },
+                { "date": "2026년 6월 5일", "amount": "₩4,500", "desc": "GS25 - 담배", "category": "생활", "kind": "" },
+                { "date": "2026년 6월 5일", "amount": "₩2,300", "desc": "CU - 담배", "category": "생활", "kind": "" },
+                { "date": "2026년 6월 5일", "amount": "₩26,660", "desc": "네이버 - 코카콜라직영몰 490ml x 24", "category": "食(식)", "kind": "" },
+                { "date": "2026년 6월 5일", "amount": "₩30,000", "desc": "숭실사이버대학교", "category": "취미", "kind": "" },
+                { "date": "2026년 6월 5일", "amount": "₩7,200", "desc": "GS25 - 담배, 기타", "category": "생활", "kind": "" },
+                { "date": "2026년 6월 6일", "amount": "₩4,500", "desc": "GS25 - 담배", "category": "생활", "kind": "" },
+                { "date": "2026년 6월 6일", "amount": "₩6,200", "desc": "택시 - 진주 → 개양시외버스터미널", "category": "교통", "kind": "" },
+                { "date": "2026년 6월 6일", "amount": "₩8,700", "desc": "시외버스터미널 - 진주 → 거제", "category": "교통", "kind": "" },
+                { "date": "2026년 6월 6일", "amount": "₩65,800", "desc": "나이키(고현점) - 상,하의 세트 운동복 구매", "category": "취미", "kind": "" },
+                { "date": "2026년 6월 6일", "amount": "₩83,250", "desc": "롯데마트(옥포점) - 장보기", "category": "食(식)", "kind": "" },
+                { "date": "2026년 6월 6일", "amount": "₩3,200", "desc": "스타벅스코리아 - 딸기라떼", "category": "食(식)", "kind": "" },
+                { "date": "2026년 6월 6일", "amount": "₩80,000", "desc": "모다아울렛(정촌점) - 라이프워크 상,하의 구매", "category": "衣(의)", "kind": "" },
+                { "date": "2026년 6월 6일", "amount": "₩30,000", "desc": "배달의민족 - 치킨", "category": "배달", "kind": "" },
+                { "date": "2026년 6월 6일", "amount": "₩7,000", "desc": "GS25 - 담배, 음료", "category": "생활", "kind": "" },
+                { "date": "2026년 6월 7일", "amount": "₩8,700", "desc": "시외버스터미널 - 거제 → 진주", "category": "교통", "kind": "" },
+                { "date": "2026년 6월 7일", "amount": "₩6,900", "desc": "세븐일레븐 - 담배, 콜라", "category": "생활", "kind": "" },
+                { "date": "2026년 6월 8일", "amount": "₩339,000", "desc": "네이버 - 삼성공식파트너사 포디아. 갤럭시 버즈4 프로(화이트)", "category": "취미", "kind": "" },
+                { "date": "2026년 6월 8일", "amount": "₩227,400", "desc": "Kream - 슈퍼블라스트3 (화이트), 250", "category": "취미", "kind": "" },
+                { "date": "2026년 6월 8일", "amount": "₩4,500", "desc": "GS25 - 담배", "category": "생활", "kind": "" },
+                { "date": "2026년 6월 8일", "amount": "₩7,700", "desc": "CU - 담배, 음료", "category": "생활", "kind": "" },
+                { "date": "2026년 6월 9일", "amount": "₩4,500", "desc": "CU - 담배", "category": "생활", "kind": "" },
+                { "date": "2026년 6월 10일", "amount": "₩17,354", "desc": "신한라이프생명보험", "category": "보험", "kind": "" },
+                { "date": "2026년 6월 10일", "amount": "₩4,500", "desc": "CU - 담배", "category": "생활", "kind": "" },
+                { "date": "2026년 6월 10일", "amount": "₩40,000", "desc": "렌탈 - 코웨이 철거비", "category": "렌탈", "kind": "" },
+                { "date": "2026년 6월 10일", "amount": "₩32,750", "desc": "렌탈 - 코웨이 이용료", "category": "렌탈", "kind": "" },
+                { "date": "2026년 6월 10일", "amount": "₩5,300", "desc": "빽다방 - 블루베리 스무디", "category": "食(식)", "kind": "" },
+                { "date": "2026년 6월 10일", "amount": "₩4,500", "desc": "GS25 - 담배", "category": "생활", "kind": "" },
+                { "date": "2026년 6월 11일", "amount": "₩10,000", "desc": "택시 - 집 → 평거동", "category": "교통", "kind": "" },
+                { "date": "2026년 6월 11일", "amount": "₩9,960", "desc": "택시 - 평거동 → 집", "category": "교통", "kind": "" },
+                { "date": "2026년 6월 11일", "amount": "₩470,000", "desc": "6월 임대료", "category": "住(주)", "kind": "" },
+                { "date": "2026년 6월 11일", "amount": "₩4,500", "desc": "GS25 - 담배", "category": "생활", "kind": "" },
+                { "date": "2026년 6월 11일", "amount": "₩1,900", "desc": "GS25 - 참이슬", "category": "食(식)", "kind": "" },
+                { "date": "2026년 6월 11일", "amount": "₩2,600", "desc": "CU - 커피", "category": "食(식)", "kind": "" },
+                { "date": "2026년 6월 11일", "amount": "₩4,500", "desc": "GS25 - 담배", "category": "생활", "kind": "" },
+                { "date": "2026년 6월 12일", "amount": "₩4,500", "desc": "CU - 담배", "category": "생활", "kind": "" },
+                { "date": "2026년 6월 12일", "amount": "₩185,122", "desc": "KREAM - 아디다스 아디제로 아디오스 프로 4 클라우드 화이트 퓨어 틸", "category": "취미", "kind": "" },
+                { "date": "2026년 6월 13일", "amount": "₩7,600", "desc": "GS25 - 담배, 음료", "category": "생활", "kind": "" },
+                { "date": "2026년 6월 13일", "amount": "₩8,500", "desc": "CU - 담배, 음료, 빵", "category": "생활", "kind": "" },
+                { "date": "2026년 6월 13일", "amount": "₩4,300", "desc": "뺵다방 - 딸기스무디", "category": "食(식)", "kind": "" },
+                { "date": "2026년 6월 13일", "amount": "₩32,800", "desc": "네이버 - 감성을다는남자, 커튼봉 구매", "category": "생활", "kind": "" },
+                { "date": "2026년 6월 13일", "amount": "₩21,745", "desc": "배달의민족 - 짜장면, 짬뽕밥, 탕수육", "category": "배달", "kind": "" },
+                { "date": "2026년 6월 13일", "amount": "₩15,800", "desc": "카카오쇼핑 - 오짱(건조오다리)", "category": "食(식)", "kind": "" },
+                { "date": "2026년 6월 13일", "amount": "₩18,000", "desc": "리안헤어진주역점 - 컷트", "category": "생활", "kind": "" },
+                { "date": "2026년 6월 13일", "amount": "₩7,338", "desc": "쿠팡 - 와우 멤버쉽", "category": "구독", "kind": "" },
+                { "date": "2026년 6월 14일", "amount": "₩6,800", "desc": "GS25 - 담배, 음료", "category": "생활", "kind": "" },
+                { "date": "2026년 6월 14일", "amount": "₩300", "desc": "GS25 - 담배", "category": "생활", "kind": "" },
+                { "date": "2026년 6월 14일", "amount": "₩33,900", "desc": "배달의민족 - 곱도리탕", "category": "배달", "kind": "" },
+                { "date": "2026년 6월 15일", "amount": "₩17,300", "desc": "GS25 - 마데카솔, 방수밴드 2EA, 담배", "category": "생활", "kind": "" },
+                { "date": "2026년 6월 15일", "amount": "₩34,707", "desc": "DB생명보험 - 암보험", "category": "보험", "kind": "" },
+                { "date": "2026년 6월 15일", "amount": "₩62,880", "desc": "핸드폰 요금", "category": "공과금", "kind": "" },
+                { "date": "2026년 6월 15일", "amount": "₩15,000", "desc": "보험 - 상조", "category": "보험", "kind": "" },
+                { "date": "2026년 6월 15일", "amount": "₩15,000", "desc": "보험 - 상조", "category": "보험", "kind": "" },
+                { "date": "2026년 6월 15일", "amount": "₩7,100", "desc": "GS25 - 담배, 음료", "category": "생활", "kind": "" },
+                { "date": "2026년 6월 15일", "amount": "₩4,500", "desc": "GS25 - 담배", "category": "생활", "kind": "" },
+                { "date": "2026년 6월 15일", "amount": "₩24,100", "desc": "배달의민족 - 맘스터치", "category": "배달", "kind": "" },
+                { "date": "2026년 6월 16일", "amount": "₩3,300", "desc": "CU - 음료", "category": "食(식)", "kind": "" },
+                { "date": "2026년 6월 16일", "amount": "₩4,500", "desc": "GS25 - 담배", "category": "생활", "kind": "" },
+                { "date": "2026년 6월 17일", "amount": "₩4,500", "desc": "CU - 담배", "category": "생활", "kind": "" },
+                { "date": "2026년 6월 17일", "amount": "₩2,500", "desc": "CU - 커피", "category": "食(식)", "kind": "" },
+                { "date": "2026년 6월 17일", "amount": "₩124,870", "desc": "네이버 - 호카, 마하 6 와이드 1147833-BNGH (250)", "category": "취미", "kind": "" },
+                { "date": "2026년 6월 17일", "amount": "₩150,330", "desc": "네이버 - DLC스토어, 써코니 엔돌핀 스피드 5, S21007-243 (250)", "category": "취미", "kind": "" },
+                { "date": "2026년 6월 17일", "amount": "₩5,900", "desc": "보험 - 삼케플(S25울트라)", "category": "구독", "kind": "" },
+                { "date": "2026년 6월 17일", "amount": "₩4,500", "desc": "GS25 - 담배", "category": "생활", "kind": "" },
+                { "date": "2026년 6월 18일", "amount": "₩6,000", "desc": "CU - 담배, 음료", "category": "생활", "kind": "" },
+                { "date": "2026년 6월 19일", "amount": "₩1,990", "desc": "배달의민족 - 배민클럽", "category": "구독", "kind": "" },
+                { "date": "2026년 6월 19일", "amount": "₩663,000", "desc": "컴퓨존 - 에센코어 클레브 DDR5 6000 30CL", "category": "취미", "kind": "" },
+                { "date": "2026년 6월 19일", "amount": "₩309,800", "desc": "네이버 - 블리에이 나이키 에어 줌 알파플라이3 화이트 하바네 레드", "category": "취미", "kind": "" },
+                { "date": "2026년 6월 22일", "amount": "₩1,415,000", "desc": "네이버 - 삼성공식파트너 우주, 삼성 더 무빙스타일 KU27LSFM7AXXKR", "category": "취미", "kind": "" },
+                { "date": "2026년 7월 1일", "amount": "₩4,600", "desc": "택시 - 출근", "category": "교통", "kind": "" },
+                { "date": "2026년 7월 1일", "amount": "₩10,410", "desc": "공과금 - 가스", "category": "공과금", "kind": "" },
+                { "date": "2026년 7월 1일", "amount": "₩25,600", "desc": "네이버 - 만두 6EA (고기,김치,새우&게살)", "category": "食(식)", "kind": "" },
+                { "date": "2026년 7월 1일", "amount": "₩23,990", "desc": "네이버 - 코카콜라 490mL × 24EA", "category": "食(식)", "kind": "" },
+                { "date": "2026년 7월 1일", "amount": "₩4,500", "desc": "GS25 - 담배", "category": "생활", "kind": "" },
+                { "date": "2026년 7월 2일", "amount": "₩3,000", "desc": "스타게임장 - 인형뽑기", "category": "생활", "kind": "" },
+                { "date": "2026년 7월 2일", "amount": "₩3,400", "desc": "CU - 콜라", "category": "食(식)", "kind": "" },
+                { "date": "2026년 7월 2일", "amount": "₩4,500", "desc": "GS25 - 담패", "category": "생활", "kind": "" },
+                { "date": "2026년 7월 2일", "amount": "₩20,000", "desc": "카카오T - 대리운전", "category": "교통", "kind": "" },
+                { "date": "2026년 7월 2일", "amount": "₩4,600", "desc": "카카오T - 택시(출근)", "category": "교통", "kind": "" },
+                { "date": "2026년 7월 2일", "amount": "₩26,790", "desc": "네이버 - 삼양식품, 자이언트 불닭소스 2Kg", "category": "食(식)", "kind": "" },
+                { "date": "2026년 7월 2일", "amount": "₩4,300", "desc": "백다방 - 딸기스무디", "category": "食(식)", "kind": "" },
+                { "date": "2026년 7월 3일", "amount": "₩4,500", "desc": "GS25 - 담배", "category": "생활", "kind": "" },
+                { "date": "2026년 7월 3일", "amount": "₩20,000", "desc": "배달의민족 - 통뼈해장국 2EA", "category": "배달", "kind": "" },
+                { "date": "2026년 7월 4일", "amount": "₩22,220", "desc": "네이버 - 유니레버스토어, 스너클 캡슐세제 2EA", "category": "생활", "kind": "" },
+                { "date": "2026년 7월 4일", "amount": "₩27,000", "desc": "네이버 - 오마라 OMARA, 양말 4EA", "category": "衣(의)", "kind": "" },
+                { "date": "2026년 7월 4일", "amount": "₩4,500", "desc": "GS25 - 담배", "category": "생활", "kind": "" },
+                { "date": "2026년 7월 4일", "amount": "₩4,500", "desc": "GS25 - 담배", "category": "생활", "kind": "" },
+                { "date": "2026년 7월 4일", "amount": "₩38,800", "desc": "배달의민족 - 갈비, 고추장찌개", "category": "배달", "kind": "" },
+                { "date": "2026년 7월 5일", "amount": "₩109,230", "desc": "이마트 - 고기, 음료, 라면. 과자 등", "category": "食(식)", "kind": "" },
+                { "date": "2026년 7월 5일", "amount": "₩9,900", "desc": "아이스포유 - 아이스크림", "category": "食(식)", "kind": "" },
+                { "date": "2026년 7월 5일", "amount": "₩4,500", "desc": "GS25 - 담배", "category": "생활", "kind": "" },
+                { "date": "2026년 7월 6일", "amount": "₩3,030", "desc": "렌탈 - 쿠쿠정수기", "category": "렌탈", "kind": "" },
+                { "date": "2026년 7월 6일", "amount": "₩4,600", "desc": "카카오T - 택시(출근)", "category": "교통", "kind": "" },
+                { "date": "2026년 7월 6일", "amount": "₩56,800", "desc": "네이버 - 종근당건강, 오메가3", "category": "의료", "kind": "" },
+                { "date": "2026년 7월 7일", "amount": "₩3,200", "desc": "CU - 음료", "category": "食(식)", "kind": "" },
+                { "date": "2026년 7월 7일", "amount": "₩4,500", "desc": "CU - 담배", "category": "생활", "kind": "" },
+                { "date": "2026년 7월 7일", "amount": "₩7,200", "desc": "담배, 커피", "category": "생활", "kind": "" },
+                { "date": "2026년 7월 7일", "amount": "₩6,800", "desc": "GS25 - 담배, 음료", "category": "생활", "kind": "" },
+                { "date": "2026년 7월 8일", "amount": "₩7,100", "desc": "CU - 담배, 커피", "category": "생활", "kind": "" },
+                { "date": "2026년 7월 8일", "amount": "₩4,500", "desc": "GS25 - 담배", "category": "생활", "kind": "" },
+                { "date": "2026년 7월 9일", "amount": "₩4,500", "desc": "CU - 담배", "category": "생활", "kind": "" },
+                { "date": "2026년 7월 9일", "amount": "₩17,000", "desc": "배달의민족 - BHC", "category": "배달", "kind": "" },
+                { "date": "2026년 7월 10일", "amount": "₩31,370", "desc": "렌탈 - 쿠쿠정수기", "category": "렌탈", "kind": "" },
+                { "date": "2026년 7월 10일", "amount": "₩6,200", "desc": "CU - 담배, 음료", "category": "생활", "kind": "" },
+                { "date": "2026년 7월 10일", "amount": "₩4,110", "desc": "우체국 - 빠른등기우편", "category": "생활", "kind": "" },
+                { "date": "2026년 7월 10일", "amount": "₩100", "desc": "우체국 - 빠른등기우편", "category": "생활", "kind": "" },
+                { "date": "2026년 7월 10일", "amount": "₩17,354", "desc": "보험 - 신한라이프생명보험", "category": "보험", "kind": "" },
+                { "date": "2026년 7월 10일", "amount": "₩6,000", "desc": "GS25 - 담배. 컵라면", "category": "생활", "kind": "" },
+                { "date": "2026년 7월 10일", "amount": "₩31,500", "desc": "카카오 - 스타벅스 뉴턴 텀블러 355ml 캔디핑크", "category": "생활", "kind": "" },
+                { "date": "2026년 7월 11일", "amount": "₩470,000", "desc": "7월 임대료", "category": "住(주)", "kind": "" },
+                { "date": "2026년 7월 11일", "amount": "₩25,915", "desc": "배달의민족 - 마라탕", "category": "배달", "kind": "" },
+                { "date": "2026년 7월 11일", "amount": "₩16,290", "desc": "쿠팡 - S25 울트라 카메라보호렌즈", "category": "취미", "kind": "" },
+                { "date": "2026년 7월 11일", "amount": "₩40,650", "desc": "네이버 - 라라스윗. 아이스크림 파인트 8EA", "category": "食(식)", "kind": "" },
+                { "date": "2026년 7월 12일", "amount": "₩4,500", "desc": "GS25 - 담배", "category": "생활", "kind": "" },
+                { "date": "2026년 7월 12일", "amount": "₩4,500", "desc": "GS25 - 담배", "category": "생활", "kind": "" },
+                { "date": "2026년 7월 12일", "amount": "₩28,600", "desc": "배달의민족 - 돈까스, 김치나베", "category": "배달", "kind": "" },
+                { "date": "2026년 7월 13일", "amount": "₩5,200", "desc": "CU - 커피, 담배", "category": "생활", "kind": "" },
+                { "date": "2026년 7월 13일", "amount": "₩7,890", "desc": "쿠팡 - 구팡맴버십 구독료", "category": "구독", "kind": "" },
+                { "date": "2026년 7월 13일", "amount": "₩3,100", "desc": "CU - 커피", "category": "食(식)", "kind": "" },
+                { "date": "2026년 7월 13일", "amount": "₩4,500", "desc": "GS25 - 담배", "category": "생활", "kind": "" },
+                { "date": "2026년 7월 14일", "amount": "₩4,500", "desc": "CU - 담배", "category": "생활", "kind": "" },
+                { "date": "2026년 7월 14일", "amount": "₩4,500", "desc": "GS25 - 담배", "category": "생활", "kind": "" },
+                { "date": "2026년 7월 14일", "amount": "₩2,300", "desc": "CU - 커피", "category": "食(식)", "kind": "" },
+                { "date": "2026년 7월 14일", "amount": "₩13,900", "desc": "배달의민족 - 맘스터치", "category": "배달", "kind": "" },
+                { "date": "2026년 7월 15일", "amount": "₩5,200", "desc": "CU - 담배, 커피", "category": "생활", "kind": "" },
+                { "date": "2026년 7월 15일", "amount": "₩3,100", "desc": "CU - 커피", "category": "食(식)", "kind": "" },
+                { "date": "2026년 7월 15일", "amount": "₩69,800", "desc": "KREAM - 데카트론 3인치, 5인치 쇼츠", "category": "衣(의)", "kind": "" },
+                { "date": "2026년 7월 15일", "amount": "₩4,500", "desc": "CU - 담배", "category": "생활", "kind": "" },
+                { "date": "2026년 7월 15일", "amount": "₩34,707", "desc": "보험 - DB생명보험", "category": "보험", "kind": "" },
+                { "date": "2026년 7월 15일", "amount": "₩15,000", "desc": "보험 - 상조", "category": "보험", "kind": "" },
+                { "date": "2026년 7월 15일", "amount": "₩15,000", "desc": "보험 - 상조", "category": "보험", "kind": "" },
+                { "date": "2026년 7월 15일", "amount": "₩5,900", "desc": "토스 - 토스프라임", "category": "구독", "kind": "" },
+                { "date": "2026년 7월 16일", "amount": "₩2,700", "desc": "CU - 커피", "category": "食(식)", "kind": "" },
+                { "date": "2026년 7월 16일", "amount": "₩4,500", "desc": "CU - 담배", "category": "생활", "kind": "" },
+                { "date": "2026년 7월 16일", "amount": "₩16,000", "desc": "배달의민족", "category": "배달", "kind": "" },
+                { "date": "2026년 7월 17일", "amount": "₩9,000", "desc": "CU - 담배", "category": "생활", "kind": "" },
+                { "date": "2026년 7월 17일", "amount": "₩3,300", "desc": "SNS - 충전", "category": "생활", "kind": "" },
+                { "date": "2026년 7월 17일", "amount": "₩1,100", "desc": "SNS - 충전", "category": "생활", "kind": "" },
+                { "date": "2026년 7월 17일", "amount": "₩6,400", "desc": "CU - 택배", "category": "생활", "kind": "" },
+                { "date": "2026년 7월 17일", "amount": "₩5,000", "desc": "1000CC - 커피프라페", "category": "食(식)", "kind": "" },
+                { "date": "2026년 7월 17일", "amount": "₩8,700", "desc": "버스(시외) - 진주->거제", "category": "교통", "kind": "" },
+                { "date": "2026년 7월 17일", "amount": "₩4,500", "desc": "CU - 담배", "category": "생활", "kind": "" },
+                { "date": "2026년 7월 18일", "amount": "₩5,200", "desc": "CU - 담배", "category": "생활", "kind": "" },
+                { "date": "2026년 7월 18일", "amount": "₩3,700", "desc": "매머드익스프레스 - 음료", "category": "食(식)", "kind": "" },
+                { "date": "2026년 7월 19일", "amount": "₩1,990", "desc": "배달의민족 - 맴버십", "category": "구독", "kind": "" },
+                { "date": "2026년 7월 19일", "amount": "₩8,700", "desc": "버스(시외) - 거제->진주", "category": "교통", "kind": "" },
+                { "date": "2026년 7월 19일", "amount": "₩32,000", "desc": "까치솥뚜껑달도리", "category": "교통", "kind": "" },
+                { "date": "2026년 7월 20일", "amount": "₩29,180", "desc": "한국전력 - 전기", "category": "공과금", "kind": "" },
+                { "date": "2026년 7월 20일", "amount": "₩9,000", "desc": "CU - 담배", "category": "생활", "kind": "" },
+                { "date": "2026년 7월 21일", "amount": "₩29,180", "desc": "공과금 - 전기", "category": "공과금", "kind": "" },
+                { "date": "2026년 7월 21일", "amount": "₩9,000", "desc": "CU - 담배", "category": "생활", "kind": "" },
+                { "date": "2026년 7월 21일", "amount": "₩34,000", "desc": "카카오쇼핑 - 춘식이 텀블러", "category": "생활", "kind": "" },
+                { "date": "2026년 7월 21일", "amount": "₩24,400", "desc": "배달의민족 - 크크크치킨", "category": "배달", "kind": "" },
+                { "date": "2026년 7월 22일", "amount": "₩3,100", "desc": "CU - 커피", "category": "食(식)", "kind": "" },
+                { "date": "2026년 7월 22일", "amount": "₩30,870", "desc": "보험 - 아메리칸화재해상보험, 치아", "category": "보험", "kind": "" },
+                { "date": "2026년 7월 22일", "amount": "₩4,500", "desc": "CU - 담배", "category": "생활", "kind": "" },
+                { "date": "2026년 7월 23일", "amount": "₩4,500", "desc": "CU - 담배", "category": "생활", "kind": "" },
+                { "date": "2026년 7월 23일", "amount": "₩2,700", "desc": "CU - 커피", "category": "食(식)", "kind": "" },
+                { "date": "2026년 7월 23일", "amount": "₩24,000", "desc": "배달의민족 - 해장국", "category": "배달", "kind": "" },
+                { "date": "2026년 7월 24일", "amount": "₩4,500", "desc": "CU - 담배", "category": "생활", "kind": "" },
+                { "date": "2026년 7월 24일", "amount": "₩139,000", "desc": "토스 - 라온르 서큘레이터 / 3개월", "category": "생활", "kind": "" },
+                { "date": "2026년 7월 24일", "amount": "₩5,000", "desc": "CU - 콜라", "category": "食(식)", "kind": "" },
+                { "date": "2026년 7월 24일", "amount": "₩26,680", "desc": "네이버 - 코카콜라 490mL, 24EA", "category": "食(식)", "kind": "" },
+                { "date": "2026년 7월 25일", "amount": "₩371,880", "desc": "당근 - S23 Plus 512GB 자급제 (그라파이트) 구매", "category": "취미", "kind": "" },
+                { "date": "2026년 7월 26일", "amount": "₩1,000,000", "desc": "대출 - 우체국 상환", "category": "구매내역", "kind": "" },
+                { "date": "2026년 7월 26일", "amount": "₩2,400", "desc": "CU - 음료", "category": "食(식)", "kind": "" },
+                { "date": "2026년 7월 26일", "amount": "₩12,981", "desc": "배달의민족 - 떡볶이", "category": "배달", "kind": "" },
+                { "date": "2026년 7월 27일", "amount": "₩8,800", "desc": "SNS - 충전", "category": "생활", "kind": "" },
+                { "date": "2026년 7월 27일", "amount": "₩179,900", "desc": "네이버 - 샤크닌자 코리아, 에보파워 EX 무선 WV270KR / 3개월", "category": "생활", "kind": "" },
+                { "date": "2026년 7월 27일", "amount": "₩7,900", "desc": "CU - 담배, 콜라", "category": "생활", "kind": "" },
+                { "date": "2026년 7월 28일", "amount": "₩2,600", "desc": "CU - 음료", "category": "食(식)", "kind": "" },
+                { "date": "2026년 7월 28일", "amount": "₩28,000", "desc": "싼홍진주냉면", "category": "食(식)", "kind": "" },
+                { "date": "2026년 7월 29일", "amount": "₩4,600", "desc": "카카오택시 - 집 → 칠암시외버스터미널", "category": "교통", "kind": "" },
+                { "date": "2026년 7월 29일", "amount": "₩7,300", "desc": "카카오택시 - 이현동 → 집", "category": "교통", "kind": "" },
+                { "date": "2026년 7월 29일", "amount": "₩30,500", "desc": "촌놈국밥", "category": "食(식)", "kind": "" },
+                { "date": "2026년 7월 30일", "amount": "₩4,856", "desc": "배달의민족 - 촌놈국밥", "category": "배달", "kind": "" },
+                { "date": "2026년 7월 31일", "amount": "₩4,500", "desc": "CU - 담배", "category": "생활", "kind": "" },
+                { "date": "2026년 7월 31일", "amount": "₩29,500", "desc": "SNS - 충전", "category": "생활", "kind": "" },
+                { "date": "2026년 8월 1일", "amount": "₩5,780", "desc": "공과금 - 가스", "category": "공과금", "kind": "" },
+                { "date": "2026년 8월 1일", "amount": "₩2,400", "desc": "CU - 음료", "category": "食(식)", "kind": "" },
+                { "date": "2026년 8월 1일", "amount": "₩5,800", "desc": "카카오T - 집 → 삼성서비스센터", "category": "생활", "kind": "" },
+                { "date": "2026년 8월 1일", "amount": "₩63,000", "desc": "리안헤어진주역점 - 펌", "category": "뷰티", "kind": "" },
+                { "date": "2026년 8월 1일", "amount": "₩104,820", "desc": "이마트 - 장보기", "category": "食(식)", "kind": "" },
+                { "date": "2026년 8월 2일", "amount": "₩9,000", "desc": "CU - 담배", "category": "생활", "kind": "" },
+                { "date": "2026년 8월 3일", "amount": "₩44,000", "desc": "네이버 - 센스맘, 하이퍼쿨 아이스 매트리스 냉감패드+베개커버 세트", "category": "생활", "kind": "" },
+                { "date": "2026년 8월 3일", "amount": "₩21,900", "desc": "네이버 - 지니비몰, 갤럭시 탭 S9 Ultra 리얼컬러 AR 필름", "category": "취미", "kind": "" },
+                { "date": "2026년 8월 3일", "amount": "₩16,740", "desc": "네이버 - 코니티, 갤럭시탭 S9 Ultra 카메라 강화유리, 후면필름", "category": "취미", "kind": "" },
+                { "date": "2026년 8월 3일", "amount": "₩9,000", "desc": "CU - 담배", "category": "생활", "kind": "" },
+                { "date": "2026년 8월 3일", "amount": "₩5,600", "desc": "서울이비인후과, 비염/축농증 검사", "category": "의료", "kind": "" },
+                { "date": "2026년 8월 3일", "amount": "₩5,500", "desc": "민들레약국, 비염, 축농증 약 처방", "category": "의료", "kind": "" },
+                { "date": "2026년 8월 4일", "amount": "₩137,900", "desc": "네이버 - 클라리스트, 샤워기헤드, 호스, 필터 3년(9EA)", "category": "생활", "kind": "" },
+                { "date": "2026년 8월 4일", "amount": "₩29,000", "desc": "네이버 - 아키클래식, 트리코트 에어쿨러 조거 슬랙스 블랙", "category": "衣(의)", "kind": "" },
+                { "date": "2026년 8월 5일", "amount": "₩7,700", "desc": "CU - 담배, 음료", "category": "생활", "kind": "" },
+                { "date": "2026년 8월 5일", "amount": "₩9,000", "desc": "CU - 담배", "category": "생활", "kind": "" },
+                { "date": "2026년 8월 6일", "amount": "₩2,600", "desc": "CU - 커피", "category": "食(식)", "kind": "" },
+                { "date": "2026년 8월 6일", "amount": "₩9,000", "desc": "CU - 담배", "category": "생활", "kind": "" },
+                { "date": "2026년 8월 7일", "amount": "₩3,800", "desc": "CU - 음료", "category": "食(식)", "kind": "" },
+                { "date": "2026년 8월 7일", "amount": "₩8,532", "desc": "당근 - 샥즈 오픈닷2 시바견 케이스", "category": "취미", "kind": "" },
+                { "date": "2026년 8월 7일", "amount": "₩25,240", "desc": "네이버 - 코카콜라, 490mL 24EA", "category": "食(식)", "kind": "" },
+                { "date": "2026년 8월 8일", "amount": "₩19,800", "desc": "식사", "category": "食(식)", "kind": "" },
+                { "date": "2026년 8월 8일", "amount": "₩7,100", "desc": "GS25 - 담배, 음료", "category": "생활", "kind": "" },
+                { "date": "2026년 8월 8일", "amount": "₩26,000", "desc": "촌놈국밥", "category": "食(식)", "kind": "" },
+                { "date": "2026년 8월 8일", "amount": "₩7,300", "desc": "CU - 댐배, 음료", "category": "생활", "kind": "" },
+                { "date": "2026년 8월 9일", "amount": "₩4,500", "desc": "GS25 - 담배", "category": "생활", "kind": "" },
+                { "date": "2026년 8월 9일", "amount": "₩5,900", "desc": "메가엠지씨커, 민지 커피", "category": "食(식)", "kind": "" },
+                { "date": "2026년 8월 9일", "amount": "₩71,000", "desc": "유정장어본점, 민지 밥", "category": "食(식)", "kind": "" },
+                { "date": "2026년 8월 10일", "amount": "₩31,310", "desc": "쿠쿠홈시스 - 정수기 렌탈", "category": "렌탈", "kind": "" },
+                { "date": "2026년 8월 10일", "amount": "₩17,354", "desc": "신한라이프생명보험 - 암보험", "category": "보험", "kind": "" },
+                { "date": "2026년 8월 10일", "amount": "₩7,200", "desc": "CU - 담배, 커피", "category": "생활", "kind": "" },
+                { "date": "2026년 8월 10일", "amount": "₩2,585", "desc": "배달의민족 - 버거킹", "category": "배달", "kind": "" },
+                { "date": "2026년 8월 10일", "amount": "₩9,000", "desc": "CU - 담배", "category": "생활", "kind": "" },
+                { "date": "2026년 8월 10일", "amount": "₩4,900", "desc": "카카오T - 집 → 칠암시외버스정류장", "category": "교통", "kind": "" },
+                { "date": "2026년 8월 11일", "amount": "₩470,000", "desc": "8월 임대료", "category": "住(주)", "kind": "현금" },
+                { "date": "2026년 8월 11일", "amount": "₩4,300", "desc": "CU - 커피, 간식", "category": "食(식)", "kind": "우리카드(신용)" },
+                { "date": "2026년 8월 12일", "amount": "₩4,500", "desc": "CU - 담배", "category": "생활", "kind": "우리카드(신용)" },
+                { "date": "2026년 8월 12일", "amount": "₩4,060", "desc": "우체국 등기료", "category": "생활", "kind": "삼성카드(신용)" },
+                { "date": "2026년 8월 12일", "amount": "₩2,700", "desc": "CU - 커피", "category": "食(식)", "kind": "삼성카드(신용)" },
+                { "date": "2026년 8월 12일", "amount": "₩9,000", "desc": "CU - 담배", "category": "생활", "kind": "삼성카드(신용)" },
+                { "date": "2026년 8월 12일", "amount": "₩8,631", "desc": "배달의민족", "category": "배달", "kind": "삼성카드(신용)" },
+                { "date": "2026년 8월 12일", "amount": "₩30,490", "desc": "네이버, 컬리N마트, 햇반 36EA", "category": "食(식)", "kind": "삼성카드(신용)" },
+                { "date": "2026년 8월 13일", "amount": "₩9,000", "desc": "CU - 담배", "category": "생활", "kind": "우리카드(신용)" },
+                { "date": "2026년 8월 13일", "amount": "₩7,890", "desc": "구독 - 쿠팡 와우멤버십", "category": "구독", "kind": "삼성카드(신용)" },
+                { "date": "2026년 8월 13일", "amount": "₩2,600", "desc": "CU - 음료", "category": "食(식)", "kind": "삼성카드(신용)" },
+                { "date": "2026년 8월 13일", "amount": "₩11,200", "desc": "다이소 - 돌돌이, 돌돌이 리필 구매", "category": "생활", "kind": "삼성카드(신용)" },
+                { "date": "2026년 8월 14일", "amount": "₩68,000", "desc": "LG U+ - 통신료", "category": "공과금", "kind": "삼성카드(신용)" },
+                { "date": "2026년 8월 14일", "amount": "₩3,000", "desc": "우체국 - 택배비", "category": "생활", "kind": "삼성카드(신용)" },
+                { "date": "2026년 8월 14일", "amount": "₩10,000", "desc": "우체국 - 택배비", "category": "생활", "kind": "삼성카드(신용)" },
+                { "date": "2026년 8월 14일", "amount": "₩8,700", "desc": "버스 - 칠암시외버스터미널 → 고현시외버스터미널", "category": "교통", "kind": "삼성카드(신용)" },
+                { "date": "2026년 8월 14일", "amount": "₩4,300", "desc": "뺵다방 - 딸기스무디", "category": "食(식)", "kind": "삼성카드(신용)" },
+                { "date": "2026년 8월 14일", "amount": "₩4,900", "desc": "택시 - 집 → 칠암시외버스정류장", "category": "교통", "kind": "삼성카드(신용)" },
+                { "date": "2026년 8월 14일", "amount": "₩4,600", "desc": "택시 - 고현버스터미널 → 삼성서비스센터", "category": "교통", "kind": "삼성카드(신용)" },
+                { "date": "2026년 8월 14일", "amount": "₩103,500", "desc": "삼성서비스센터 - S23 커넥트 하부보드 교체", "category": "생활", "kind": "삼성카드(신용)" },
+                { "date": "2026년 8월 14일", "amount": "₩1,000", "desc": "다이소 - 우편봉투", "category": "생활", "kind": "삼성카드(신용)" },
+                { "date": "2026년 8월 15일", "amount": "₩300,000", "desc": "아버지 생신", "category": "생활", "kind": "현금" },
+                { "date": "2026년 8월 15일", "amount": "₩10,500", "desc": "동네커피 - 커피 4잔", "category": "食(식)", "kind": "삼성카드(신용)" },
+                { "date": "2026년 8월 15일", "amount": "₩4,500", "desc": "CU - 담배", "category": "생활", "kind": "삼성카드(신용)" },
+                { "date": "2026년 8월 15일", "amount": "₩5,900", "desc": "구독 - 토스프라임", "category": "구독", "kind": "우리카드(신용)" },
+                { "date": "2026년 8월 17일", "amount": "₩42,600", "desc": "네이버 - 테팔, 테팔 휴대용 무선 미니 블렌더 라이트믹스 유칼립툽스, BL1C0430", "category": "생활", "kind": "우리카드(신용)" },
+                { "date": "2026년 8월 17일", "amount": "₩9,000", "desc": "CU - 담배", "category": "생활", "kind": "삼성카드(신용)" },
+                { "date": "2026년 8월 17일", "amount": "₩2,700", "desc": "파리바게뜨 - 크룽지 2EA", "category": "食(식)", "kind": "삼성카드(신용)" },
+                { "date": "2026년 8월 18일", "amount": "₩34,707", "desc": "보험 - DB생명보험 암보험", "category": "보험", "kind": "우리카드(신용)" },
+                { "date": "2026년 8월 18일", "amount": "₩15,000", "desc": "보험 - 온오프코리아 상조", "category": "보험", "kind": "우리카드(신용)" },
+                { "date": "2026년 8월 18일", "amount": "₩15,000", "desc": "보험 - 온오프코리아 상조", "category": "보험", "kind": "우리카드(신용)" },
+                { "date": "2026년 8월 18일", "amount": "₩8,900", "desc": "네이버 - 갤럭시 버즈3 Pro 케이스", "category": "취미", "kind": "삼성카드(신용)" },
+                { "date": "2026년 8월 18일", "amount": "₩9,000", "desc": "CU -담배", "category": "생활", "kind": "삼성카드(신용)" },
+                { "date": "2026년 8월 18일", "amount": "₩51,600", "desc": "호르몬치치 - 부산서면점, 식사", "category": "食(식)", "kind": "삼성카드(신용)" },
+                { "date": "2026년 8월 18일", "amount": "₩1,000", "desc": "짱 - 부산서면점, 인형뽑기", "category": "취미", "kind": "삼성카드(신용)" },
+                { "date": "2026년 8월 18일", "amount": "₩1,000", "desc": "짱 - 부산서면점, 인형뽑기", "category": "취미", "kind": "삼성카드(신용)" },
+                { "date": "2026년 8월 18일", "amount": "₩12,000", "desc": "버스 - 부산서부시외버스터미널 → 진주시외버스터미널", "category": "교통", "kind": "삼성카드(신용)" },
+                { "date": "2026년 8월 18일", "amount": "₩2,500", "desc": "GS25 - 음료", "category": "食(식)", "kind": "삼성카드(신용)" },
+                { "date": "2026년 8월 19일", "amount": "₩1,990", "desc": "구독 - 베민클럽", "category": "구독", "kind": "우리카드(신용)" },
+                { "date": "2026년 8월 19일", "amount": "₩4,500", "desc": "GS25 - 담배", "category": "생활", "kind": "삼성카드(신용)" },
+                { "date": "2026년 8월 20일", "amount": "₩36,300", "desc": "공과금 - 전기", "category": "공과금", "kind": "삼성카드(신용)" },
+                { "date": "2026년 8월 20일", "amount": "₩27,920", "desc": "토스 - 바디 건조기 구매", "category": "생활", "kind": "삼성카드(신용)" },
+                { "date": "2026년 8월 20일", "amount": "₩7,100", "desc": "CU - 담배, 커피", "category": "생활", "kind": "우리카드(신용)" },
+                { "date": "2026년 8월 20일", "amount": "₩15,957", "desc": "배달의민족 - 범앗간", "category": "배달", "kind": "삼성카드(신용)" },
+                { "date": "2026년 8월 21일", "amount": "₩9,000", "desc": "GS25 - 담배", "category": "생활", "kind": "삼성카드(신용)" },
+                { "date": "2026년 8월 21일", "amount": "₩2,700", "desc": "CU - 커피", "category": "食(식)", "kind": "삼성카드(신용)" },
+                { "date": "2026년 8월 21일", "amount": "₩8,450", "desc": "CU - 담배, 라면", "category": "생활", "kind": "삼성카드(신용)" },
+                { "date": "2026년 8월 22일", "amount": "₩9,410", "desc": "토스 - 쇼핑, 섬유유연제 샤프란", "category": "생활", "kind": "삼성카드(신용)" },
+                { "date": "2026년 8월 22일", "amount": "₩3,900", "desc": "메가커피 - 진주시청점, 요거트블루베리스무디", "category": "食(식)", "kind": "삼성카드(신용)" },
+                { "date": "2026년 8월 22일", "amount": "₩52,900", "desc": "와디즈 - 저주파 복부 벨트", "category": "생활", "kind": "삼성카드(신용)" },
+                { "date": "2026년 8월 23일", "amount": "₩4,590", "desc": "토스 - 쇼핑, 섬유유연제", "category": "생활", "kind": "삼성카드(신용)" },
+                { "date": "2026년 8월 23일", "amount": "₩23,244", "desc": "토스 - 쇼핑, 고추포", "category": "食(식)", "kind": "삼성카드(신용)" },
+                { "date": "2026년 8월 23일", "amount": "₩6,330", "desc": "토스 - 쇼핑, 생와사비", "category": "食(식)", "kind": "삼성카드(신용)" },
+                { "date": "2026년 8월 23일", "amount": "₩26,000", "desc": "강가명가 - 상대점, 곰탕", "category": "食(식)", "kind": "삼성카드(신용)" },
+                { "date": "2026년 8월 24일", "amount": "₩30,870", "desc": "보험 - 에이스아메리칸화재해상보험, 치아보험", "category": "보험", "kind": "우리카드(신용)" },
+                { "date": "2026년 8월 25일", "amount": "₩7,100", "desc": "CU - 담배, 커피", "category": "생활", "kind": "삼성카드(신용)" },
+                { "date": "2026년 8월 25일", "amount": "₩300", "desc": "삼성카드 - 바로알림서비스", "category": "생활", "kind": "삼성카드(신용)" },
+                { "date": "2026년 8월 27일", "amount": "₩4,500", "desc": "CU - 담배", "category": "생활", "kind": "삼성카드(신용)" },
+                { "date": "2026년 8월 27일", "amount": "₩55,000", "desc": "풀하우스", "category": "食(식)", "kind": "삼성카드(신용)" },
+                { "date": "2026년 8월 28일", "amount": "₩4,600", "desc": "택시 - 집 → 회사", "category": "교통", "kind": "삼성카드(신용)" },
+                { "date": "2026년 8월 30일", "amount": "₩25,330", "desc": "네이버 - 코카콜라 490mL 24EA", "category": "食(식)", "kind": "삼성카드(신용)" },
+                { "date": "2026년 8월 31일", "amount": "₩9,000", "desc": "CU - 담배", "category": "생활", "kind": "삼성카드(신용)" },
+                { "date": "2026년 9월 1일", "amount": "₩7,700", "desc": "CU - 담배, 커피", "category": "생활", "kind": "토스카드(체크)" },
+                { "date": "2026년 9월 1일", "amount": "₩7,880", "desc": "택배 - 우체국", "category": "생활", "kind": "삼성카드(신용)" },
+                { "date": "2026년 9월 1일", "amount": "₩6,000", "desc": "구글플레이 결제", "category": "생활", "kind": "삼성카드(신용)" },
+                { "date": "2026년 9월 1일", "amount": "₩7,100", "desc": "CU - 담배, 커피", "category": "생활", "kind": "삼성카드(신용)" },
+                { "date": "2026년 9월 1일", "amount": "₩19,400", "desc": "교육 - 정보보안기사 4회 필기접수", "category": "생활", "kind": "삼성카드(신용)" },
+                { "date": "2026년 9월 2일", "amount": "₩4,500", "desc": "CU - 담배", "category": "생활", "kind": "삼성카드(신용)" },
+                { "date": "2026년 9월 2일", "amount": "₩32,000", "desc": "배달의민족 - 국물닭발", "category": "배달", "kind": "삼성카드(신용)" },
+                { "date": "2026년 9월 2일", "amount": "₩126,000", "desc": "네이버 - 헬스헬퍼, 맥스컷 프로 크롬 4EA", "category": "생활", "kind": "삼성카드(신용)" },
+                { "date": "2026년 9월 3일", "amount": "₩6,200", "desc": "GS25 - 담배, 음료", "category": "생활", "kind": "삼성카드(신용)" },
+                { "date": "2026년 9월 3일", "amount": "₩6,010", "desc": "CU - 담배, 음료", "category": "생활", "kind": "토스카드(체크)" },
+                { "date": "2026년 9월 4일", "amount": "₩5,200", "desc": "CU - 음료, 라면", "category": "食(식)", "kind": "삼성카드(신용)" },
+                { "date": "2026년 9월 4일", "amount": "₩11,500", "desc": "GS25 - 담배, 음료, 라면", "category": "생활", "kind": "삼성카드(신용)" },
+                { "date": "2026년 9월 4일", "amount": "₩23,244", "desc": "토스 - 고추양념포", "category": "食(식)", "kind": "삼성카드(신용)" },
+                { "date": "2026년 9월 5일", "amount": "₩4,500", "desc": "CU - 담배", "category": "생활", "kind": "삼성카드(신용)" },
+                { "date": "2026년 9월 5일", "amount": "₩4,000", "desc": "컴포즈커피 진주시청점", "category": "食(식)", "kind": "삼성카드(신용)" },
+                { "date": "2026년 9월 5일", "amount": "₩22,500", "desc": "월계수식당 남포점", "category": "食(식)", "kind": "삼성카드(신용)" },
+                { "date": "2026년 9월 5일", "amount": "₩8,000", "desc": "더리터 커피", "category": "食(식)", "kind": "삼성카드(신용)" },
+                { "date": "2026년 9월 5일", "amount": "₩1,600", "desc": "당근 - 당근페이", "category": "생활", "kind": "삼성카드(신용)" },
+                { "date": "2026년 9월 6일", "amount": "₩24,000", "desc": "촌놈국밥", "category": "食(식)", "kind": "삼성카드(신용)" },
+                { "date": "2026년 9월 6일", "amount": "₩6,434", "desc": "배달의민족", "category": "배달", "kind": "삼성카드(신용)" },
+                { "date": "2026년 9월 6일", "amount": "₩4,500", "desc": "GS25 - 담배", "category": "생활", "kind": "삼성카드(신용)" },
+                { "date": "2026년 9월 7일", "amount": "₩2,470", "desc": "CU - 음료", "category": "食(식)", "kind": "삼성카드(신용)" },
+                { "date": "2026년 9월 7일", "amount": "₩11,300", "desc": "CU - 담배, 커피", "category": "생활", "kind": "삼성카드(신용)" },
+                { "date": "2026년 9월 7일", "amount": "₩4,500", "desc": "CU - 담배", "category": "생활", "kind": "삼성카드(신용)" },
+                { "date": "2026년 9월 8일", "amount": "₩4,500", "desc": "CU - 담배", "category": "생활", "kind": "삼성카드(신용)" },
+                { "date": "2026년 9월 8일", "amount": "₩25,400", "desc": "토스 - 닭다리살", "category": "食(식)", "kind": "삼성카드(신용)" },
+                { "date": "2026년 9월 8일", "amount": "₩25,000", "desc": "배달의민족", "category": "배달", "kind": "삼성카드(신용)" },
+                { "date": "2026년 9월 9일", "amount": "₩7,100", "desc": "CU - 담배, 음료", "category": "생활", "kind": "삼성카드(신용)" },
+                { "date": "2026년 9월 10일", "amount": "₩2,470", "desc": "CU - 음료", "category": "食(식)", "kind": "삼성카드(신용)" },
+                { "date": "2026년 9월 10일", "amount": "₩4,500", "desc": "CU - 담배", "category": "생활", "kind": "삼성카드(신용)" },
+                { "date": "2026년 9월 10일", "amount": "₩6,800", "desc": "CU - 담배, 음료", "category": "생활", "kind": "삼성카드(신용)" },
+                { "date": "2026년 9월 10일", "amount": "₩31,310", "desc": "렌탈 - 쿠쿠 정수기", "category": "렌탈", "kind": "우리카드(신용)" },
+                { "date": "2026년 9월 10일", "amount": "₩17,354", "desc": "보험 - 신한라이프생명", "category": "보험", "kind": "우리카드(신용)" },
+                { "date": "2026년 9월 11일", "amount": "₩4,600", "desc": "카카오택시", "category": "교통", "kind": "삼성카드(신용)" },
+                { "date": "2026년 9월 11일", "amount": "₩4,500", "desc": "CU - 담배", "category": "생활", "kind": "삼성카드(신용)" },
+                { "date": "2026년 9월 11일", "amount": "₩490,000", "desc": "9월 임대료", "category": "住(주)", "kind": "우리카드(신용)" },
+                { "date": "2026년 9월 12일", "amount": "₩33,820", "desc": "배달의민족 - 중국집", "category": "배달", "kind": "삼성카드(신용)" },
+                { "date": "2026년 9월 12일", "amount": "₩4,500", "desc": "GS25 - 담배", "category": "생활", "kind": "삼성카드(신용)" },
+                { "date": "2026년 9월 12일", "amount": "₩7,100", "desc": "CU - 담배, 음료", "category": "생활", "kind": "삼성카드(신용)" },
+                { "date": "2026년 9월 13일", "amount": "₩22,790", "desc": "네이버 - 코카콜라, 490ml 24EA", "category": "食(식)", "kind": "삼성카드(신용)" },
+                { "date": "2026년 9월 13일", "amount": "₩8,500", "desc": "배달의민족", "category": "배달", "kind": "삼성카드(신용)" },
+                { "date": "2026년 9월 13일", "amount": "₩4,500", "desc": "GS25 - 담배", "category": "생활", "kind": "삼성카드(신용)" },
+                { "date": "2026년 9월 14일", "amount": "₩4,500", "desc": "CU - 담배", "category": "생활", "kind": "삼성카드(신용)" },
+                { "date": "2026년 9월 14일", "amount": "₩2,700", "desc": "CU - 커피", "category": "食(식)", "kind": "삼성카드(신용)" },
+                { "date": "2026년 9월 14일", "amount": "₩1,143,560", "desc": "네이버 - 삼성전자 갤럭시북6 NT740VJQ-A58A 8GB 256GB / 12개월", "category": "생활", "kind": "삼성카드(신용)" },
+                { "date": "2026년 9월 14일", "amount": "₩33,500", "desc": "배달의민족 - 국물닭발", "category": "배달", "kind": "삼성카드(신용)" },
+                { "date": "2026년 9월 14일", "amount": "₩2,940", "desc": "CU - 커피", "category": "食(식)", "kind": "삼성카드(신용)" },
+                { "date": "2026년 9월 15일", "amount": "₩34,707", "desc": "보험 - DB생명", "category": "보험", "kind": "우리카드(신용)" },
+                { "date": "2026년 9월 15일", "amount": "₩30,000", "desc": "보험 - 상조", "category": "보험", "kind": "우리카드(신용)" },
+                { "date": "2026년 9월 15일", "amount": "₩4,500", "desc": "CU - 담배", "category": "생활", "kind": "삼성카드(신용)" },
+                { "date": "2026년 9월 15일", "amount": "₩2,940", "desc": "CU - 커피", "category": "食(식)", "kind": "삼성카드(신용)" },
+                { "date": "2026년 9월 15일", "amount": "₩9,000", "desc": "GS25 - 담배", "category": "생활", "kind": "삼성카드(신용)" },
+                { "date": "2026년 9월 16일", "amount": "₩2,700", "desc": "CU - 커피", "category": "食(식)", "kind": "삼성카드(신용)" },
+                { "date": "2026년 9월 17일", "amount": "₩67,320", "desc": "네이버 - 힐링쉴드, 갤럭시북6 A58A 전면, 외부 필름 세트 / 3개월", "category": "취미", "kind": "삼성카드(신용)" },
+                { "date": "2026년 9월 17일", "amount": "₩8,500", "desc": "CU - 라면, 김밥, 담배", "category": "생활", "kind": "삼성카드(신용)" },
+                { "date": "2026년 9월 17일", "amount": "₩68,170", "desc": "공과금 - 핸드폰", "category": "공과금", "kind": "삼성카드(신용)" },
+                { "date": "2026년 9월 17일", "amount": "₩38,000", "desc": "여기어떄 - 부산역 팝콘호텔 숙박 (자격증시험)", "category": "생활", "kind": "삼성카드(신용)" },
+                { "date": "2026년 9월 17일", "amount": "₩2,560", "desc": "CU - 커피", "category": "食(식)", "kind": "삼성카드(신용)" },
+                { "date": "2026년 9월 17일", "amount": "₩103,160", "desc": "네이버 - 신세계 사우스시티 푸마, 나이트로캣 블랙&레드 슬리버 / 3개월", "category": "뷰티", "kind": "삼성카드(신용)" },
+                { "date": "2026년 9월 17일", "amount": "₩9,200", "desc": "버스 - 진주시외버스터미널(칠암) → 부산서부시외버스터미널(사상)", "category": "교통", "kind": "삼성카드(신용)" },
+                { "date": "2026년 9월 17일", "amount": "₩4,500", "desc": "CU - 담배", "category": "생활", "kind": "삼성카드(신용)" },
+                { "date": "2026년 9월 17일", "amount": "₩6,300", "desc": "CU - 음료", "category": "食(식)", "kind": "삼성카드(신용)" },
+                { "date": "2026년 9월 18일", "amount": "₩9,200", "desc": "부산서부시외버스터미널 - 진주시외버스터미널", "category": "교통", "kind": "삼성카드(신용)" },
+                { "date": "2026년 9월 18일", "amount": "₩6,700", "desc": "CU - 담배, 음료", "category": "생활", "kind": "삼성카드(신용)" },
+                { "date": "2026년 9월 18일", "amount": "₩4,100", "desc": "GS25 - 택배비", "category": "생활", "kind": "삼성카드(신용)" },
+                { "date": "2026년 9월 18일", "amount": "₩4,500", "desc": "CU - 담배", "category": "생활", "kind": "삼성카드(신용)" },
+                { "date": "2026년 9월 19일", "amount": "₩103,500", "desc": "네이버 - 중고나라, 마이크로닉스 Classic 2 풀체인지 3.1 700W, PM9A1 256GB / 3개월", "category": "구매내역", "kind": "삼성카드(신용)" },
+                { "date": "2026년 9월 19일", "amount": "₩124,090", "desc": "네이버 - 컴퓨존, 다크플래쉬 DPH70M ARGB 케이스, RC2 ARGB AND PWM HUB, C22 120 ARGB PWM 블랙 3EA , C22R 120 ARGB PWM 블랙 3EA / 3개월", "category": "구매내역", "kind": "삼성카드(신용)" },
+                { "date": "2026년 9월 19일", "amount": "₩261,715", "desc": "네이버 - 중고나라, 기가바이트 AORUS RTX 2080 8GB / 3개월", "category": "구매내역", "kind": "삼성카드(신용)" },
+                { "date": "2026년 9월 20일", "amount": "₩6,500", "desc": "GS25 - 담배, 커피", "category": "생활", "kind": "삼성카드(신용)" },
+                { "date": "2026년 9월 20일", "amount": "₩144,900", "desc": "네이버 - 중고나라, 라이젠 5600 / 3개월", "category": "구매내역", "kind": "삼성카드(신용)" },
+                { "date": "2026년 9월 20일", "amount": "₩116,369", "desc": "당근 - MSI MAG B550M 박격포 MAX WiFI / 3개월", "category": "구매내역", "kind": "삼성카드(신용)" },
+                { "date": "2026년 9월 20일", "amount": "₩5,700", "desc": "CU - 담배, 음료", "category": "생활", "kind": "삼성카드(신용)" },
+                { "date": "2026년 9월 20일", "amount": "₩14,680", "desc": "롯데ON - 삼겹살, 반건조 오징어", "category": "食(식)", "kind": "삼성카드(신용)" },
+                { "date": "2026년 9월 21일", "amount": "₩7,100", "desc": "CU - 담배, 커피", "category": "생활", "kind": "삼성카드(신용)" },
+                { "date": "2026년 9월 21일", "amount": "₩8,700", "desc": "진주시외버스터미널 - 고현시외버스터미널", "category": "교통", "kind": "삼성카드(신용)" },
+                { "date": "2026년 9월 21일", "amount": "₩6,400", "desc": "CU - 담배, 커피", "category": "생활", "kind": "삼성카드(신용)" },
+                { "date": "2026년 9월 22일", "amount": "₩30,870", "desc": "보험 - 아메리칸화재해상", "category": "보험", "kind": "우리카드(신용)" },
+                { "date": "2026년 9월 22일", "amount": "₩33,260", "desc": "공과금 - 전기", "category": "공과금", "kind": "삼성카드(신용)" },
+                { "date": "2026년 9월 22일", "amount": "₩7,600", "desc": "CU - 담배, 커피", "category": "생활", "kind": "삼성카드(신용)" },
+                { "date": "2026년 9월 22일", "amount": "₩27,000", "desc": "배달의민족 - 마라탕", "category": "배달", "kind": "삼성카드(신용)" }
+            ],
+            "savings": [
+                { "date": "2026년 1월 1일", "amount": "₩100,000", "category": "농협은행(적금)" },
+                { "date": "2026년 1월 1일", "amount": "₩100,000", "category": "종합계좌(통합)" },
+                { "date": "2026년 1월 1일", "amount": "₩200,000", "category": "ISA계좌(서민)" },
+                { "date": "2026년 1월 1일", "amount": "₩100,000", "category": "연금걔좌(개인)" },
+                { "date": "2026년 2월 1일", "amount": "₩100,000", "category": "농협은행(적금)" },
+                { "date": "2026년 2월 1일", "amount": "₩100,000", "category": "종합계좌(통합)" },
+                { "date": "2026년 2월 1일", "amount": "₩200,000", "category": "ISA계좌(서민)" },
+                { "date": "2026년 2월 1일", "amount": "₩100,000", "category": "연금걔좌(개인)" },
+                { "date": "2026년 2월 3일", "amount": "₩100,000", "category": "연금계좌(퇴직)" },
+                { "date": "2026년 2월 5일", "amount": "₩100,000", "category": "연금계좌(퇴직)" },
+                { "date": "2026년 3월 1일", "amount": "₩100,000", "category": "농협은행(적금)" },
+                { "date": "2026년 3월 1일", "amount": "₩100,000", "category": "종합계좌(통합)" },
+                { "date": "2026년 3월 1일", "amount": "₩200,000", "category": "ISA계좌(서민)" },
+                { "date": "2026년 3월 1일", "amount": "₩100,000", "category": "연금걔좌(개인)" },
+                { "date": "2026년 4월 1일", "amount": "₩100,000", "category": "농협은행(적금)" },
+                { "date": "2026년 4월 1일", "amount": "₩100,000", "category": "종합계좌(통합)" },
+                { "date": "2026년 4월 1일", "amount": "₩200,000", "category": "ISA계좌(서민)" },
+                { "date": "2026년 4월 1일", "amount": "₩100,000", "category": "연금걔좌(개인)" },
+                { "date": "2026년 5월 1일", "amount": "₩100,000", "category": "농협은행(적금)" },
+                { "date": "2026년 5월 1일", "amount": "₩100,000", "category": "종합계좌(통합)" },
+                { "date": "2026년 5월 1일", "amount": "₩200,000", "category": "ISA계좌(서민)" },
+                { "date": "2026년 5월 1일", "amount": "₩100,000", "category": "연금걔좌(개인)" },
+                { "date": "2026년 6월 1일", "amount": "₩100,000", "category": "농협은행(적금)" },
+                { "date": "2026년 6월 1일", "amount": "₩100,000", "category": "종합계좌(통합)" },
+                { "date": "2026년 6월 1일", "amount": "₩200,000", "category": "ISA계좌(서민)" },
+                { "date": "2026년 6월 1일", "amount": "₩100,000", "category": "연금걔좌(개인)" },
+                { "date": "2026년 7월 1일", "amount": "₩100,000", "category": "농협은행(적금)" },
+                { "date": "2026년 7월 1일", "amount": "₩100,000", "category": "종합계좌(통합)" },
+                { "date": "2026년 7월 1일", "amount": "₩200,000", "category": "ISA계좌(서민)" },
+                { "date": "2026년 7월 1일", "amount": "₩100,000", "category": "연금걔좌(개인)" },
+                { "date": "2026년 7월 26일", "amount": "₩500,000", "category": "종합계좌(통합)" },
+                { "date": "2026년 7월 26일", "amount": "₩1,000,000", "category": "ISA계좌(서민)" },
+                { "date": "2026년 7월 26일", "amount": "₩500,000", "category": "연금걔좌(개인)" },
+                { "date": "2026년 7월 29일", "amount": "₩5,000,000", "category": "신한은행(예금)" },
+                { "date": "2026년 7월 29일", "amount": "₩5,000,000", "category": "국민은행(예금)" },
+                { "date": "2026년 8월 2일", "amount": "₩5,000,000", "category": "우리은행(예금)" },
+                { "date": "2026년 8월 3일", "amount": "₩100,000", "category": "농협은행(적금)" },
+                { "date": "2026년 8월 3일", "amount": "₩500,000", "category": "국민은행(적금)" },
+                { "date": "2026년 8월 6일", "amount": "₩200,000", "category": "가상화폐" },
+                { "date": "2026년 8월 12일", "amount": "₩300,000", "category": "가상화폐" },
+                { "date": "2026년 8월 14일", "amount": "₩5,000,000", "category": "농협은행(예금)" },
+                { "date": "2026년 8월 28일", "amount": "-₩350,803", "category": "가상화폐" },
+                { "date": "2026년 9월 1일", "amount": "₩500,000", "category": "국민은행(적금)" },
+                { "date": "2026년 9월 1일", "amount": "₩100,000", "category": "농협은행(적금)" },
+                { "date": "2026년 9월 21일", "amount": "-₩1,000,000", "category": "가상화폐" },
+                { "date": "2026년 10월 1일", "amount": "₩500,000", "category": "국민은행(적금)" },
+                { "date": "2026년 10월 1일", "amount": "₩100,000", "category": "농협은행(적금)" },
+                { "date": "2026년 11월 1일", "amount": "₩500,000", "category": "국민은행(적금)" },
+                { "date": "2026년 11월 1일", "amount": "₩100,000", "category": "농협은행(적금)" },
+                { "date": "2026년 12월 1일", "amount": "₩500,000", "category": "국민은행(적금)" },
+                { "date": "2026년 12월 1일", "amount": "₩100,000", "category": "농협은행(적금)" }
+            ]
+        };
+
+        let transactions = [];
+        let categories = [];
+        let currentTab = 'all'; // Default to 'all' for complete visibility
         let monthlyChartInstance = null;
         let doughnutChartInstance = null;
 
-        window.showToast = function(msg) {
+        function showToast(msg) {
             const el = document.getElementById('toast-msg');
             el.textContent = msg;
             el.classList.add('show');
             setTimeout(() => el.classList.remove('show'), 2600);
-        }
-
-        window.loginWithGoogle = async function() {
-            try {
-                await signInWithPopup(auth, provider);
-            } catch (error) {
-                console.error("로그인 실패:", error);
-                alert("로그인 중 오류가 발생했습니다.");
-            }
-        }
-
-        window.logoutGoogle = async function() {
-            await signOut(auth);
-            location.reload();
-        }
-
-        onAuthStateChanged(auth, async (user) => {
-            if (user) {
-                document.getElementById('auth-overlay').style.display = 'none';
-                document.getElementById('main-app').style.display = 'block';
-                document.getElementById('user-email-display').textContent = user.email + ' 님';
-                await loadCloudData();
-            } else {
-                document.getElementById('auth-overlay').style.display = 'flex';
-                document.getElementById('main-app').style.display = 'none';
-            }
-        });
-
-        async function loadCloudData() {
-            try {
-                const querySnapshot = await getDocs(collection(db, "거래내역"));
-                window.transactions = [];
-                querySnapshot.forEach((docSnap) => {
-                    window.transactions.push({ id: docSnap.id, ...docSnap.data() });
-                });
-
-                syncFilterCategoryDropdown();
-                renderKPIs();
-                renderCharts();
-                renderTable();
-            } catch (e) {
-                console.error("데이터 로드 실패:", e);
-            }
-        }
-
-        async function saveToCloud(item) {
-            try {
-                await setDoc(doc(db, "거래내역", item.id), item);
-            } catch (e) {
-                console.error("저장 실패:", e);
-            }
-        }
-
-        async function deleteFromCloud(id) {
-            try {
-                await deleteDoc(doc(db, "거래내역", id));
-            } catch (e) {
-                console.error("삭제 실패:", e);
-            }
         }
 
         function parseAmount(val) {
@@ -521,11 +1848,13 @@
 
         function formatWon(num) {
             const isNeg = num < 0;
-            return (isNeg ? '-₩' : '₩') + Math.abs(num).toLocaleString('ko-KR');
+            const abs = Math.abs(num);
+            return (isNeg ? '-₩' : '₩') + abs.toLocaleString('ko-KR');
         }
 
         function parseMonth(dateStr) {
             if (!dateStr) return null;
+            // Matches YYYY-MM-DD or YYYY년 M월 D일
             const isoM = dateStr.match(/^\d{4}-(\d{1,2})-\d{1,2}/);
             if (isoM) return parseInt(isoM[1], 10);
             const m = dateStr.match(/(\d+)월/);
@@ -534,61 +1863,344 @@
 
         function parseDateForSort(dateStr) {
             if (!dateStr) return 0;
-            if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return new Date(dateStr).getTime();
+            // Check YYYY-MM-DD
+            if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+                return new Date(dateStr).getTime();
+            }
+            // Check Korean format
             const m = dateStr.match(/(\d{4})년\s*(\d{1,2})월\s*(\d{1,2})일/);
-            if (m) return new Date(`${m[1]}-${String(m[2]).padStart(2, '0')}-${String(m[3]).padStart(2, '0')}`).getTime();
+            if (m) {
+                const y = parseInt(m[1], 10);
+                const mon = String(m[2]).padStart(2, '0');
+                const d = String(m[3]).padStart(2, '0');
+                return new Date(`${y}-${mon}-${d}`).getTime();
+            }
             return 0;
         }
 
         function convertToDisplayDate(dateInput) {
-            if (!dateInput) return '2026년 10월 13일';
-            if (dateInput.includes('년')) return dateInput;
+            if (!dateInput) return '2026년 9월 29일';
+            if (dateInput.includes('년') && dateInput.includes('월')) return dateInput;
             const parts = dateInput.split('-');
-            if (parts.length === 3) return `${parts[0]}년 ${parseInt(parts[1], 10)}월 ${parseInt(parts[2], 10)}일`;
+            if (parts.length === 3) {
+                return `${parts[0]}년 ${parseInt(parts[1], 10)}월 ${parseInt(parts[2], 10)}일`;
+            }
             return dateInput;
         }
 
-        window.syncFilterCategoryDropdown = function() {
+        function convertToInputDate(displayDate) {
+            if (!displayDate) return new Date().toISOString().slice(0, 10);
+            if (/^\d{4}-\d{2}-\d{2}$/.test(displayDate)) return displayDate;
+            const m = displayDate.match(/(\d{4})년\s*(\d{1,2})월\s*(\d{1,2})일/);
+            if (m) {
+                const y = m[1];
+                const mon = String(m[2]).padStart(2, '0');
+                const d = String(m[3]).padStart(2, '0');
+                return `${y}-${mon}-${d}`;
+            }
+            return new Date().toISOString().slice(0, 10);
+        }
+
+        function classifyAsset(cat) {
+            if (!cat) return 'savings';
+            if (cat.includes('적금') || cat.includes('예금')) {
+                return 'savings';
+            }
+            return 'invest';
+        }
+
+        // Persistence
+        function saveToStorage() {
+            try {
+                localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(transactions));
+                localStorage.setItem(CATEGORIES_KEY, JSON.stringify(categories));
+            } catch (e) {
+                console.error('LocalStorage 저장 실패:', e);
+            }
+        }
+
+        function loadFromStorage() {
+            try {
+                const savedCats = localStorage.getItem(CATEGORIES_KEY);
+                if (savedCats) {
+                    categories = JSON.parse(savedCats);
+                } else {
+                    categories = [...DEFAULT_CATEGORIES];
+                }
+
+                const savedTx = localStorage.getItem(LOCAL_STORAGE_KEY);
+                if (savedTx) {
+                    transactions = JSON.parse(savedTx);
+                    return true;
+                }
+            } catch (e) {
+                console.error('LocalStorage 읽기 실패:', e);
+            }
+            return false;
+        }
+
+        function initData() {
+            if (!loadFromStorage()) {
+                loadInitialRawData();
+            }
+
+            syncFilterCategoryDropdown();
+            renderKPIs();
+            renderCharts();
+            renderTable();
+        }
+
+        function loadInitialRawData() {
+            transactions = [];
+
+            RAW_DATA.incomes.forEach((item, idx) => {
+                transactions.push({
+                    id: 'inc_' + idx,
+                    type: 'income',
+                    date: item.date || '',
+                    amount: parseAmount(item.amount),
+                    desc: item.desc || '',
+                    category: item.category || '기타',
+                    kind: ''
+                });
+            });
+
+            RAW_DATA.expenses.forEach((item, idx) => {
+                transactions.push({
+                    id: 'exp_' + idx,
+                    type: 'expense',
+                    date: item.date || '',
+                    amount: parseAmount(item.amount),
+                    desc: item.desc || '',
+                    category: item.category || '기타',
+                    kind: item.kind || ''
+                });
+            });
+
+            RAW_DATA.savings.forEach((item, idx) => {
+                const assetType = classifyAsset(item.category);
+                transactions.push({
+                    id: 'sav_' + idx,
+                    type: assetType,
+                    date: item.date || '',
+                    amount: parseAmount(item.amount),
+                    desc: item.category || (assetType === 'savings' ? '저축' : '투자'),
+                    category: item.category || (assetType === 'savings' ? '저축' : '투자'),
+                    kind: ''
+                });
+            });
+
+            // Extract unique categories from raw data if not present
+            transactions.forEach(t => {
+                if (t.category && !categories.includes(t.category)) {
+                    categories.push(t.category);
+                }
+            });
+
+            saveToStorage();
+        }
+
+        function resetToInitialData() {
+            if (confirm('모든 데이터를 최초 기본값으로 초기화하시겠습니까? (로컬스토리지 변경사항이 리셋됩니다)')) {
+                localStorage.removeItem(LOCAL_STORAGE_KEY);
+                localStorage.removeItem(CATEGORIES_KEY);
+                categories = [...DEFAULT_CATEGORIES];
+                loadInitialRawData();
+                syncFilterCategoryDropdown();
+                renderKPIs();
+                renderCharts();
+                renderTable();
+                showToast('기본 데이터로 초기화 완료되었습니다.');
+            }
+        }
+
+        // Category Management
+        function syncFilterCategoryDropdown() {
             const select = document.getElementById('filter-category');
             const cats = new Set();
-            window.transactions.forEach(t => { if ((currentTab === 'all' || t.type === currentTab) && t.category) cats.add(t.category); });
+            transactions.forEach(t => {
+                if ((currentTab === 'all' || t.type === currentTab) && t.category) {
+                    cats.add(t.category);
+                }
+            });
+
             select.innerHTML = '<option value="all">전체 카테고리</option>';
             Array.from(cats).sort().forEach(c => {
-                const opt = document.createElement('option'); opt.value = c; opt.textContent = c; select.appendChild(opt);
+                const opt = document.createElement('option');
+                opt.value = c;
+                opt.textContent = c;
+                select.appendChild(opt);
             });
         }
 
-        window.syncModalCategoryOptions = function(selectedCat = '') {
+        function syncModalCategoryOptions(selectedCat = '') {
+            const type = document.getElementById('modal-type').value;
             const select = document.getElementById('modal-category');
             select.innerHTML = '';
-            window.categories.forEach(cat => {
-                const opt = document.createElement('option'); opt.value = cat; opt.textContent = cat;
+
+            // Group suggestions based on type
+            const suggested = categories.filter(c => {
+                if (type === 'expense') return !['급여', '배당', '지원금', '인센티브', '이자', '적금', '예금'].includes(c);
+                if (type === 'income') return ['급여', '배당', '지원금', '인센티브', '이자', '판매내역', '보험금', '기타'].includes(c) || categories.includes(c);
+                if (type === 'savings') return c.includes('적금') || c.includes('예금') || c.includes('은행') || c.includes('청약');
+                if (type === 'invest') return c.includes('ISA') || c.includes('연금') || c.includes('가상화폐') || c.includes('주식') || c.includes('종합');
+                return true;
+            });
+
+            const uniqueCats = Array.from(new Set([...suggested, ...categories]));
+
+            uniqueCats.forEach(cat => {
+                const opt = document.createElement('option');
+                opt.value = cat;
+                opt.textContent = cat;
                 if (cat === selectedCat) opt.selected = true;
                 select.appendChild(opt);
             });
         }
 
-        window.renderKPIs = function() {
-            let inc = 0, exp = 0, sav = 0, inv = 0;
-            window.transactions.forEach(t => {
-                if (t.type === 'income') inc += t.amount;
-                else if (t.type === 'expense') exp += t.amount;
-                else if (t.type === 'savings') sav += t.amount;
-                else if (t.type === 'invest') inv += t.amount;
-            });
-            const net = inc - exp;
-            document.getElementById('kpi-net-amount').textContent = formatWon(net);
-            document.getElementById('kpi-total-expense').textContent = formatWon(exp);
-            document.getElementById('kpi-total-income').textContent = formatWon(inc);
-            document.getElementById('kpi-total-savings').textContent = formatWon(sav);
-            document.getElementById('kpi-total-invest').textContent = formatWon(inv);
-            document.getElementById('count-all').textContent = window.transactions.length;
+        function openCategoryModal() {
+            renderCategoryChips();
+            document.getElementById('category-modal').classList.add('open');
         }
 
-        window.renderCharts = function() {
+        function closeCategoryModal() {
+            document.getElementById('category-modal').classList.remove('open');
+            syncFilterCategoryDropdown();
+        }
+
+        function renderCategoryChips() {
+            const container = document.getElementById('cat-chip-container');
+            container.innerHTML = '';
+            categories.forEach(cat => {
+                const chip = document.createElement('span');
+                chip.className = 'cat-chip';
+                chip.innerHTML = `
+                    <span>${cat}</span>
+                    <span class="cat-chip-del" onclick="deleteCategory('${cat}')" title="삭제">×</span>
+                `;
+                container.appendChild(chip);
+            });
+        }
+
+        function addNewCategory() {
+            const input = document.getElementById('new-cat-name');
+            const name = input.value.trim();
+            if (!name) return;
+            if (categories.includes(name)) {
+                alert('이미 등록된 카테고리입니다.');
+                return;
+            }
+            categories.push(name);
+            saveToStorage();
+            renderCategoryChips();
+            syncFilterCategoryDropdown();
+            input.value = '';
+            showToast(`'${name}' 카테고리가 등록되었습니다.`);
+        }
+
+        function deleteCategory(cat) {
+            if (confirm(`'${cat}' 카테고리를 목록에서 삭제하시겠습니까?`)) {
+                categories = categories.filter(c => c !== cat);
+                saveToStorage();
+                renderCategoryChips();
+                syncFilterCategoryDropdown();
+                showToast(`'${cat}' 카테고리 삭제됨`);
+            }
+        }
+
+        function toggleCustomCategoryInput() {
+            const select = document.getElementById('modal-category');
+            const customInput = document.getElementById('modal-custom-category');
+            const btn = document.getElementById('btn-toggle-custom-cat');
+
+            if (customInput.style.display === 'none') {
+                select.style.display = 'none';
+                customInput.style.display = 'block';
+                customInput.focus();
+                btn.textContent = '목록선택';
+            } else {
+                select.style.display = 'block';
+                customInput.style.display = 'none';
+                btn.textContent = '직접입력';
+            }
+        }
+
+        // Amount input 3-digit comma helper
+        function handleAmountInput(input) {
+            let val = input.value.replace(/[^0-9-]/g, '');
+            if (!val) {
+                input.value = '';
+                return;
+            }
+            const isNeg = val.startsWith('-');
+            const abs = val.replace(/-/g, '');
+            const num = parseInt(abs, 10);
+            if (isNaN(num)) {
+                input.value = '';
+                return;
+            }
+            input.value = (isNeg ? '-' : '') + num.toLocaleString('ko-KR');
+        }
+
+        // Render KPI
+        function renderKPIs() {
+            let incTotal = 0, incCount = 0;
+            let expTotal = 0, expCount = 0;
+            let savTotal = 0, savCount = 0;
+            let invTotal = 0, invCount = 0;
+
+            transactions.forEach(t => {
+                if (t.type === 'income') {
+                    incTotal += t.amount;
+                    incCount++;
+                } else if (t.type === 'expense') {
+                    expTotal += t.amount;
+                    expCount++;
+                } else if (t.type === 'savings') {
+                    savTotal += t.amount;
+                    savCount++;
+                } else if (t.type === 'invest') {
+                    invTotal += t.amount;
+                    invCount++;
+                }
+            });
+
+            const netTotal = incTotal - expTotal;
+            const netEl = document.getElementById('kpi-net-amount');
+            netEl.textContent = formatWon(netTotal);
+            netEl.style.color = netTotal >= 0 ? 'var(--income-color)' : 'var(--expense-color)';
+
+            const totalInflow = incTotal > 0 ? incTotal : 1;
+            const savingsRate = Math.round(((savTotal + invTotal) / totalInflow) * 100);
+            document.getElementById('kpi-net-rate').textContent = `자산형성률 ${savingsRate}%`;
+
+            document.getElementById('kpi-total-expense').textContent = formatWon(expTotal);
+            document.getElementById('kpi-expense-count').textContent = `${expCount.toLocaleString()}건의 지출`;
+
+            document.getElementById('kpi-total-income').textContent = formatWon(incTotal);
+            document.getElementById('kpi-income-count').textContent = `${incCount.toLocaleString()}건의 수입`;
+
+            document.getElementById('kpi-total-savings').textContent = formatWon(savTotal);
+            document.getElementById('kpi-savings-count').textContent = `${savCount.toLocaleString()}건 (예적금)`;
+
+            document.getElementById('kpi-total-invest').textContent = formatWon(invTotal);
+            document.getElementById('kpi-invest-count').textContent = `${invCount.toLocaleString()}건 (투자·자산)`;
+
+            document.getElementById('count-all').textContent = transactions.length.toLocaleString();
+            document.getElementById('count-expense').textContent = expCount.toLocaleString();
+            document.getElementById('count-income').textContent = incCount.toLocaleString();
+            document.getElementById('count-savings').textContent = savCount.toLocaleString();
+            document.getElementById('count-invest').textContent = invCount.toLocaleString();
+        }
+
+        // Render Charts with Chart.js
+        function renderCharts() {
             const monthlyData = {};
-            for (let m = 1; m <= 12; m++) monthlyData[m] = { income: 0, expense: 0, savings: 0, invest: 0 };
-            window.transactions.forEach(t => {
+            for (let m = 1; m <= 12; m++) {
+                monthlyData[m] = { income: 0, expense: 0, savings: 0, invest: 0 };
+            }
+
+            transactions.forEach(t => {
                 const m = parseMonth(t.date);
                 if (m && monthlyData[m]) {
                     if (t.type === 'income') monthlyData[m].income += t.amount;
@@ -597,160 +2209,488 @@
                     else if (t.type === 'invest') monthlyData[m].invest += t.amount;
                 }
             });
-            const labels = [], incomeData = [], expenseData = [], assetData = [];
+
+            const labels = [];
+            const incomeData = [];
+            const expenseData = [];
+            const assetData = [];
+
             for (let m = 1; m <= 12; m++) {
                 labels.push(`${m}월`);
                 incomeData.push(monthlyData[m].income);
                 expenseData.push(monthlyData[m].expense);
                 assetData.push(monthlyData[m].savings + monthlyData[m].invest);
             }
-            const ctx = document.getElementById('monthlyTrendChart').getContext('2d');
+
+            const metric = document.getElementById('chart-metric-select').value;
+
+            const ctxMonthly = document.getElementById('monthlyTrendChart').getContext('2d');
             if (monthlyChartInstance) monthlyChartInstance.destroy();
-            monthlyChartInstance = new Chart(ctx, {
+
+            const datasets = [
+                {
+                    label: '수입 (Income)',
+                    data: incomeData,
+                    backgroundColor: 'rgba(16, 185, 129, 0.65)',
+                    borderColor: '#10b981',
+                    borderWidth: 1.5,
+                    borderRadius: 4
+                },
+                {
+                    label: '지출 (Expense)',
+                    data: expenseData,
+                    backgroundColor: 'rgba(244, 63, 94, 0.65)',
+                    borderColor: '#f43f5e',
+                    borderWidth: 1.5,
+                    borderRadius: 4
+                }
+            ];
+
+            if (metric === 'all') {
+                datasets.push({
+                    label: '자산형성 (저축+투자)',
+                    data: assetData,
+                    type: 'line',
+                    borderColor: '#38bdf8',
+                    backgroundColor: 'rgba(56, 189, 248, 0.2)',
+                    borderWidth: 2.5,
+                    fill: false,
+                    tension: 0.35,
+                    pointBackgroundColor: '#0284c7',
+                    pointRadius: 4
+                });
+            }
+
+            monthlyChartInstance = new Chart(ctxMonthly, {
                 type: 'bar',
-                data: { labels, datasets: [
-                    { label: '수입', data: incomeData, backgroundColor: 'rgba(16, 185, 129, 0.65)' },
-                    { label: '지출', data: expenseData, backgroundColor: 'rgba(244, 63, 94, 0.65)' },
-                    { label: '자산형성', data: assetData, type: 'line', borderColor: '#38bdf8', borderWidth: 2 }
-                ]},
-                options: { responsive: true, maintainAspectRatio: false }
+                data: {
+                    labels,
+                    datasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            labels: {
+                                color: '#94a3b8',
+                                font: { family: 'Pretendard', size: 11 }
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: ctx => `${ctx.dataset.label}: ₩${ctx.parsed.y.toLocaleString('ko-KR')}`
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                            ticks: { color: '#64748b', font: { family: 'JetBrains Mono', size: 11 } }
+                        },
+                        y: {
+                            grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                            ticks: {
+                                color: '#64748b',
+                                font: { family: 'JetBrains Mono', size: 10 },
+                                callback: val => (val >= 1000000 ? (val / 10000).toLocaleString() + '만' : val.toLocaleString())
+                            }
+                        }
+                    }
+                }
             });
 
+            // Category breakdown (Top Expense)
             const catSums = {};
-            window.transactions.forEach(t => { if (t.type === 'expense') catSums[t.category || '기타'] = (catSums[t.category || '기타'] || 0) + t.amount; });
-            const sorted = Object.keys(catSums).map(c => ({ name: c, amount: catSums[c] })).sort((a,b)=>b.amount-a.amount).slice(0,5);
-            const ctxD = document.getElementById('categoryDoughnutChart').getContext('2d');
+            let totalExp = 0;
+            transactions.forEach(t => {
+                if (t.type === 'expense') {
+                    const c = t.category || '기타';
+                    catSums[c] = (catSums[c] || 0) + t.amount;
+                    totalExp += t.amount;
+                }
+            });
+
+            const sortedCats = Object.keys(catSums)
+                .map(c => ({ name: c, amount: catSums[c] }))
+                .sort((a, b) => b.amount - a.amount);
+
+            const top5 = sortedCats.slice(0, 5);
+            const othersSum = sortedCats.slice(5).reduce((acc, curr) => acc + curr.amount, 0);
+            if (othersSum > 0) {
+                top5.push({ name: '기타 외', amount: othersSum });
+            }
+
+            const doughnutLabels = top5.map(c => c.name);
+            const doughnutData = top5.map(c => c.amount);
+            const doughnutColors = [
+                '#f43f5e', '#fb7185', '#fda4af', '#f472b6', '#c084fc', '#64748b'
+            ];
+
+            const ctxDoughnut = document.getElementById('categoryDoughnutChart').getContext('2d');
             if (doughnutChartInstance) doughnutChartInstance.destroy();
-            doughnutChartInstance = new Chart(ctxD, {
+
+            doughnutChartInstance = new Chart(ctxDoughnut, {
                 type: 'doughnut',
-                data: { labels: sorted.map(s=>s.name), datasets: [{ data: sorted.map(s=>s.amount), backgroundColor: ['#f43f5e','#fb7185','#fda4af','#f472b6','#c084fc'] }] },
-                options: { responsive: true, maintainAspectRatio: false, cutout: '72%' }
+                data: {
+                    labels: doughnutLabels,
+                    datasets: [{
+                        data: doughnutData,
+                        backgroundColor: doughnutColors,
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: ctx => `${ctx.label}: ₩${ctx.parsed.toLocaleString('ko-KR')}`
+                            }
+                        }
+                    },
+                    cutout: '72%'
+                }
+            });
+
+            // Render category list progress
+            const catListEl = document.getElementById('top-categories');
+            catListEl.innerHTML = '';
+            sortedCats.slice(0, 7).forEach((c, idx) => {
+                const pct = totalExp > 0 ? ((c.amount / totalExp) * 100).toFixed(1) : 0;
+                const item = document.createElement('div');
+                item.className = 'cat-item';
+                item.onclick = () => {
+                    document.getElementById('filter-category').value = c.name;
+                    handleFilter();
+                };
+                item.innerHTML = `
+                    <div class="cat-top">
+                        <span class="cat-name">
+                            <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:${doughnutColors[idx] || '#6366f1'};"></span>
+                            ${c.name} (${pct}%)
+                        </span>
+                        <span class="cat-amount">${formatWon(c.amount)}</span>
+                    </div>
+                    <div class="cat-progress">
+                        <div class="cat-bar" style="width: ${pct}%; background:${doughnutColors[idx] || '#6366f1'};"></div>
+                    </div>
+                `;
+                catListEl.appendChild(item);
             });
         }
 
-        window.switchTab = function(tab) {
+        // Tabs
+        function switchTab(tab) {
             currentTab = tab;
-            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
             document.getElementById('tab-' + tab).classList.add('active');
             syncFilterCategoryDropdown();
             renderTable();
         }
 
-        window.handleFilter = function() { renderTable(); }
+        function handleFilter() {
+            renderTable();
+        }
 
-        window.renderTable = function() {
+        function getFilteredData() {
             const query = document.getElementById('search-input').value.toLowerCase().trim();
             const selectedMonth = document.getElementById('filter-month').value;
             const selectedCat = document.getElementById('filter-category').value;
             const sortMode = document.getElementById('filter-sort').value;
 
-            let filtered = window.transactions.filter(item => {
+            let filtered = transactions.filter(item => {
                 if (currentTab !== 'all' && item.type !== currentTab) return false;
-                if (selectedMonth !== 'all' && parseMonth(item.date) !== parseInt(selectedMonth)) return false;
+
+                if (selectedMonth !== 'all') {
+                    const m = parseMonth(item.date);
+                    if (m !== parseInt(selectedMonth, 10)) return false;
+                }
+
                 if (selectedCat !== 'all' && item.category !== selectedCat) return false;
-                if (query && !JSON.stringify(item).toLowerCase().includes(query)) return false;
+
+                if (query) {
+                    const matchDesc = (item.desc || '').toLowerCase().includes(query);
+                    const matchCat = (item.category || '').toLowerCase().includes(query);
+                    const matchKind = (item.kind || '').toLowerCase().includes(query);
+                    const matchDate = (item.date || '').toLowerCase().includes(query);
+                    if (!matchDesc && !matchCat && !matchKind && !matchDate) return false;
+                }
+
                 return true;
             });
 
+            // Sorting
             filtered.sort((a, b) => {
                 if (sortMode === 'date-desc') return parseDateForSort(b.date) - parseDateForSort(a.date);
                 if (sortMode === 'date-asc') return parseDateForSort(a.date) - parseDateForSort(b.date);
                 if (sortMode === 'amount-desc') return b.amount - a.amount;
-                return a.amount - b.amount;
+                if (sortMode === 'amount-asc') return a.amount - b.amount;
+                return 0;
             });
 
+            return filtered;
+        }
+
+        function renderTable() {
+            const filtered = getFilteredData();
             const tbody = document.getElementById('table-body');
             tbody.innerHTML = '';
-            let total = 0;
+
+            let totalSum = 0;
+
             filtered.forEach(item => {
-                total += item.amount;
+                totalSum += item.amount;
                 const tr = document.createElement('tr');
+
+                let typeTag = '';
+                let amountClass = '';
+                let sign = '';
+
+                if (item.type === 'income') {
+                    typeTag = '<span class="badge-tag tag-income">수입</span>';
+                    amountClass = 'amount-income';
+                    sign = '+';
+                } else if (item.type === 'expense') {
+                    typeTag = '<span class="badge-tag tag-expense">지출</span>';
+                    amountClass = 'amount-expense';
+                    sign = '-';
+                } else if (item.type === 'savings') {
+                    typeTag = '<span class="badge-tag tag-savings">저축</span>';
+                    amountClass = 'amount-savings';
+                    sign = '';
+                } else if (item.type === 'invest') {
+                    typeTag = '<span class="badge-tag tag-invest">투자</span>';
+                    amountClass = 'amount-invest';
+                    sign = '';
+                }
+
+                const kindBadge = item.kind ? `<span class="badge-tag tag-kind">${item.kind}</span>` : '<span style="color:var(--text-dim);">-</span>';
+
                 tr.innerHTML = `
                     <td class="td-date">${item.date}</td>
-                    <td><span class="badge-tag tag-${item.type}">${item.type}</span></td>
-                    <td>${item.category}</td>
-                    <td class="td-amount amount-${item.type}" style="text-align:right;">${formatWon(item.amount)}</td>
-                    <td>${item.desc}</td>
-                    <td>${item.kind || '-'}</td>
-                    <td style="text-align:center;">
-                        <button class="btn-icon" onclick="openEditModal('${item.id}')">✏️</button>
-                        <button class="btn-icon btn-icon-del" onclick="deleteTransaction('${item.id}')">🗑️</button>
+                    <td>${typeTag}</td>
+                    <td><span class="badge-tag">${item.category || '-'}</span></td>
+                    <td class="td-amount ${amountClass}" style="text-align: right;">${sign}${formatWon(item.amount)}</td>
+                    <td><strong>${item.desc || '-'}</strong></td>
+                    <td>${kindBadge}</td>
+                    <td style="text-align: center;">
+                        <div class="action-btns">
+                            <button class="btn-icon" onclick="openEditModal('${item.id}')" title="수정">✏️</button>
+                            <button class="btn-icon btn-icon-del" onclick="deleteTransaction('${item.id}')" title="삭제">🗑️</button>
+                        </div>
                     </td>
                 `;
                 tbody.appendChild(tr);
             });
-            document.getElementById('table-summary-info').textContent = `조회 결과: ${filtered.length}건`;
-            document.getElementById('table-sum-info').textContent = `합계: ${formatWon(total)}`;
+
+            const tabName = currentTab === 'all' ? '전체' : currentTab === 'expense' ? '지출' : currentTab === 'income' ? '수입' : currentTab === 'savings' ? '저축' : '투자';
+            document.getElementById('table-summary-info').textContent = `[${tabName}] 조회 결과: ${filtered.length.toLocaleString()}건`;
+            document.getElementById('table-sum-info').textContent = `[${tabName}] 합계: ${formatWon(totalSum)}`;
         }
 
-        window.openAddModal = function() {
+        // Add / Edit Modal
+        function openAddModal() {
             document.getElementById('modal-title-text').textContent = '새 내역 추가';
             document.getElementById('edit-id').value = '';
+            document.getElementById('modal-type').value = currentTab === 'all' ? 'expense' : currentTab;
             document.getElementById('modal-date').value = new Date().toISOString().slice(0, 10);
             document.getElementById('modal-amount').value = '';
             document.getElementById('modal-desc').value = '';
             document.getElementById('modal-kind').value = '';
+
+            document.getElementById('modal-category').style.display = 'block';
+            document.getElementById('modal-custom-category').style.display = 'none';
+            document.getElementById('modal-custom-category').value = '';
+            document.getElementById('btn-toggle-custom-cat').textContent = '직접입력';
+
             syncModalCategoryOptions();
             document.getElementById('tx-modal').classList.add('open');
         }
 
-        window.openEditModal = function(id) {
-            const item = window.transactions.find(t => t.id === id);
+        function openEditModal(id) {
+            const item = transactions.find(t => t.id === id);
             if (!item) return;
+
             document.getElementById('modal-title-text').textContent = '내역 수정';
             document.getElementById('edit-id').value = item.id;
             document.getElementById('modal-type').value = item.type;
-            document.getElementById('modal-date').value = item.date;
-            document.getElementById('modal-amount').value = Math.abs(item.amount).toLocaleString();
-            document.getElementById('modal-desc').value = item.desc;
-            document.getElementById('modal-kind').value = item.kind;
+            document.getElementById('modal-date').value = convertToInputDate(item.date);
+            document.getElementById('modal-amount').value = Math.abs(item.amount).toLocaleString('ko-KR');
+            document.getElementById('modal-desc').value = item.desc || '';
+            document.getElementById('modal-kind').value = item.kind || '';
+
+            document.getElementById('modal-category').style.display = 'block';
+            document.getElementById('modal-custom-category').style.display = 'none';
+            document.getElementById('modal-custom-category').value = '';
+            document.getElementById('btn-toggle-custom-cat').textContent = '직접입력';
+
             syncModalCategoryOptions(item.category);
             document.getElementById('tx-modal').classList.add('open');
         }
 
-        window.closeTxModal = function() { document.getElementById('tx-modal').classList.remove('open'); }
+        function closeTxModal() {
+            document.getElementById('tx-modal').classList.remove('open');
+        }
 
-        window.saveTransaction = async function() {
+        function saveTransaction() {
             const editId = document.getElementById('edit-id').value;
             const type = document.getElementById('modal-type').value;
-            const date = convertToDisplayDate(document.getElementById('modal-date').value);
+            const rawDate = document.getElementById('modal-date').value;
+            const date = convertToDisplayDate(rawDate);
             const amount = parseAmount(document.getElementById('modal-amount').value);
             const desc = document.getElementById('modal-desc').value.trim();
             const kind = document.getElementById('modal-kind').value.trim();
-            const category = document.getElementById('modal-category').value;
 
-            const item = {
-                id: editId || 'tx_' + Date.now(),
-                type, date, amount, desc, category, kind
-            };
+            let category = '';
+            const customInput = document.getElementById('modal-custom-category');
+            if (customInput.style.display !== 'none' && customInput.value.trim()) {
+                category = customInput.value.trim();
+                if (!categories.includes(category)) {
+                    categories.push(category);
+                }
+            } else {
+                category = document.getElementById('modal-category').value || '기타';
+            }
 
-            await saveToCloud(item);
-            await loadCloudData();
+            if (amount === 0) {
+                alert('유효한 금액을 입력해주세요.');
+                return;
+            }
+
+            if (editId) {
+                const idx = transactions.findIndex(t => t.id === editId);
+                if (idx !== -1) {
+                    transactions[idx] = {
+                        ...transactions[idx],
+                        type,
+                        date,
+                        amount,
+                        desc: desc || category,
+                        category,
+                        kind
+                    };
+                    showToast('내역이 성공적으로 수정되었습니다.');
+                }
+            } else {
+                const newItem = {
+                    id: 'tx_' + Date.now(),
+                    type,
+                    date,
+                    amount,
+                    desc: desc || category,
+                    category,
+                    kind
+                };
+                transactions.unshift(newItem);
+                showToast('새 내역이 추가되었습니다.');
+            }
+
+            saveToStorage();
+            syncFilterCategoryDropdown();
+            renderKPIs();
+            renderCharts();
+            renderTable();
             closeTxModal();
-            showToast('저장 완료되었습니다.');
         }
 
-        window.deleteTransaction = async function(id) {
-            if (confirm('삭제하시겠습니까?')) {
-                await deleteFromCloud(id);
-                await loadCloudData();
-                showToast('삭제되었습니다.');
+        function deleteTransaction(id) {
+            if (confirm('해당 거래 내역을 삭제하시겠습니까?')) {
+                transactions = transactions.filter(t => t.id !== id);
+                saveToStorage();
+                syncFilterCategoryDropdown();
+                renderKPIs();
+                renderCharts();
+                renderTable();
+                showToast('거래 내역이 삭제되었습니다.');
             }
         }
 
-        window.openCategoryModal = function() { document.getElementById('category-modal').classList.add('open'); }
-        window.closeCategoryModal = function() { document.getElementById('category-modal').classList.remove('open'); }
-        window.addNewCategory = function() {
-            const name = document.getElementById('new-cat-name').value.trim();
-            if(name && !window.categories.includes(name)) {
-                window.categories.push(name);
-                document.getElementById('new-cat-name').value = '';
-                showToast('카테고리 추가됨');
-            }
+        // Export & Import
+        function exportToCSV() {
+            const filtered = getFilteredData();
+            let csv = '\uFEFF날짜,구분,카테고리,금액,내용,결제수단\n';
+
+            filtered.forEach(item => {
+                let typeStr = '기타';
+                if (item.type === 'income') typeStr = '수입';
+                else if (item.type === 'expense') typeStr = '지출';
+                else if (item.type === 'savings') typeStr = '저축';
+                else if (item.type === 'invest') typeStr = '투자';
+
+                const row = [
+                    `"${item.date}"`,
+                    typeStr,
+                    `"${(item.category || '').replace(/"/g, '""')}"`,
+                    item.amount,
+                    `"${(item.desc || '').replace(/"/g, '""')}"`,
+                    `"${(item.kind || '').replace(/"/g, '""')}"`
+                ];
+                csv += row.join(',') + '\n';
+            });
+
+            const tabName = currentTab === 'all' ? '전체' : currentTab === 'expense' ? '지출' : currentTab === 'income' ? '수입' : currentTab === 'savings' ? '저축' : '투자';
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.setAttribute('download', `2026_가계부_${tabName}_${new Date().toISOString().slice(0, 10)}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            showToast('CSV 다운로드가 완료되었습니다.');
         }
-        window.handleAmountInput = function(el) {}
-        window.exportJSON = function() {}
-        window.exportToCSV = function() {}
+
+        function exportJSON() {
+            const backup = {
+                version: '2026.1.0',
+                exportedAt: new Date().toISOString(),
+                categories,
+                transactions
+            };
+            const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.setAttribute('download', `가계부_백업_2026_${new Date().toISOString().slice(0, 10)}.json`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            showToast('JSON 백업 파일이 저장되었습니다.');
+        }
+
+        function importJSON(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    if (data.transactions && Array.isArray(data.transactions)) {
+                        transactions = data.transactions;
+                        if (data.categories && Array.isArray(data.categories)) {
+                            categories = data.categories;
+                        }
+                        saveToStorage();
+                        syncFilterCategoryDropdown();
+                        renderKPIs();
+                        renderCharts();
+                        renderTable();
+                        showToast(`데이터 복원 완료 (${transactions.length}건)`);
+                    } else {
+                        alert('유효하지 않은 백업 파일 형식입니다.');
+                    }
+                } catch (err) {
+                    alert('파일을 파싱하는 중 오류가 발생했습니다.');
+                }
+            };
+            reader.readAsText(file);
+            event.target.value = '';
+        }
+
+        document.addEventListener('DOMContentLoaded', initData);
     </script>
 </body>
+
 </html>
