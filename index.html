@@ -544,7 +544,8 @@
             '수입': 'income',
             '지출': 'expense',
             '저축': 'savings',
-            '투자': 'invest'
+            '투자': 'invest',
+            '구분': 'expense'
         };
 
         window.showToast = function(msg) {
@@ -660,21 +661,29 @@
 
         function parseYear(dateStr) {
             if (!dateStr) return null;
-            const m = dateStr.match(/^(\d{4})/);
+            const clean = dateStr.toString().replace(/[^0-9]/g, '');
+            if (clean.length >= 4) {
+                return parseInt(clean.substring(0, 4), 10);
+            }
+            const m = dateStr.toString().match(/^(\d{4})/);
             return m ? parseInt(m[1], 10) : null;
         }
 
         function parseMonth(dateStr) {
             if (!dateStr) return null;
-            const isoM = dateStr.match(/^\d{4}-(\d{1,2})-\d{1,2}/);
+            const clean = dateStr.toString().replace(/[^0-9]/g, '');
+            if (clean.length >= 6) {
+                return parseInt(clean.substring(4, 6), 10);
+            }
+            const isoM = dateStr.toString().match(/^\d{4}[^\d]?(\d{1,2})/);
             if (isoM) return parseInt(isoM[1], 10);
-            const m = dateStr.match(/(\d+)월/);
+            const m = dateStr.toString().match(/(\d+)월/);
             return m ? parseInt(m[1], 10) : null;
         }
 
         function parseDateForSort(dateStr) {
             if (!dateStr) return 0;
-            const clean = dateStr.replace(/[^0-9]/g, '');
+            const clean = dateStr.toString().replace(/[^0-9]/g, '');
             if (clean.length >= 8) {
                 const y = clean.substring(0, 4);
                 const m = clean.substring(4, 6);
@@ -686,7 +695,7 @@
 
         function formatDateWithDay(dateInput) {
             if (!dateInput) return '2026. 10. 14. (수)';
-            const clean = dateInput.replace(/[^0-9]/g, '');
+            const clean = dateInput.toString().replace(/[^0-9]/g, '');
             if (clean.length >= 8) {
                 const y = clean.substring(0, 4);
                 const m = String(parseInt(clean.substring(4, 6), 10)).padStart(2, '0');
@@ -700,7 +709,7 @@
 
         function formatToInputDate(dateStr) {
             if (!dateStr) return new Date().toISOString().slice(0, 10);
-            const clean = dateStr.replace(/[^0-9]/g, '');
+            const clean = dateStr.toString().replace(/[^0-9]/g, '');
             if (clean.length >= 8) {
                 return `${clean.substring(0, 4)}-${clean.substring(4, 6)}-${clean.substring(6, 8)}`;
             }
@@ -864,8 +873,8 @@
 
             let filtered = window.transactions.filter(item => {
                 if (selectedType !== 'all' && item.type !== selectedType) return false;
-                if (selectedYear !== 'all' && parseYear(item.date) !== parseInt(selectedYear)) return false;
-                if (selectedMonth !== 'all' && parseMonth(item.date) !== parseInt(selectedMonth)) return false;
+                if (selectedYear !== 'all' && parseYear(item.date) !== parseInt(selectedYear, 10)) return false;
+                if (selectedMonth !== 'all' && parseMonth(item.date) !== parseInt(selectedMonth, 10)) return false;
                 if (selectedCat !== 'all' && item.category !== selectedCat) return false;
                 if (selectedMethod !== 'all' && (item.method || '신용카드') !== selectedMethod) return false;
                 if (query && !JSON.stringify(item).toLowerCase().includes(query)) return false;
@@ -910,10 +919,10 @@
                         <td>
                             <select class="table-cell-input" onchange="updateTransactionField('${item.id}', 'type', this.value)">
                                 <option value="" disabled ${!item.type ? 'selected' : ''}>구분 선택</option>
-                                <option value="지출" ${item.type === 'expense' ? 'selected' : ''}>지출</option>
-                                <option value="수입" ${item.type === 'income' ? 'selected' : ''}>수입</option>
-                                <option value="저축" ${item.type === 'savings' ? 'selected' : ''}>저축</option>
-                                <option value="투자" ${item.type === 'invest' ? 'selected' : ''}>투자</option>
+                                <option value="expense" ${item.type === 'expense' ? 'selected' : ''}>지출</option>
+                                <option value="income" ${item.type === 'income' ? 'selected' : ''}>수입</option>
+                                <option value="savings" ${item.type === 'savings' ? 'selected' : ''}>저축</option>
+                                <option value="invest" ${item.type === 'invest' ? 'selected' : ''}>투자</option>
                             </select>
                         </td>
                         <td>
@@ -1186,7 +1195,10 @@
                 try {
                     const imported = JSON.parse(e.target.result);
                     if(Array.isArray(imported)) {
-                        window.transactions = imported;
+                        window.transactions = imported.map(t => ({
+                            ...t,
+                            type: TYPE_NAME_MAP[t.type] || t.type || 'expense'
+                        }));
                         saveDataToCloud();
                         renderKPIs();
                         renderCharts();
@@ -1260,14 +1272,21 @@
                 if(idx === 0 && line.includes('날짜')) return;
                 const parts = line.split(',').map(p => p.trim().replace(/^"(.*)"$/, '$1'));
                 if(parts.length >= 5) {
-                    const [rawDate, type, category, desc, amountStr, method, splitStr] = parts;
+                    const [rawDate, rawType, category, desc, amountStr, method, splitStr] = parts;
                     const amount = parseAmount(amountStr);
                     const split = parseInt(splitStr, 10) || 1;
-                    if(rawDate && type && category && !isNaN(amount)) {
+                    
+                    let mappedType = TYPE_NAME_MAP[rawType] || rawType || 'expense';
+                    if (!['income', 'expense', 'savings', 'invest'].includes(mappedType)) {
+                        mappedType = 'expense';
+                    }
+
+                    if (rawDate && rawType && category && !isNaN(amount)) {
                         window.transactions.push({
                             id: 'tx_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
                             date: formatDateWithDay(rawDate), 
-                            type, category, 
+                            type: mappedType, 
+                            category, 
                             desc: desc || '',
                             amount, 
                             method: method || '신용카드', 
