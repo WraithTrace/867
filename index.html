@@ -343,7 +343,7 @@
 
         <div class="guide-banner">
             <div>
-                💡 <strong>안내:</strong> 평상시에는 안전하게 조회되며, <strong>연필(✏️) 아이콘</strong>을 누를 때만 수정 모드가 활성화됩니다.
+                💡 <strong>안내:</strong> 평상시에는 안전하게 조회되며, <strong>연필(✏️) 아이콘</strong>을 누를 때만 수정 모드가 활성화됩니다. 상단 업로드 버튼으로 본인의 CSV 파일을 불러오세요.
             </div>
         </div>
 
@@ -497,8 +497,8 @@
         <div class="modal-content" style="max-width: 600px;">
             <div class="modal-title"><span>📋 텍스트/CSV 일괄 가져오기</span><button class="btn-icon" onclick="closePasteModal()">✕</button></div>
             <div class="form-group">
-                <label>형식: 날짜,구분,카테고리,내용,금액,결제방식,1/N인원</label>
-                <textarea id="paste-textarea" rows="8" placeholder="2026-10-14,expense,식,점심식사,10000,신용카드,1" style="width:100%; background:rgba(9,13,22,0.85); border:1px solid var(--border-color); border-radius:var(--radius-sm); padding:9px; color:var(--text-main);"></textarea>
+                <label>형식: 일자,구분,대분류,카테고리,금액,내용,결제/종류 호환</label>
+                <textarea id="paste-textarea" rows="8" placeholder="2026-01-01,수입,수입,배당,18229,삼성증권,현금" style="width:100%; background:rgba(9,13,22,0.85); border:1px solid var(--border-color); border-radius:var(--radius-sm); padding:9px; color:var(--text-main);"></textarea>
             </div>
             <div class="modal-buttons">
                 <button class="btn" onclick="closePasteModal()">취소</button>
@@ -515,10 +515,21 @@
             income: ['급여', '배당', '지원금', '판매내역', '인센티브', '이자', '기타'],
             savings: ['적금', '예금', '기타'],
             invest: ['가상화폐', 'ISA계좌', '연금계좌', '종합계좌', '기타'],
-            method: ['신용카드', '체크카드', '현금', '계좌이체', '기타']
+            method: ['신용카드', '체크카드', '현금', '계좌이체', '우리카드(신용)', '삼성카드(신용)', '토스카드(체크)', '기타']
         };
 
+        // 초기 데이터 빈 배열 (클린 상태)
         window.transactions = [];
+
+        try {
+            const saved = localStorage.getItem('local_transactions');
+            if (saved) {
+                const parsed = JSON.parse(saved);
+                if (Array.isArray(parsed) && parsed.length > 0) {
+                    window.transactions = parsed;
+                }
+            }
+        } catch(e) {}
 
         try {
             window.categories = JSON.parse(localStorage.getItem('local_categories')) || DEFAULT_CATEGORIES;
@@ -544,8 +555,7 @@
             '수입': 'income',
             '지출': 'expense',
             '저축': 'savings',
-            '투자': 'invest',
-            '구분': 'expense'
+            '투자': 'invest'
         };
 
         window.showToast = function(msg) {
@@ -1217,15 +1227,17 @@
         }
 
         window.exportToCSV = function() {
-            let csv = '\uFEFF날짜,구분,카테고리,내용,금액,결제방식,1/N\n';
+            let csv = '\uFEFF일자,구분,대분류,카테고리,금액,내용,결제/종류\n';
             window.transactions.forEach(t => {
-                csv += `"${t.date}","${t.type}","${t.category}","${t.desc}",${t.amount},"${t.method || '신용카드'}",${t.split || 1}\n`;
+                const rawDate = t.date.replace(/[^0-9]/g, '').substring(0, 8);
+                const formattedRaw = rawDate.length === 8 ? `${rawDate.substring(0,4)}-${rawDate.substring(4,6)}-${rawDate.substring(6,8)}` : t.date;
+                csv += `"${formattedRaw}","${t.type}","${t.type === 'income' ? '수입' : (t.type === 'expense' ? '지출' : '자산(저축/투자)')}","${t.category}","${t.amount}","${t.desc}","${t.method || '신용카드'}"\n`;
             });
             const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
             const url = URL.createObjectURL(blob);
             const dlAnchor = document.createElement('a');
             dlAnchor.setAttribute("href", url);
-            dlAnchor.setAttribute("download", "transactions.csv");
+            dlAnchor.setAttribute("download", "거래내역_백업.csv");
             document.body.appendChild(dlAnchor);
             dlAnchor.click();
             dlAnchor.remove();
@@ -1269,13 +1281,17 @@
             const lines = text.split('\n');
             let addedCount = 0;
             lines.forEach((line, idx) => {
-                if(idx === 0 && line.includes('날짜')) return;
+                if(idx === 0 && (line.includes('일자') || line.includes('날짜'))) return;
                 const parts = line.split(',').map(p => p.trim().replace(/^"(.*)"$/, '$1'));
                 if(parts.length >= 5) {
-                    const [rawDate, rawType, category, desc, amountStr, method, splitStr] = parts;
+                    let rawDate, rawType, category, amountStr, desc, method;
+                    if (parts.length >= 7) {
+                        [rawDate, rawType, , category, amountStr, desc, method] = parts;
+                    } else {
+                        [rawDate, rawType, category, desc, amountStr, method] = parts;
+                    }
+
                     const amount = parseAmount(amountStr);
-                    const split = parseInt(splitStr, 10) || 1;
-                    
                     let mappedType = TYPE_NAME_MAP[rawType] || rawType || 'expense';
                     if (!['income', 'expense', 'savings', 'invest'].includes(mappedType)) {
                         mappedType = 'expense';
@@ -1289,8 +1305,8 @@
                             category, 
                             desc: desc || '',
                             amount, 
-                            method: method || '신용카드', 
-                            split
+                            method: method && method !== 'nan' ? method : '신용카드', 
+                            split: 1
                         });
                         addedCount++;
                     }
