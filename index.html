@@ -518,7 +518,6 @@
             method: ['신용카드', '체크카드', '현금', '계좌이체', '기타']
         };
 
-        // 데이터 초기화 (빈 배열로 세팅)
         window.transactions = [];
 
         try {
@@ -895,17 +894,17 @@
                 const splitText = item.split > 1 ? `1/${item.split}` : '1/1';
 
                 const allowedCats = window.getCategoriesForType(item.type);
-                let catOptionsHtml = `<option value="" disabled ${!item.category ? 'selected' : ''}>카테고리 선택</option>`;
-                allowedCats.forEach(c => {
-                    catOptionsHtml += `<option value="${c}" ${item.category === c ? 'selected' : ''}>${c}</option>`;
-                });
-
-                let methodOptionsHtml = `<option value="" disabled ${!item.method ? 'selected' : ''}>결제방식 선택</option>`;
-                allowedMethods.forEach(m => {
-                    methodOptionsHtml += `<option value="${m}" ${item.method === m ? 'selected' : ''}>${m}</option>`;
-                });
 
                 if (isEditing) {
+                    let catDatalistId = `cat-list-${item.id}`;
+                    let methodDatalistId = `method-list-${item.id}`;
+
+                    let catOptionsHtml = '';
+                    allowedCats.forEach(c => { catOptionsHtml += `<option value="${c}">`; });
+
+                    let methodOptionsHtml = '';
+                    allowedMethods.forEach(m => { methodOptionsHtml += `<option value="${m}">`; });
+
                     tr.innerHTML = `
                         <td class="td-date"><input type="date" class="table-cell-input" value="${formatToInputDate(item.date)}" onchange="updateTransactionField('${item.id}', 'date', this.value)" /></td>
                         <td>
@@ -918,16 +917,14 @@
                             </select>
                         </td>
                         <td>
-                            <select class="table-cell-input" id="cat-select-${item.id}" onchange="updateTransactionField('${item.id}', 'category', this.value)">
-                                ${catOptionsHtml}
-                            </select>
+                            <input type="text" class="table-cell-input" list="${catDatalistId}" value="${item.category || ''}" onchange="updateTransactionField('${item.id}', 'category', this.value)" placeholder="카테고리 선택/입력" />
+                            <datalist id="${catDatalistId}">${catOptionsHtml}</datalist>
                         </td>
                         <td><input type="text" class="table-cell-input" value="${item.desc || ''}" onchange="updateTransactionField('${item.id}', 'desc', this.value)" placeholder="내용 입력..." /></td>
                         <td style="text-align:right;"><input type="text" class="table-cell-input" style="text-align:right;" value="${item.amount ? Math.abs(item.amount).toLocaleString() : ''}" oninput="handleTableAmountInput(this, '${item.id}')" placeholder="0" /></td>
                         <td>
-                            <select class="table-cell-input" onchange="updateTransactionField('${item.id}', 'method', this.value)">
-                                ${methodOptionsHtml}
-                            </select>
+                            <input type="text" class="table-cell-input" list="${methodDatalistId}" value="${item.method || ''}" onchange="updateTransactionField('${item.id}', 'method', this.value)" placeholder="결제방식 선택/입력" />
+                            <datalist id="${methodDatalistId}">${methodOptionsHtml}</datalist>
                         </td>
                         <td class="td-split"><input type="number" class="table-cell-input" style="text-align:center;" value="${item.split || 1}" min="1" onchange="updateTransactionField('${item.id}', 'split', this.value)" /></td>
                         <td style="text-align:center; white-space:nowrap;">
@@ -961,12 +958,12 @@
         window.addNewRow = function() {
             const newItem = {
                 id: 'tx_' + Date.now(),
-                type: '',
+                type: 'expense',
                 date: formatDateWithDay(new Date().toISOString().slice(0, 10)),
-                category: '',
+                category: window.categories.expense[0] || '',
                 desc: '',
                 amount: 0,
-                method: '',
+                method: window.categories.method[0] || '',
                 split: 1
             };
             window.transactions.unshift(newItem);
@@ -976,7 +973,7 @@
             renderCharts();
             renderTable();
             syncFilterCategoryDropdown();
-            showToast('새 행이 추가되었습니다. 내용을 입력하세요.');
+            showToast('새 행이 추가되었습니다.');
         }
 
         window.updateTransactionField = function(id, field, val) {
