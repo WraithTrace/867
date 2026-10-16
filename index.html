@@ -12,57 +12,6 @@
         rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-
-        const firebaseConfig = {
-            apiKey: "AIzaSyBC_VzTRSGzt4Seq7TWwwIYV65t1DwiQzk",
-            authDomain: "information-ff70a.firebaseapp.com",
-            projectId: "information-ff70a",
-            storageBucket: "information-ff70a.firebasestorage.app",
-            messagingSenderId: "138612781096",
-            appId: "1:138612781096:web:362d37f450a36c9bff851d",
-            measurementId: "G-1Y4XM506W1"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
-        
-        window.firebaseEnabled = true;
-        window.auth = auth;
-        window.db = db;
-        window.GoogleAuthProvider = GoogleAuthProvider;
-        window.signInWithPopup = signInWithPopup;
-        window.signOut = signOut;
-        window.doc = doc;
-        window.setDoc = setDoc;
-        window.getDoc = getDoc;
-
-        onAuthStateChanged(auth, (user) => {
-            window.currentUser = user;
-            const statusTag = document.getElementById('storage-status-tag');
-            const loginBtn = document.getElementById('firebase-login-btn');
-            if (user) {
-                if (statusTag) {
-                    statusTag.replaceChildren();
-                    const dot = document.createElement('span');
-                    dot.className = 'storage-dot';
-                    dot.style.background = '#10b981';
-                    dot.style.boxShadow = '0 0 8px #10b981';
-                    statusTag.append(dot, document.createTextNode(` ${user.displayName || user.email} 연동됨`));
-                }
-                if (loginBtn) loginBtn.textContent = '로그아웃';
-                loadCloudData();
-            } else {
-                if (statusTag) statusTag.innerHTML = `<span class="storage-dot"></span> 로컬 저장소 모드 (로그인 필요)`;
-                if (loginBtn) loginBtn.textContent = 'Google 로그인';
-            }
-        });
-    </script>
-
     <style>
         :root {
             --bg-primary: #090d16;
@@ -207,7 +156,7 @@
         .card-title { font-size: 15px; font-weight: 700; display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
         .chart-container-box { position: relative; width: 100%; height: 280px; }
         
-        .cat-list { display: flex; flex-direction: column; gap: 10px; max-height: 240px; overflow-y: auto; padding-right: 4px; }
+        .cat-list { display: flex; flex-direction: column; gap: 10px; max-height: 380px; overflow-y: auto; padding-right: 4px; }
         .cat-item { display: flex; flex-direction: column; gap: 4px; font-size: 12.5px; padding: 4px 6px; border-radius: 6px; }
         .cat-top { display: flex; justify-content: space-between; align-items: center; }
         .cat-name { color: var(--text-muted); font-weight: 500; display: flex; align-items: center; gap: 6px; }
@@ -358,9 +307,7 @@
             </div>
         </div>
 
-        <!-- Workspace Grid (Table + Graphs) -->
         <div class="workspace-grid">
-            
             <div class="left-pane">
                 <div class="controls-card">
                     <div class="controls-top">
@@ -431,7 +378,6 @@
                 </div>
             </div>
 
-            <!-- Right Pane: Charts & TOP -->
             <div class="right-pane">
                 <div class="card">
                     <div class="card-title">
@@ -442,17 +388,15 @@
 
                 <div class="card">
                     <div class="card-title">
-                        <span>📈 카테고리별 분석 TOP</span>
+                        <span>📊 카테고리별 분석 TOP</span>
                         <span style="font-size: 11px; color: var(--text-dim);">지출 기준</span>
                     </div>
                     <div class="cat-list" id="top-categories"></div>
                 </div>
             </div>
-
         </div>
     </div>
 
-    <!-- Category/Method Management Modal -->
     <div class="modal-overlay" id="category-modal">
         <div class="modal-content">
             <div class="modal-title"><span>항목 및 결제방식 관리</span><button class="btn-icon" onclick="closeCategoryModal()">✕</button></div>
@@ -477,6 +421,59 @@
 
     <div class="toast" id="toast-msg">알림</div>
 
+    <!-- Firebase SDK Setup -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBC_VzTRSGzt4Seq7TWwwIYV65t1DwiQzk",
+            authDomain: "information-ff70a.firebaseapp.com",
+            projectId: "information-ff70a",
+            storageBucket: "information-ff70a.firebasestorage.app",
+            messagingSenderId: "138612781096",
+            appId: "1:138612781096:web:362d37f450a36c9bff851d",
+            measurementId: "G-1Y4XM506W1"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        
+        window.firebaseEnabled = true;
+        window.auth = auth;
+        window.db = db;
+        window.GoogleAuthProvider = GoogleAuthProvider;
+        window.signInWithPopup = signInWithPopup;
+        window.signOut = signOut;
+        window.doc = doc;
+        window.setDoc = setDoc;
+        window.getDoc = getDoc;
+
+        onAuthStateChanged(auth, (user) => {
+            window.currentUser = user;
+            const statusTag = document.getElementById('storage-status-tag');
+            const loginBtn = document.getElementById('firebase-login-btn');
+            if (user) {
+                if (statusTag) {
+                    statusTag.replaceChildren();
+                    const dot = document.createElement('span');
+                    dot.className = 'storage-dot';
+                    dot.style.background = '#10b981';
+                    dot.style.boxShadow = '0 0 8px #10b981';
+                    statusTag.append(dot, document.createTextNode(` ${user.displayName || user.email} 연동됨`));
+                }
+                if (loginBtn) loginBtn.textContent = '로그아웃';
+                if (typeof window.loadCloudData === 'function') window.loadCloudData();
+            } else {
+                if (statusTag) statusTag.innerHTML = `<span class="storage-dot"></span> 로컬 저장소 모드 (로그인 필요)`;
+                if (loginBtn) loginBtn.textContent = 'Google 로그인';
+            }
+        });
+    </script>
+
+    <!-- App Logic Script -->
     <script>
         const DEFAULT_CATEGORIES = {
             '지출': ['食(식)', '住(주)', '衣(의)', '생활', '취미', '교통', '배달', '보험', '렌탈', '공과금', '구독', '의료', '뷰티', '기타'],
@@ -530,19 +527,19 @@
                 if (window.currentUser) {
                     await window.signOut(window.auth);
                     showToast('로그아웃되었습니다.');
-                    setTimeout(() => location.reload(), 800);
+                    setTimeout(() => location.reload(), 500);
                 } else {
                     const provider = new window.GoogleAuthProvider();
                     await window.signInWithPopup(window.auth, provider);
                     showToast('Google 로그인 성공!');
-                    setTimeout(() => location.reload(), 800);
+                    setTimeout(() => location.reload(), 500);
                 }
             } catch (err) {
                 alert('인증 중 오류가 발생했습니다: ' + err.message);
             }
         }
 
-        async function saveDataToCloud() {
+        window.saveDataToCloud = async function() {
             saveDataLocally();
             if (window.firebaseEnabled && window.currentUser && window.db) {
                 try {
@@ -554,12 +551,11 @@
                     });
                 } catch(err) {
                     console.error('Cloud 저장 실패:', err);
-                    showToast('클라우드 저장에 실패했습니다.');
                 }
             }
         }
 
-        async function loadCloudData() {
+        window.loadCloudData = async function() {
             if (window.firebaseEnabled && window.currentUser && window.db) {
                 try {
                     const userDocRef = window.doc(window.db, "users", window.currentUser.uid);
@@ -567,7 +563,7 @@
                     if (docSnap && docSnap.exists()) {
                         const data = docSnap.data();
                         if (data.transactions) {
-                            window.transactions = data.transactions.map(t => ({ ...t, id: /^[A-Za-z0-9_-]+$/.test(String(t.id || '')) ? String(t.id) : ('tx_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8)), type: normalizeType(t.type) }));
+                            window.transactions = data.transactions.map(t => ({ ...t, id: String(t.id || ('tx_' + Date.now())), type: normalizeType(t.type) }));
                         }
                         if (data.categories) {
                             window.categories = { ...DEFAULT_CATEGORIES, ...data.categories };
@@ -578,7 +574,6 @@
                     }
                 } catch(err) {
                     console.error('Cloud 불러오기 실패:', err);
-                    showToast('클라우드 데이터를 불러오지 못했습니다.');
                 }
             }
         }
@@ -587,26 +582,22 @@
             try {
                 localStorage.setItem('local_transactions', JSON.stringify(window.transactions));
                 localStorage.setItem('local_categories', JSON.stringify(window.categories));
-            } catch (err) {
-                console.error('로컬 저장 실패:', err);
-            }
+            } catch (err) { console.error(err); }
         }
 
-        function toggleUploadDropdown() {
+        window.toggleUploadDropdown = function() {
             document.getElementById('upload-dropdown').classList.toggle('open');
             document.getElementById('download-dropdown').classList.remove('open');
         }
-        function toggleDownloadDropdown() {
+        window.toggleDownloadDropdown = function() {
             document.getElementById('download-dropdown').classList.toggle('open');
             document.getElementById('upload-dropdown').classList.remove('open');
         }
         window.addEventListener('click', function(e) {
-            if (!document.getElementById('upload-dropdown').contains(e.target)) {
-                document.getElementById('upload-dropdown').classList.remove('open');
-            }
-            if (!document.getElementById('download-dropdown').contains(e.target)) {
-                document.getElementById('download-dropdown').classList.remove('open');
-            }
+            const up = document.getElementById('upload-dropdown');
+            const down = document.getElementById('download-dropdown');
+            if (up && !up.contains(e.target)) up.classList.remove('open');
+            if (down && !down.contains(e.target)) down.classList.remove('open');
         });
 
         window.addEventListener('DOMContentLoaded', () => {
@@ -638,16 +629,13 @@
             if (!dateStr) return null;
             const clean = dateStr.toString().replace(/[^0-9]/g, '');
             if (clean.length >= 4) return parseInt(clean.substring(0, 4), 10);
-            const m = dateStr.toString().match(/^(\d{4})/);
-            return m ? parseInt(m[1], 10) : null;
+            return null;
         }
 
         function parseMonth(dateStr) {
             if (!dateStr) return null;
             const clean = dateStr.toString().replace(/[^0-9]/g, '');
             if (clean.length >= 6) return parseInt(clean.substring(4, 6), 10);
-            const isoM = dateStr.toString().match(/^\d{4}[^\d]?(\d{1,2})/);
-            if (isoM) return parseInt(isoM[1], 10);
             return null;
         }
 
@@ -655,10 +643,7 @@
             if (!dateStr) return 0;
             const clean = dateStr.toString().replace(/[^0-9]/g, '');
             if (clean.length >= 8) {
-                const y = clean.substring(0, 4);
-                const m = clean.substring(4, 6);
-                const d = clean.substring(6, 8);
-                return new Date(`${y}-${m}-${d}`).getTime();
+                return new Date(`${clean.substring(0, 4)}-${clean.substring(4, 6)}-${clean.substring(6, 8)}`).getTime();
             }
             return 0;
         }
@@ -755,7 +740,7 @@
             }
 
             const ctx = document.getElementById('monthlyTrendChart');
-            if(ctx) {
+            if (ctx && window.Chart) {
                 if (monthlyChartInstance) monthlyChartInstance.destroy();
                 monthlyChartInstance = new Chart(ctx.getContext('2d'), {
                     type: 'bar',
@@ -860,10 +845,10 @@
                     let methodDatalistId = `method-list-${item.id}`;
 
                     let catOptionsHtml = '';
-                    allowedCats.forEach(c => { catOptionsHtml += `<option value="${escapeHtml(c)}">`;  });
+                    allowedCats.forEach(c => { catOptionsHtml += `<option value="${escapeHtml(c)}">`; });
 
                     let methodOptionsHtml = '';
-                    allowedMethods.forEach(m => { methodOptionsHtml += `<option value="${escapeHtml(m)}">`;  });
+                    allowedMethods.forEach(m => { methodOptionsHtml += `<option value="${escapeHtml(m)}">`; });
 
                     tr.innerHTML = `
                         <td class="td-date"><input type="date" class="table-cell-input" value="${escapeHtml(formatToInputDate(item.date))}" onchange="updateTransactionField('${item.id}', 'date', this.value)" /></td>
@@ -1130,7 +1115,7 @@
                 try {
                     const imported = JSON.parse(e.target.result);
                     if(Array.isArray(imported)) {
-                        window.transactions = imported.map(t => ({ ...t, id: /^[A-Za-z0-9_-]+$/.test(String(t.id || '')) ? String(t.id) : ('tx_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8)), type: normalizeType(t.type) }));
+                        window.transactions = imported.map(t => ({ ...t, id: String(t.id || ('tx_' + Date.now())), type: normalizeType(t.type) }));
                         saveDataToCloud();
                         renderAll();
                         showToast('JSON 데이터를 성공적으로 가져왔습니다.');
