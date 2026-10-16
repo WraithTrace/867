@@ -442,10 +442,10 @@
 
                 <div class="card">
                     <div class="card-title">
-                        <span>🍩 카테고리별 분석 TOP</span>
+                        <span>📉 카테고리별 분석 TOP</span>
                         <span style="font-size: 11px; color: var(--text-dim);">지출 기준</span>
                     </div>
-                    <div class="chart-container-box" style="height: 120px;"><canvas id="categoryDoughnutChart"></canvas></div>
+                    <!-- 도넛 차트 영역 제거 -->
                     <div class="cat-list" id="top-categories"></div>
                 </div>
             </div>
@@ -502,7 +502,6 @@
         let currentCatTab = '지출';
         let draggedCatIndex = null;
         let monthlyChartInstance = null;
-        let doughnutChartInstance = null;
         const WEEK_DAYS = ['일', '월', '화', '수', '목', '금', '토'];
 
         function escapeHtml(value) {
@@ -675,7 +674,7 @@
                 const d = String(parseInt(clean.substring(6, 8), 10)).padStart(2, '0');
                 const dateObj = new Date(`${y}-${m}-${d}`);
                 const dayName = WEEK_DAYS[dateObj.getDay()] || '수';
-                return `${y}. ${m}. ${d}. (${dayName})`;
+                return `${y}.${m}. ${d}. (${dayName})`;
             }
             return dateInput;
         }
@@ -780,16 +779,9 @@
             });
             const sorted = Object.keys(catSums).map(c => ({ name: c, amount: catSums[c] })).sort((a,b)=>b.amount-a.amount).slice(0,10);
             
-            const ctxD = document.getElementById('categoryDoughnutChart');
-            if(ctxD) {
-                if (doughnutChartInstance) doughnutChartInstance.destroy();
-                doughnutChartInstance = new Chart(ctxD.getContext('2d'), {
-                    type: 'doughnut',
-                    data: { labels: sorted.map(s=>s.name), datasets: [{ data: sorted.map(s=>s.amount), backgroundColor: ['#3b82f6','#60a5fa','#93c5fd','#10b981','#34d399','#f43f5e','#fb7185','#eab308','#facc15','#a855f7'] }] },
-                    options: { responsive: true, maintainAspectRatio: false, cutout: '70%' }
-                });
-            }
+            // --- 도넛 차트 및 범례 관련 JavaScript 제거 ---
 
+            // --- 목록 렌더링 부분 수정 ---
             const catListEl = document.getElementById('top-categories');
             if(catListEl) {
                 catListEl.innerHTML = '';
@@ -798,8 +790,14 @@
                     const pct = Math.round((item.amount / totalExp) * 100);
                     const div = document.createElement('div');
                     div.className = 'cat-item';
+                    // 카테고리 이름에 지출 색상을 적용하고, 아이콘을 변경합니다.
                     div.innerHTML = `
-                        <div class="cat-top"><span class="cat-name">🔹 ${escapeHtml(item.name)}</span><span class="cat-amount">${formatWon(item.amount)} (${pct}%)</span></div>
+                        <div class="cat-top">
+                            <span class="cat-name" style="color: var(--expense-color);">
+                                💸 ${escapeHtml(item.name)}
+                            </span>
+                            <span class="cat-amount">${formatWon(item.amount)} (${pct}%)</span>
+                        </div>
                         <div class="cat-progress"><div class="cat-bar" style="width: ${pct}%; background: var(--expense-color);"></div></div>
                     `;
                     catListEl.appendChild(div);
@@ -877,405 +875,6 @@
                         <td class="td-date"><input type="date" class="table-cell-input" value="${escapeHtml(formatToInputDate(item.date))}" onchange="updateTransactionField('${item.id}', 'date', this.value)" /></td>
                         <td>
                             <select class="table-cell-input" onchange="updateTransactionField('${item.id}', 'type', this.value)">
-                                <option value="" disabled ${!item.type ? 'selected' : ''}>구분 선택</option>
-                                <option value="수입" ${item.type === '수입' ? 'selected' : ''}>수입</option>
-                                <option value="지출" ${item.type === '지출' ? 'selected' : ''}>지출</option>
-                                <option value="저축" ${item.type === '저축' ? 'selected' : ''}>저축</option>
-                                <option value="투자" ${item.type === '투자' ? 'selected' : ''}>투자</option>
-                            </select>
-                        </td>
-                        <td>
-                            <input type="text" class="table-cell-input" list="${catDatalistId}" value="${escapeHtml(item.category || '')}" onchange="updateTransactionField('${item.id}', 'category', this.value)" placeholder="카테고리 입력" />
-                            <datalist id="${catDatalistId}">${catOptionsHtml}</datalist>
-                        </td>
-                        <td><input type="text" class="table-cell-input" value="${escapeHtml(item.desc || '')}" onchange="updateTransactionField('${item.id}', 'desc', this.value)" placeholder="내용 입력" /></td>
-                        <td style="text-align:right;"><input type="text" class="table-cell-input" style="text-align:right;" value="${item.amount ? Math.abs(item.amount).toLocaleString() : ''}" oninput="handleTableAmountInput(this, '${item.id}')" placeholder="0" /></td>
-                        <td>
-                            <input type="text" class="table-cell-input" list="${methodDatalistId}" value="${escapeHtml(item.method || '')}" onchange="updateTransactionField('${item.id}', 'method', this.value)" placeholder="결제방식" />
-                            <datalist id="${methodDatalistId}">${methodOptionsHtml}</datalist>
-                        </td>
-                        <td class="td-split"><input type="number" class="table-cell-input" style="text-align:center;" value="${item.split || 1}" min="1" onchange="updateTransactionField('${item.id}', 'split', this.value)" /></td>
-                        <td style="text-align:center; white-space:nowrap;">
-                            <button class="btn-icon" onclick="toggleEditRow('${item.id}')" title="수정 완료">✅</button>
-                            <button class="btn-icon btn-icon-del" onclick="deleteTransaction('${item.id}')" title="삭제">🗑️</button>
-                        </td>
-                    `;
-                } else {
-                    tr.innerHTML = `
-                        <td class="td-date">${escapeHtml(item.date)}</td>
-                        <td><span class="badge-tag tag-${escapeHtml(item.type)}">${escapeHtml(item.type || '-')}</span></td>
-                        <td>${escapeHtml(item.category || '-')}</td>
-                        <td>${escapeHtml(item.desc || '-')}</td>
-                        <td class="td-amount" style="text-align:right;">${formatWon(item.amount)}</td>
-                        <td>${escapeHtml(item.method || '-')}</td>
-                        <td class="td-split">${splitText}</td>
-                        <td style="text-align:center; white-space:nowrap;">
-                            <button class="btn-icon" onclick="toggleEditRow('${item.id}')" title="수정">✏️</button>
-                            <button class="btn-icon btn-icon-del" onclick="deleteTransaction('${item.id}')" title="삭제">🗑️</button>
-                        </td>
-                    `;
-                }
-                tbody.appendChild(tr);
-            });
+                               
 
-            document.getElementById('table-summary-info').textContent = `조회 결과: ${filtered.length}건`;
-            document.getElementById('table-sum-info').textContent = `합계: ${formatWon(total)}`;
-        }
-
-        window.addNewRow = function() {
-            const newItem = {
-                id: 'tx_' + Date.now(),
-                type: '',
-                date: formatDateWithDay(new Date().toISOString().slice(0, 10)),
-                category: '',
-                desc: '',
-                amount: 0,
-                method: null,
-                split: 1
-            };
-            window.transactions.unshift(newItem);
-            window.editingRows.add(newItem.id);
-            saveDataToCloud();
-            renderAll();
-            showToast('새 행이 추가되었습니다.');
-        }
-
-        window.updateTransactionField = function(id, field, val) {
-            const item = window.transactions.find(t => t.id === id);
-            if(!item) return;
-
-            if(field === 'date') {
-                item.date = formatDateWithDay(val);
-            } else if(field === 'split') {
-                item.split = parseInt(val, 10) || 1;
-            } else if(field === 'amount') {
-                item.amount = parseAmount(val);
-            } else if(field === 'type') {
-                item.type = normalizeType(val);
-                renderTable();
-            } else {
-                item[field] = val;
-            }
-
-            saveDataToCloud();
-            renderKPIs();
-            renderCharts();
-            syncDropdowns();
-        }
-
-        window.handleTableAmountInput = function(el, id) {
-            let val = el.value.replace(/[^0-9]/g, '');
-            el.value = val ? Number(val).toLocaleString('ko-KR') : '';
-            updateTransactionField(id, 'amount', el.value);
-        }
-
-        window.deleteTransaction = function(id) {
-            if (confirm('정말 삭제하시겠습니까?')) {
-                window.editingRows.delete(id);
-                window.transactions = window.transactions.filter(t => t.id !== id);
-                saveDataToCloud();
-                renderAll();
-                showToast('삭제되었습니다.');
-            }
-        }
-
-        // Category Management Modal & Drag-and-Drop Functions
-        window.openCategoryModal = function() {
-            renderCategoryChips();
-            document.getElementById('category-modal').classList.add('open');
-        }
-        window.closeCategoryModal = function() {
-            document.getElementById('category-modal').classList.remove('open');
-        }
-
-        window.switchCatTab = function(tabKey) {
-            currentCatTab = tabKey;
-            ['지출', '수입', '저축', '투자', 'method'].forEach(k => {
-                const btn = document.getElementById('cat-tab-' + k);
-                if (btn) btn.classList.remove('active');
-            });
-            const activeBtn = document.getElementById('cat-tab-' + tabKey);
-            if (activeBtn) activeBtn.classList.add('active');
-            renderCategoryChips();
-        }
-
-        window.handleCatDragStart = function(e, index) {
-            draggedCatIndex = index;
-            e.dataTransfer.effectAllowed = 'move';
-        }
-
-        window.handleCatDragOver = function(e) {
-            e.preventDefault();
-            e.dataTransfer.dropEffect = 'move';
-        }
-
-        window.handleCatDrop = function(e, index) {
-            e.preventDefault();
-            if (draggedCatIndex === null || draggedCatIndex === index) return;
-            const list = window.categories[currentCatTab];
-            const item = list.splice(draggedCatIndex, 1)[0];
-            list.splice(index, 0, item);
-            draggedCatIndex = null;
-            saveDataToCloud();
-            renderCategoryChips();
-            renderAll();
-        }
-
-        window.renderCategoryChips = function() {
-            const container = document.getElementById('cat-chip-container');
-            if(!container) return;
-            container.innerHTML = '';
-            const list = window.categories[currentCatTab] || [];
-            list.forEach((cat, index) => {
-                const chip = document.createElement('div');
-                chip.className = 'cat-chip';
-                chip.draggable = true;
-                chip.addEventListener('dragstart', event => window.handleCatDragStart(event, index));
-                chip.addEventListener('dragover', window.handleCatDragOver);
-                chip.addEventListener('drop', event => window.handleCatDrop(event, index));
-                const label = document.createElement('span');
-                label.textContent = cat;
-                label.addEventListener('dblclick', () => window.startEditCategory(label, index, cat));
-                const remove = document.createElement('span');
-                remove.className = 'cat-chip-del';
-                remove.textContent = '×';
-                remove.addEventListener('click', () => window.removeCategory(cat));
-                chip.append(label, document.createTextNode(' '), remove);
-                container.appendChild(chip);
-            });
-        }
-
-        window.startEditCategory = function(spanEl, index, oldVal) {
-            const parent = spanEl.parentElement;
-            const input = document.createElement('input');
-            input.type = 'text';
-            input.value = oldVal;
-            input.className = 'table-cell-input';
-            input.style.width = '100px';
-            input.style.padding = '2px 4px';
-            input.style.fontSize = '12px';
-            
-            parent.replaceChild(input, spanEl);
-            input.focus();
-
-            const saveEdit = () => {
-                const newVal = input.value.trim();
-                const list = window.categories[currentCatTab];
-                if (newVal && newVal !== oldVal) {
-                    if (list.includes(newVal)) {
-                        alert('이미 존재하는 항목입니다.');
-                    } else {
-                        list[index] = newVal;
-                        
-                        window.transactions.forEach(t => {
-                            if (currentCatTab !== 'method' && t.category === oldVal) t.category = newVal;
-                            if (currentCatTab === 'method' && t.method === oldVal) t.method = newVal;
-                        });
-
-                        saveDataToCloud();
-                        renderCategoryChips();
-                        renderAll();
-                        showToast('수정되었습니다.');
-                    }
-                }
-                renderCategoryChips();
-            };
-
-            input.onblur = saveEdit;
-            input.onkeydown = (e) => {
-                if (e.key === 'Enter') saveEdit();
-                else if (e.key === 'Escape') renderCategoryChips();
-            };
-        }
-
-        window.addNewCategory = function() {
-            const nameInput = document.getElementById('new-cat-name');
-            if(!nameInput) return;
-            const name = nameInput.value.trim();
-            if(name) {
-                if(!window.categories[currentCatTab]) window.categories[currentCatTab] = [];
-                if(!window.categories[currentCatTab].includes(name)) {
-                    window.categories[currentCatTab].push(name);
-                    nameInput.value = '';
-                    saveDataToCloud();
-                    renderCategoryChips();
-                    renderAll();
-                    showToast('항목이 추가되었습니다.');
-                } else {
-                    alert('이미 존재하는 항목입니다.');
-                }
-            }
-        }
-
-        window.removeCategory = function(cat) {
-            const list = window.categories[currentCatTab] || [];
-            if(list.length <= 1) {
-                alert('최소 1개 이상 유지되어야 합니다.');
-                return;
-            }
-            window.categories[currentCatTab] = list.filter(c => c !== cat);
-            saveDataToCloud();
-            renderCategoryChips();
-            renderAll();
-            showToast('항목이 삭제되었습니다.');
-        }
-
-        window.exportJSON = function() {
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(window.transactions, null, 2));
-            const dlAnchor = document.createElement('a');
-            dlAnchor.setAttribute("href", dataStr);
-            dlAnchor.setAttribute("download", "transactions_backup.json");
-            document.body.appendChild(dlAnchor);
-            dlAnchor.click();
-            dlAnchor.remove();
-            showToast('JSON 백업 파일이 다운로드되었습니다.');
-        }
-
-        window.importJSON = function(event) {
-            const file = event.target.files[0];
-            if(!file) return;
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    const imported = JSON.parse(e.target.result);
-                    if(Array.isArray(imported)) {
-                        window.transactions = imported.map(t => ({ ...t, id: /^[A-Za-z0-9_-]+$/.test(String(t.id || '')) ? String(t.id) : ('tx_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8)), type: normalizeType(t.type) }));
-                        saveDataToCloud();
-                        renderAll();
-                        showToast('JSON 데이터를 성공적으로 가져왔습니다.');
-                    }
-                } catch(err) {
-                    alert('파싱 중 오류가 발생했습니다.');
-                }
-            };
-            reader.readAsText(file);
-        }
-
-        function csvCell(value) {
-            const text = String(value ?? '');
-            return '"' + text.replace(/"/g, '""') + '"';
-        }
-
-        window.exportToCSV = function() {
-            let csv = '\uFEFF일자,구분,카테고리,금액,내용,결제방식\n';
-            window.transactions.forEach(t => {
-                const rawDate = String(t.date || '').replace(/[^0-9]/g, '').substring(0, 8);
-                const formattedRaw = rawDate.length === 8 ? `${rawDate.substring(0,4)}-${rawDate.substring(4,6)}-${rawDate.substring(6,8)}` : (t.date || '');
-                csv += [formattedRaw, t.type, t.category || '', t.amount, t.desc || '', t.method || ''].map(csvCell).join(',') + '\n';
-            });
-            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-            const url = URL.createObjectURL(blob);
-            const dlAnchor = document.createElement('a');
-            dlAnchor.setAttribute("href", url);
-            dlAnchor.setAttribute("download", "거래내역_백업.csv");
-            document.body.appendChild(dlAnchor);
-            dlAnchor.click();
-            dlAnchor.remove();
-            showToast('CSV 백업 파일이 다운로드되었습니다.');
-        }
-
-        function parseCSVLine(text) {
-            const result = [];
-            let insideQuote = false;
-            let entry = '';
-            for (let i = 0; i < text.length; i++) {
-                const char = text[i];
-                if (char === '"') {
-                    insideQuote = !insideQuote;
-                } else if (char === ',' && !insideQuote) {
-                    result.push(entry.trim().replace(/^"(.*)"$/, '$1'));
-                    entry = '';
-                } else {
-                    entry += char;
-                }
-            }
-            result.push(entry.trim().replace(/^"(.*)"$/, '$1'));
-            return result;
-        }
-
-        window.importCSV = function(event) {
-            const file = event.target.files[0];
-            if(!file) return;
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    parseAndLoadCSV(e.target.result);
-                } catch(err) {
-                    alert('CSV 파일을 읽는 중 오류가 발생했습니다.');
-                }
-            };
-            reader.readAsText(file);
-        }
-
-        function parseAndLoadCSV(text) {
-            const lines = text.split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 0);
-            if (lines.length === 0) return;
-
-            let addedCount = 0;
-            let headerMap = null;
-            let startIndex = 0;
-
-            const firstLineCols = parseCSVLine(lines[0]);
-            const keywords = ['날짜', '일자', '구분', '카테고리', '내용', '금액', '결제'];
-            const isHeader = firstLineCols.some(col => keywords.some(kw => col.includes(kw)));
-
-            if (isHeader) {
-                startIndex = 1;
-                headerMap = {};
-                firstLineCols.forEach((col, idx) => {
-                    const c = col.replace(/['"]+/g, '').trim();
-                    if (c.includes('날짜') || c.includes('일자')) headerMap.date = idx;
-                    else if (c.includes('구분')) headerMap.type = idx;
-                    else if (c.includes('카테고리') || c.includes('대분류')) headerMap.category = idx;
-                    else if (c.includes('내용')) headerMap.desc = idx;
-                    else if (c.includes('금액')) headerMap.amount = idx;
-                    else if (c.includes('결제') || c.includes('종류')) headerMap.method = idx;
-                });
-            }
-
-            for (let i = startIndex; i < lines.length; i++) {
-                const parts = parseCSVLine(lines[i]);
-                if (parts.length < 2) continue;
-
-                let rawDate, rawType, category, amountStr, desc, method;
-
-                if (headerMap) {
-                    rawDate = headerMap.date !== undefined ? parts[headerMap.date] : parts[0];
-                    rawType = headerMap.type !== undefined ? parts[headerMap.type] : parts[1];
-                    category = headerMap.category !== undefined ? parts[headerMap.category] : parts[2];
-                    amountStr = headerMap.amount !== undefined ? parts[headerMap.amount] : parts[3];
-                    desc = headerMap.desc !== undefined ? parts[headerMap.desc] : parts[4];
-                    method = headerMap.method !== undefined ? parts[headerMap.method] : parts[5];
-                } else {
-                    [rawDate, rawType, category, amountStr, desc, method] = parts;
-                }
-
-                const amount = parseAmount(amountStr);
-                const mappedType = normalizeType(rawType);
-
-                if (rawDate && rawType && !isNaN(amount)) {
-                    window.transactions.push({
-                        id: 'tx_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
-                        date: formatDateWithDay(rawDate.trim()), 
-                        type: mappedType, 
-                        category: category ? category.trim() : '', 
-                        desc: desc ? desc.trim() : '',
-                        amount, 
-                        method: method && method.trim().toLowerCase() !== 'nan' && method.trim() !== '' ? method.trim() : null, 
-                        split: 1
-                    });
-                    addedCount++;
-                }
-            }
-
-            if(addedCount > 0) {
-                saveDataToCloud();
-                renderAll();
-                showToast(`${addedCount}건의 데이터가 성공적으로 업로드되었습니다.`);
-            } else {
-                alert('올바른 형식의 데이터가 없습니다.');
-            }
-        }
-    </script>
-</body>
-</html>
+http://googleusercontent.com/image_generation_content/0_1212
