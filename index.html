@@ -514,6 +514,23 @@
             return v;
         }
 
+        function getCategoryType(catName) {
+            for (const typeKey of ['수입', '지출', '저축', '투자']) {
+                if (window.categories[typeKey] && window.categories[typeKey].includes(catName)) {
+                    return typeKey;
+                }
+            }
+            return '지출';
+        }
+
+        function getTypeColor(type) {
+            if (type === '수입') return 'var(--income-color)';
+            if (type === '지출') return 'var(--expense-color)';
+            if (type === '저축') return 'var(--savings-color)';
+            if (type === '투자') return 'var(--invest-color)';
+            return 'var(--primary)';
+        }
+
         window.showToast = function(msg) {
             const el = document.getElementById('toast-msg');
             if(!el) return;
@@ -755,9 +772,12 @@
             }
 
             const catSums = {};
+            const catTypes = {};
             window.transactions.forEach(t => { 
                 if (t.type === '지출') {
-                    catSums[t.category || '기타'] = (catSums[t.category || '기타'] || 0) + t.amount; 
+                    const cat = t.category || '기타';
+                    catSums[cat] = (catSums[cat] || 0) + t.amount; 
+                    catTypes[cat] = t.type;
                 }
             });
             const sorted = Object.keys(catSums).map(c => ({ name: c, amount: catSums[c] })).sort((a,b)=>b.amount-a.amount).slice(0,10);
@@ -768,16 +788,19 @@
                 const totalExp = Object.values(catSums).reduce((a, b) => a + b, 0) || 1;
                 sorted.forEach(item => {
                     const pct = Math.round((item.amount / totalExp) * 100);
+                    const itemType = catTypes[item.name] || getCategoryType(item.name);
+                    const colorVar = getTypeColor(itemType);
+
                     const div = document.createElement('div');
                     div.className = 'cat-item';
                     div.innerHTML = `
                         <div class="cat-top">
-                            <span class="cat-name" style="color: var(--expense-color);">
+                            <span class="cat-name" style="color: ${colorVar};">
                                 💸 ${escapeHtml(item.name)}
                             </span>
                             <span class="cat-amount">${formatWon(item.amount)} (${pct}%)</span>
                         </div>
-                        <div class="cat-progress"><div class="cat-bar" style="width: ${pct}%; background: var(--expense-color);"></div></div>
+                        <div class="cat-progress"><div class="cat-bar" style="width: ${pct}%; background: ${colorVar};"></div></div>
                     `;
                     catListEl.appendChild(div);
                 });
