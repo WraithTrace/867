@@ -529,19 +529,23 @@
         }
 
         window.toggleFirebaseLogin = async function() {
-            try {
-                if (window.currentUser) {
-                    await window.signOut(window.auth);
-                    showToast('로그아웃되었습니다.');
-                } else {
-                    const provider = new window.GoogleAuthProvider();
-                    await window.signInWithPopup(window.auth, provider);
-                    showToast('Google 로그인 성공!');
-                }
-            } catch (err) {
-                alert('인증 중 오류가 발생했습니다: ' + err.message);
-            }
+    try {
+        if (window.currentUser) {
+            await window.signOut(window.auth);
+            showToast('로그아웃되었습니다.');
+            // 로그아웃 후 확실하게 세션을 비우기 위해 1초 뒤 새로고침
+            setTimeout(() => location.reload(), 800);a
+        } else {
+            const provider = new window.GoogleAuthProvider();
+            await window.signInWithPopup(window.auth, provider);
+            showToast('Google 로그인 성공!');
+            // 로그인 성공 후 데이터 동기화를 위해 1초 뒤 새로고침
+            setTimeout(() => location.reload(), 800);
         }
+    } catch (err) {
+        alert('인증 중 오류가 발생했습니다: ' + err.message);
+    }
+}
 
         async function saveDataToCloud() {
             saveDataLocally();
