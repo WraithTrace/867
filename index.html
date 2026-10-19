@@ -145,6 +145,11 @@
         .kpi-savings .kpi-badge { background: var(--savings-bg); color: var(--savings-color); border: 1px solid var(--savings-border); }
         .kpi-invest .kpi-badge { background: var(--invest-bg); color: var(--invest-color); border: 1px solid var(--invest-border); }
         .kpi-amount { font-family: var(--font-mono); font-size: 24px; font-weight: 700; letter-spacing: -0.5px; }
+        .kpi-sub { font-size: 11.5px; color: var(--text-dim); margin-top: 8px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+        .kpi-sub-val { font-family: var(--font-mono); font-size: 12px; font-weight: 600; }
+        .kpi-sub-pos { color: #10b981; }
+        .kpi-sub-neg { color: #f43f5e; }
+        .kpi-sub-dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; margin-right: 2px; }
 
         .workspace-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; align-items: start; }
         @media (max-width: 1400px) { .workspace-grid { grid-template-columns: 1fr; } }
@@ -288,22 +293,27 @@
             <div class="kpi-card kpi-net">
                 <div class="kpi-header"><span class="kpi-badge">총 자산</span></div>
                 <div class="kpi-amount" id="kpi-net-amount">₩0</div>
+                <div class="kpi-sub"><span class="kpi-sub-dot" style="background:#818cf8"></span>이번달&nbsp;<span class="kpi-sub-val" id="kpi-net-month">₩0</span></div>
             </div>
             <div class="kpi-card kpi-income">
                 <div class="kpi-header"><span class="kpi-badge">총 수입</span></div>
                 <div class="kpi-amount" id="kpi-total-income">₩0</div>
+                <div class="kpi-sub"><span class="kpi-sub-dot" style="background:var(--income-color)"></span>이번달&nbsp;<span class="kpi-sub-val" id="kpi-income-month">₩0</span></div>
             </div>
             <div class="kpi-card kpi-expense">
                 <div class="kpi-header"><span class="kpi-badge">총 지출</span></div>
                 <div class="kpi-amount" id="kpi-total-expense">₩0</div>
+                <div class="kpi-sub"><span class="kpi-sub-dot" style="background:var(--expense-color)"></span>이번달&nbsp;<span class="kpi-sub-val" id="kpi-expense-month">₩0</span></div>
             </div>
             <div class="kpi-card kpi-savings">
                 <div class="kpi-header"><span class="kpi-badge">총 저축</span></div>
                 <div class="kpi-amount" id="kpi-total-savings">₩0</div>
+                <div class="kpi-sub"><span class="kpi-sub-dot" style="background:var(--savings-color)"></span>이번달&nbsp;<span class="kpi-sub-val" id="kpi-savings-month">₩0</span></div>
             </div>
             <div class="kpi-card kpi-invest">
                 <div class="kpi-header"><span class="kpi-badge">총 투자</span></div>
                 <div class="kpi-amount" id="kpi-total-invest">₩0</div>
+                <div class="kpi-sub"><span class="kpi-sub-dot" style="background:var(--invest-color)"></span>이번달&nbsp;<span class="kpi-sub-val" id="kpi-invest-month">₩0</span></div>
             </div>
         </div>
 
@@ -531,6 +541,22 @@
             return 'var(--primary)';
         }
 
+        // 카테고리 이름을 해시하여 팔레트에서 고유한 색상 반환
+        const CATEGORY_COLOR_PALETTE = [
+            '#f43f5e', '#f97316', '#eab308', '#22c55e', '#10b981',
+            '#06b6d4', '#3b82f6', '#6366f1', '#8b5cf6', '#ec4899',
+            '#14b8a6', '#84cc16', '#fb923c', '#a78bfa', '#38bdf8',
+            '#4ade80', '#fbbf24', '#f87171', '#34d399', '#818cf8'
+        ];
+        function getCategoryColor(catName) {
+            if (!catName) return CATEGORY_COLOR_PALETTE[0];
+            let hash = 0;
+            for (let i = 0; i < catName.length; i++) {
+                hash = (hash * 31 + catName.charCodeAt(i)) >>> 0;
+            }
+            return CATEGORY_COLOR_PALETTE[hash % CATEGORY_COLOR_PALETTE.length];
+        }
+
         window.showToast = function(msg) {
             const el = document.getElementById('toast-msg');
             if(!el) return;
@@ -722,6 +748,7 @@
         }
 
         window.renderKPIs = function() {
+            // 전체 누계
             let inc = 0, exp = 0, sav = 0, inv = 0;
             window.transactions.forEach(t => {
                 if (t.type === '수입') inc += t.amount;
@@ -729,12 +756,41 @@
                 else if (t.type === '저축') sav += t.amount;
                 else if (t.type === '투자') inv += t.amount;
             });
-            const net = inc - exp;
+            // 총 자산 = 투자 + 저축 + (수입 - 지출)
+            const net = inv + sav + (inc - exp);
+
             document.getElementById('kpi-net-amount').textContent = formatWon(net);
             document.getElementById('kpi-total-income').textContent = formatWon(inc);
             document.getElementById('kpi-total-expense').textContent = formatWon(exp);
             document.getElementById('kpi-total-savings').textContent = formatWon(sav);
             document.getElementById('kpi-total-invest').textContent = formatWon(inv);
+
+            // 이번달 현재까지 흐름
+            const now = new Date();
+            const curYear = now.getFullYear();
+            const curMonth = now.getMonth() + 1;
+            let mInc = 0, mExp = 0, mSav = 0, mInv = 0;
+            window.transactions.forEach(t => {
+                if (parseYear(t.date) === curYear && parseMonth(t.date) === curMonth) {
+                    if (t.type === '수입') mInc += t.amount;
+                    else if (t.type === '지출') mExp += t.amount;
+                    else if (t.type === '저축') mSav += t.amount;
+                    else if (t.type === '투자') mInv += t.amount;
+                }
+            });
+            const mNet = mInv + mSav + (mInc - mExp);
+
+            const setMonthEl = (id, val, signed) => {
+                const el = document.getElementById(id);
+                if (!el) return;
+                el.textContent = (signed && val > 0 ? '+' : '') + formatWon(val);
+                el.className = 'kpi-sub-val' + (signed ? (val >= 0 ? ' kpi-sub-pos' : ' kpi-sub-neg') : '');
+            };
+            setMonthEl('kpi-net-month', mNet, true);
+            setMonthEl('kpi-income-month', mInc, false);
+            setMonthEl('kpi-expense-month', mExp, false);
+            setMonthEl('kpi-savings-month', mSav, false);
+            setMonthEl('kpi-invest-month', mInv, false);
         }
 
         window.renderCharts = function() {
@@ -789,18 +845,18 @@
                 sorted.forEach(item => {
                     const pct = Math.round((item.amount / totalExp) * 100);
                     const itemType = catTypes[item.name] || getCategoryType(item.name);
-                    const colorVar = getTypeColor(itemType);
+                    const catColor = getTypeColor(itemType);
 
                     const div = document.createElement('div');
                     div.className = 'cat-item';
                     div.innerHTML = `
                         <div class="cat-top">
-                            <span class="cat-name" style="color: ${colorVar};">
-                                💸 ${escapeHtml(item.name)}
+                            <span class="cat-name" style="color: ${catColor};">
+                                <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${catColor};margin-right:4px;"></span>${escapeHtml(item.name)}
                             </span>
                             <span class="cat-amount">${formatWon(item.amount)} (${pct}%)</span>
                         </div>
-                        <div class="cat-progress"><div class="cat-bar" style="width: ${pct}%; background: ${colorVar};"></div></div>
+                        <div class="cat-progress"><div class="cat-bar" style="width: ${pct}%; background: ${catColor}; box-shadow: 0 0 6px ${catColor}55;"></div></div>
                     `;
                     catListEl.appendChild(div);
                 });
