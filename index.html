@@ -620,8 +620,8 @@
             position: relative;
             display: flex;
             align-items: center;
-            min-width: 200px;
-            flex: 1;
+            min-width: 120px;
+            flex: 0 1 180px;
         }
 
         .search-box input {
@@ -1128,9 +1128,8 @@
                                 <option value="amount-desc">높은금액</option>
                                 <option value="amount-asc">낮은금액</option>
                             </select>
+                            <button class="btn btn-primary" onclick="addNewRow()" style="white-space:nowrap;">+ 새 거래 추가</button>
                         </div>
-                        <button class="btn btn-primary" onclick="addNewRow()" style="white-space:nowrap;">+ 새 거래
-                            추가</button>
                     </div>
                 </div>
 
