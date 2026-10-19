@@ -311,7 +311,6 @@
             <div class="kpi-card kpi-net">
                 <div class="kpi-header"><span class="kpi-badge">총 자산</span></div>
                 <div class="kpi-amount" id="kpi-net-amount">₩0</div>
-                <div class="kpi-sub"><span class="kpi-sub-dot" style="background:#818cf8"></span>이번달&nbsp;<span class="kpi-sub-val" id="kpi-net-month">₩0</span></div>
             </div>
             <div class="kpi-card kpi-income">
                 <div class="kpi-header"><span class="kpi-badge">총 수입</span></div>
@@ -352,7 +351,7 @@
                     <input class="extras-input" id="extras-name-input" placeholder="항목명 (예: 보증금)" />
                     <input class="extras-input" id="extras-amount-input" type="number" placeholder="금액 (음수=차감)" />
                     <button class="btn btn-primary" onclick="addExtrasItem()">추가</button>
-                    <p class="extras-hint">• 양수: 총 자산에 합산  |  음수(-): 총 자산에서 차감</p>
+                    <p class="extras-hint">• 양수: 총 자산에 합산  |  음수(-): 총 자산에서 차감</p>
                 </div>
             </div>
         </div>
@@ -380,14 +379,11 @@
                                 <option value="date-desc">최신순</option><option value="date-asc">과거순</option><option value="amount-desc">높은금액</option><option value="amount-asc">낮은금액</option>
                             </select>
                         </div>
+                        <button class="btn btn-primary" onclick="addNewRow()" style="white-space:nowrap;">+ 새 거래 추가</button>
                     </div>
                 </div>
 
                 <div class="table-card">
-                    <div class="table-action-bar">
-                        <button class="btn btn-primary" onclick="addNewRow()">+ 새 행 추가하기</button>
-                    </div>
-
                     <div class="table-responsive">
                         <table id="transaction-table">
                             <thead>
