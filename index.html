@@ -11,7 +11,7 @@
         href="https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap"
         rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-    
+
     <style>
         :root {
             --bg-primary: #090d16;
@@ -24,19 +24,19 @@
             --text-muted: #94a3b8;
             --text-dim: #64748b;
             --primary: #6366f1;
-            
+
             --income-color: #f43f5e;
             --income-bg: rgba(244, 63, 94, 0.15);
             --income-border: rgba(244, 63, 94, 0.3);
-            
+
             --expense-color: #3b82f6;
             --expense-bg: rgba(59, 130, 246, 0.15);
             --expense-border: rgba(59, 130, 246, 0.3);
-            
+
             --savings-color: #10b981;
             --savings-bg: rgba(16, 185, 129, 0.15);
             --savings-border: rgba(16, 185, 129, 0.3);
-            
+
             --invest-color: #eab308;
             --invest-bg: rgba(234, 179, 8, 0.15);
             --invest-border: rgba(234, 179, 8, 0.3);
@@ -50,7 +50,11 @@
             --font-mono: 'JetBrains Mono', monospace;
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
         body {
             background-color: var(--bg-primary);
@@ -66,202 +70,918 @@
             padding: 24px 20px 60px;
         }
 
-        .container { max-width: 1760px; margin: 0 auto; }
+        .container {
+            max-width: 1760px;
+            margin: 0 auto;
+        }
 
         header {
-            display: flex; align-items: center; justify-content: space-between;
-            flex-wrap: wrap; gap: 16px; margin-bottom: 24px; padding-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 16px;
+            margin-bottom: 24px;
+            padding-bottom: 20px;
             border-bottom: 1px solid var(--border-color);
         }
-        .logo-area { display: flex; align-items: center; gap: 14px; }
+
+        .logo-area {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
         .logo-icon {
-            width: 46px; height: 46px; background: linear-gradient(135deg, #6366f1, #3b82f6);
-            border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center;
-            font-size: 22px; box-shadow: 0 4px 16px rgba(99, 102, 241, 0.4);
+            width: 46px;
+            height: 46px;
+            background: linear-gradient(135deg, #6366f1, #3b82f6);
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            box-shadow: 0 4px 16px rgba(99, 102, 241, 0.4);
         }
+
         .logo-title h1 {
-            font-size: 22px; font-weight: 800; letter-spacing: -0.5px;
+            font-size: 22px;
+            font-weight: 800;
+            letter-spacing: -0.5px;
             background: linear-gradient(90deg, #ffffff, #cbd5e1);
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
-        .logo-title p { font-size: 12.5px; color: var(--text-muted); margin-top: 2px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+
+        .logo-title p {
+            font-size: 12.5px;
+            color: var(--text-muted);
+            margin-top: 2px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
         .storage-status {
-            display: inline-flex; align-items: center; gap: 5px;
-            background: rgba(99, 102, 241, 0.15); color: #818cf8;
-            padding: 2px 8px; border-radius: 20px; font-size: 11px; font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            background: rgba(99, 102, 241, 0.15);
+            color: #818cf8;
+            padding: 2px 8px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
         }
-        .storage-dot { width: 6px; height: 6px; background: #6366f1; border-radius: 50%; box-shadow: 0 0 8px #6366f1; }
-        
-        .header-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-        
+
+        .storage-dot {
+            width: 6px;
+            height: 6px;
+            background: #6366f1;
+            border-radius: 50%;
+            box-shadow: 0 0 8px #6366f1;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
         .btn {
-            display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px;
-            border-radius: var(--radius-sm); font-size: 13px; font-weight: 600; cursor: pointer;
-            transition: all 0.2s ease; border: 1px solid var(--border-color);
-            background: rgba(255, 255, 255, 0.05); color: var(--text-main); backdrop-filter: blur(8px);
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 14px;
+            border-radius: var(--radius-sm);
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: 1px solid var(--border-color);
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-main);
+            backdrop-filter: blur(8px);
         }
-        .btn:hover { background: rgba(255, 255, 255, 0.1); border-color: rgba(255, 255, 255, 0.2); transform: translateY(-1px); }
+
+        .btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.2);
+            transform: translateY(-1px);
+        }
+
         .btn-primary {
-            background: linear-gradient(135deg, #6366f1, #4f46e5); border-color: #6366f1; color: #fff;
+            background: linear-gradient(135deg, #6366f1, #4f46e5);
+            border-color: #6366f1;
+            color: #fff;
             box-shadow: 0 4px 14px rgba(99, 102, 241, 0.35);
         }
-        .btn-primary:hover { background: linear-gradient(135deg, #4f46e5, #4338ca); }
 
-        .dropdown { position: relative; display: inline-block; }
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #4f46e5, #4338ca);
+        }
+
+        .dropdown {
+            position: relative;
+            display: inline-block;
+        }
+
         .dropdown-content {
-            display: none; position: absolute; right: 0; background: var(--bg-secondary);
-            min-width: 170px; box-shadow: var(--shadow-glow); border: 1px solid var(--border-color);
-            border-radius: var(--radius-sm); z-index: 100; overflow: hidden;
+            display: none;
+            position: absolute;
+            right: 0;
+            background: var(--bg-secondary);
+            min-width: 170px;
+            box-shadow: var(--shadow-glow);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            z-index: 100;
+            overflow: hidden;
         }
-        .dropdown-content button {
-            width: 100%; text-align: left; background: none; border: none; padding: 10px 14px;
-            color: var(--text-main); font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 8px;
-        }
-        .dropdown-content button:hover { background: rgba(255, 255, 255, 0.08); }
-        .dropdown.open .dropdown-content { display: block; }
 
-        .kpi-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 14px; margin-bottom: 24px; }
-        @media (max-width: 1500px) { .kpi-grid { grid-template-columns: repeat(3, 1fr); } }
-        @media (max-width: 800px) { .kpi-grid { grid-template-columns: repeat(2, 1fr); } }
-        @media (max-width: 520px) { .kpi-grid { grid-template-columns: 1fr; } }
-        
+        .dropdown-content button {
+            width: 100%;
+            text-align: left;
+            background: none;
+            border: none;
+            padding: 10px 14px;
+            color: var(--text-main);
+            font-size: 13px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .dropdown-content button:hover {
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .dropdown.open .dropdown-content {
+            display: block;
+        }
+
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 14px;
+            margin-bottom: 24px;
+        }
+
+        @media (max-width: 1500px) {
+            .kpi-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        @media (max-width: 800px) {
+            .kpi-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 520px) {
+            .kpi-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
         .kpi-card {
-            background: var(--bg-card); backdrop-filter: blur(16px); border: 1px solid var(--border-color);
-            border-radius: var(--radius-lg); padding: 20px 18px; position: relative; overflow: hidden;
+            background: var(--bg-card);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 20px 18px;
+            position: relative;
+            overflow: hidden;
             box-shadow: var(--shadow-glow);
         }
-        .kpi-card::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 3px; }
-        .kpi-net::before { background: var(--primary); }
-        .kpi-income::before { background: var(--income-color); }
-        .kpi-expense::before { background: var(--expense-color); }
-        .kpi-savings::before { background: var(--savings-color); }
-        .kpi-invest::before { background: var(--invest-color); }
-        
-        .kpi-header { display: flex; align-items: center; margin-bottom: 10px; }
-        .kpi-badge { font-size: 13px; font-weight: 700; padding: 4px 12px; border-radius: 16px; display: inline-block; }
-        .kpi-net .kpi-badge { background: rgba(99, 102, 241, 0.2); color: #818cf8; border: 1px solid rgba(99, 102, 241, 0.4); }
-        .kpi-income .kpi-badge { background: var(--income-bg); color: var(--income-color); border: 1px solid var(--income-border); }
-        .kpi-expense .kpi-badge { background: var(--expense-bg); color: var(--expense-color); border: 1px solid var(--expense-border); }
-        .kpi-savings .kpi-badge { background: var(--savings-bg); color: var(--savings-color); border: 1px solid var(--savings-border); }
-        .kpi-other::before { background: #a78bfa; }
-        .kpi-other .kpi-badge { background: rgba(167,139,250,0.15); color: #a78bfa; border: 1px solid rgba(167,139,250,0.35); }
+
+        .kpi-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+        }
+
+        .kpi-net::before {
+            background: var(--primary);
+        }
+
+        .kpi-income::before {
+            background: var(--income-color);
+        }
+
+        .kpi-expense::before {
+            background: var(--expense-color);
+        }
+
+        .kpi-savings::before {
+            background: var(--savings-color);
+        }
+
+        .kpi-invest::before {
+            background: var(--invest-color);
+        }
+
+        .kpi-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .kpi-badge {
+            font-size: 13px;
+            font-weight: 700;
+            padding: 4px 12px;
+            border-radius: 16px;
+            display: inline-block;
+        }
+
+        .kpi-net .kpi-badge {
+            background: rgba(99, 102, 241, 0.2);
+            color: #818cf8;
+            border: 1px solid rgba(99, 102, 241, 0.4);
+        }
+
+        .kpi-income .kpi-badge {
+            background: var(--income-bg);
+            color: var(--income-color);
+            border: 1px solid var(--income-border);
+        }
+
+        .kpi-expense .kpi-badge {
+            background: var(--expense-bg);
+            color: var(--expense-color);
+            border: 1px solid var(--expense-border);
+        }
+
+        .kpi-savings .kpi-badge {
+            background: var(--savings-bg);
+            color: var(--savings-color);
+            border: 1px solid var(--savings-border);
+        }
+
+        .kpi-other::before {
+            background: #a78bfa;
+        }
+
+        .kpi-other .kpi-badge {
+            background: rgba(167, 139, 250, 0.15);
+            color: #a78bfa;
+            border: 1px solid rgba(167, 139, 250, 0.35);
+        }
 
         /* 기타 자산 모달 */
-        .extras-modal-overlay { position: fixed; top:0; left:0; right:0; bottom:0; background: rgba(0,0,0,0.75); backdrop-filter: blur(8px); display:none; align-items:center; justify-content:center; z-index:1000; }
-        .extras-modal-overlay.open { display:flex; }
-        .extras-modal { background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: var(--radius-lg); padding: 24px; width: 460px; max-width: 95vw; max-height: 85vh; overflow-y:auto; box-shadow: 0 25px 60px rgba(0,0,0,0.6); }
-        .extras-modal-title { font-size: 16px; font-weight: 700; color: var(--text-main); margin-bottom: 18px; display:flex; align-items:center; justify-content:space-between; }
-        .extras-list { display:flex; flex-direction:column; gap:8px; margin-bottom:16px; min-height:40px; }
-        .extras-row { display:flex; align-items:center; gap:8px; background: rgba(255,255,255,0.04); border-radius: 8px; padding: 10px 12px; }
-        .extras-row-name { flex:1; font-size:13px; color: var(--text-main); }
-        .extras-row-amount { font-family: var(--font-mono); font-size:13px; font-weight:600; min-width:120px; text-align:right; }
-        .extras-row-amount.pos { color: #10b981; }
-        .extras-row-amount.neg { color: #f43f5e; }
-        .extras-add-form { display:grid; grid-template-columns:1fr 1fr auto; gap:8px; align-items:center; padding:12px; background:rgba(255,255,255,0.03); border-radius:8px; border:1px dashed var(--border-color); }
-        .extras-input { background: rgba(255,255,255,0.06); border:1px solid var(--border-color); border-radius:6px; padding: 8px 10px; font-size:13px; color:var(--text-main); outline:none; width:100%; }
-        .extras-input:focus { border-color: #a78bfa; }
-        .extras-input::placeholder { color: var(--text-dim); }
-        .extras-hint { font-size:11px; color:var(--text-dim); margin-top:6px; grid-column:1/-1; }
-        .kpi-amount { font-family: var(--font-mono); font-size: 24px; font-weight: 700; letter-spacing: -0.5px; }
-        .kpi-sub { font-size: 11.5px; color: var(--text-dim); margin-top: 8px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
-        .kpi-sub-val { font-family: var(--font-mono); font-size: 12px; font-weight: 600; }
-        .kpi-sub-pos { color: #10b981; }
-        .kpi-sub-neg { color: #f43f5e; }
-        .kpi-sub-dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; margin-right: 2px; }
+        .extras-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(8px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
 
-        .workspace-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; align-items: start; }
-        @media (max-width: 1400px) { .workspace-grid { grid-template-columns: 1fr; } }
+        .extras-modal-overlay.open {
+            display: flex;
+        }
 
-        .left-pane { display: flex; flex-direction: column; gap: 16px; }
-        .right-pane { display: flex; flex-direction: column; gap: 16px; }
+        .extras-modal {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 24px;
+            width: 460px;
+            max-width: 95vw;
+            max-height: 85vh;
+            overflow-y: auto;
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6);
+        }
 
-        .card { background: var(--bg-card); backdrop-filter: blur(16px); border: 1px solid var(--border-color); border-radius: var(--radius-lg); padding: 20px; box-shadow: var(--shadow-glow); }
-        .card-title { font-size: 15px; font-weight: 700; display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
-        .chart-container-box { position: relative; width: 100%; height: 280px; }
-        
-        .cat-list { display: flex; flex-direction: column; gap: 10px; max-height: 380px; overflow-y: auto; padding-right: 4px; }
-        .cat-item { display: flex; flex-direction: column; gap: 4px; font-size: 12.5px; padding: 4px 6px; border-radius: 6px; }
-        .cat-top { display: flex; justify-content: space-between; align-items: center; }
-        .cat-name { color: var(--text-muted); font-weight: 500; display: flex; align-items: center; gap: 6px; }
-        .cat-amount { font-family: var(--font-mono); font-weight: 600; color: var(--text-main); }
-        .cat-progress { height: 6px; background: rgba(255, 255, 255, 0.06); border-radius: 4px; overflow: hidden; }
-        .cat-bar { height: 100%; border-radius: 4px; }
+        .extras-modal-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text-main);
+            margin-bottom: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
 
-        .controls-card { background: var(--bg-card); backdrop-filter: blur(16px); border: 1px solid var(--border-color); border-radius: var(--radius-lg); padding: 16px; box-shadow: var(--shadow-glow); }
-        .controls-top { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
-        
-        .filters { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; width: 100%; }
-        .search-box { position: relative; display: flex; align-items: center; min-width: 200px; flex: 1; }
-        .search-box input { background: rgba(22, 30, 49, 0.8); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 7px 10px 7px 30px; color: var(--text-main); font-size: 12.5px; outline: none; width: 100%; }
-        .search-icon { position: absolute; left: 9px; fill: var(--text-dim); pointer-events: none; }
-        
-        select, input[type="text"], input[type="date"], input[type="number"] {
-            background: rgba(22, 30, 49, 0.8); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 7px 10px; color: var(--text-main); font-size: 12.5px; outline: none; cursor: pointer;
+        .extras-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 16px;
+            min-height: 40px;
+        }
+
+        .extras-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.04);
+            border-radius: 8px;
+            padding: 10px 12px;
+        }
+
+        .extras-row-name {
+            flex: 1;
+            font-size: 13px;
+            color: var(--text-main);
+        }
+
+        .extras-row-amount {
+            font-family: var(--font-mono);
+            font-size: 13px;
+            font-weight: 600;
+            min-width: 120px;
+            text-align: right;
+        }
+
+        .extras-row-amount.pos {
+            color: #10b981;
+        }
+
+        .extras-row-amount.neg {
+            color: #f43f5e;
+        }
+
+        .extras-add-form {
+            display: grid;
+            grid-template-columns: 1fr 1fr auto;
+            gap: 8px;
+            align-items: center;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 8px;
+            border: 1px dashed var(--border-color);
+        }
+
+        .extras-input {
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 8px 10px;
+            font-size: 13px;
+            color: var(--text-main);
+            outline: none;
+            width: 100%;
+        }
+
+        .extras-input:focus {
+            border-color: #a78bfa;
+        }
+
+        .extras-input::placeholder {
+            color: var(--text-dim);
+        }
+
+        .extras-hint {
+            font-size: 11px;
+            color: var(--text-dim);
+            margin-top: 6px;
+            grid-column: 1/-1;
+        }
+
+        .kpi-amount {
+            font-family: var(--font-mono);
+            font-size: 24px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
+        .kpi-sub {
+            font-size: 11.5px;
+            color: var(--text-dim);
+            margin-top: 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .kpi-sub-val {
+            font-family: var(--font-mono);
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .kpi-sub-pos {
+            color: #10b981;
+        }
+
+        .kpi-sub-neg {
+            color: #f43f5e;
+        }
+
+        .kpi-sub-dot {
+            display: inline-block;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            margin-right: 2px;
+        }
+
+        .workspace-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 20px;
+            align-items: start;
+        }
+
+        @media (max-width: 1400px) {
+            .workspace-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .left-pane {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .right-pane {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .card {
+            background: var(--bg-card);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 20px;
+            box-shadow: var(--shadow-glow);
+        }
+
+        .card-title {
+            font-size: 15px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+
+        .chart-container-box {
+            position: relative;
+            width: 100%;
+            height: 280px;
+        }
+
+        .cat-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-height: 380px;
+            overflow-y: auto;
+            padding-right: 4px;
+        }
+
+        .cat-item {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            font-size: 12.5px;
+            padding: 4px 6px;
+            border-radius: 6px;
+        }
+
+        .cat-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .cat-name {
+            color: var(--text-muted);
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .cat-amount {
+            font-family: var(--font-mono);
+            font-weight: 600;
+            color: var(--text-main);
+        }
+
+        .cat-progress {
+            height: 6px;
+            background: rgba(255, 255, 255, 0.06);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .cat-bar {
+            height: 100%;
+            border-radius: 4px;
+        }
+
+        .controls-card {
+            background: var(--bg-card);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 16px;
+            box-shadow: var(--shadow-glow);
+        }
+
+        .controls-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .filters {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            width: 100%;
+        }
+
+        .search-box {
+            position: relative;
+            display: flex;
+            align-items: center;
+            min-width: 200px;
+            flex: 1;
+        }
+
+        .search-box input {
+            background: rgba(22, 30, 49, 0.8);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            padding: 7px 10px 7px 30px;
+            color: var(--text-main);
+            font-size: 12.5px;
+            outline: none;
+            width: 100%;
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 9px;
+            fill: var(--text-dim);
+            pointer-events: none;
+        }
+
+        select,
+        input[type="text"],
+        input[type="date"],
+        input[type="number"] {
+            background: rgba(22, 30, 49, 0.8);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            padding: 7px 10px;
+            color: var(--text-main);
+            font-size: 12.5px;
+            outline: none;
+            cursor: pointer;
         }
 
         .table-cell-input {
-            width: 100%; background: rgba(9, 13, 22, 0.9); border: 1px solid var(--border-active); border-radius: var(--radius-sm);
-            padding: 6px 8px; color: var(--text-main); font-size: 12.5px; outline: none;
+            width: 100%;
+            background: rgba(9, 13, 22, 0.9);
+            border: 1px solid var(--border-active);
+            border-radius: var(--radius-sm);
+            padding: 6px 8px;
+            color: var(--text-main);
+            font-size: 12.5px;
+            outline: none;
         }
 
         .table-action-bar {
-            display: flex; justify-content: flex-end; padding: 10px 14px; background: rgba(15, 23, 42, 0.6);
+            display: flex;
+            justify-content: flex-end;
+            padding: 10px 14px;
+            background: rgba(15, 23, 42, 0.6);
             border-bottom: 1px solid var(--border-color);
         }
 
-        .table-card { background: var(--bg-card); backdrop-filter: blur(16px); border: 1px solid var(--border-color); border-radius: var(--radius-lg); overflow: hidden; box-shadow: var(--shadow-glow); }
-        .table-responsive { width: 100%; overflow-x: auto; max-height: 680px; }
-        table { width: 100%; border-collapse: collapse; text-align: left; }
-        
-        th { background: rgba(15, 23, 42, 0.92); padding: 10px 12px; font-size: 11.5px; font-weight: 700; text-transform: uppercase; color: var(--text-muted); border-bottom: 1px solid var(--border-color); position: sticky; top: 0; z-index: 10; white-space: nowrap; }
-        
-        select.header-filter-select {
-            -webkit-appearance: none; -moz-appearance: none; appearance: none;
-            background: transparent url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>") no-repeat right center;
-            border: none; border-radius: 0;
-            color: var(--text-muted); font-size: 11.5px; font-weight: 700; text-transform: uppercase;
-            padding: 0 16px 0 0; margin: 0; cursor: pointer; display: inline-block; vertical-align: middle;
-            outline: none; width: 100%;
+        .table-card {
+            background: var(--bg-card);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            box-shadow: var(--shadow-glow);
         }
-        select.header-filter-select option { background: #0f172a; color: var(--text-main); }
 
-        td { padding: 10px 12px; font-size: 13px; border-bottom: 1px solid rgba(255, 255, 255, 0.04); color: var(--text-main); vertical-align: middle; }
-        tbody tr:hover td { background-color: var(--bg-card-hover); }
-        .td-date { font-family: var(--font-mono); font-size: 12px; color: var(--text-muted); white-space: nowrap; }
-        .td-amount { font-family: var(--font-mono); font-weight: 700; white-space: nowrap; }
-        .td-split { font-family: var(--font-mono); font-size: 12px; color: #cbd5e1; text-align: center; }
-        
-        .badge-tag { display: inline-block; font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 5px; border: 1px solid transparent; white-space: nowrap; }
-        .tag-수입 { background: var(--income-bg); color: var(--income-color); border-color: var(--income-border); }
-        .tag-지출 { background: var(--expense-bg); color: var(--expense-color); border-color: var(--expense-border); }
-        .tag-저축 { background: var(--savings-bg); color: var(--savings-color); border-color: var(--savings-border); }
-        .tag-투자 { background: var(--invest-bg); color: var(--invest-color); border-color: var(--invest-border); }
+        .table-responsive {
+            width: 100%;
+            overflow-x: auto;
+            max-height: 680px;
+        }
 
-        .btn-icon { background: none; border: none; color: var(--text-dim); cursor: pointer; font-size: 13px; padding: 4px; border-radius: 4px; transition: all 0.2s; }
-        .btn-icon:hover { color: var(--text-main); background: rgba(255, 255, 255, 0.08); }
-        .btn-icon-del:hover { color: var(--income-color); background: var(--income-bg); }
-        .table-footer { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; font-size: 12px; color: var(--text-dim); border-top: 1px solid var(--border-color); background: rgba(15, 23, 42, 0.7); }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
 
-        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.75); backdrop-filter: blur(8px); display: none; align-items: center; justify-content: center; z-index: 1000; }
-        .modal-overlay.open { display: flex; }
-        .modal-content { background: #151d2f; border: 1px solid var(--border-color); border-radius: var(--radius-xl); padding: 24px; width: 90%; max-width: 560px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7); }
-        .modal-title { font-size: 17px; font-weight: 700; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between; }
-        .form-group { margin-bottom: 12px; }
-        .form-group label { display: block; font-size: 12px; font-weight: 600; color: var(--text-muted); margin-bottom: 5px; }
-        .modal-buttons { display: flex; justify-content: flex-end; gap: 8px; margin-top: 18px; border-top: 1px solid var(--border-color); padding-top: 14px; }
-        
-        .cat-tabs { display: flex; gap: 4px; margin-bottom: 14px; background: rgba(9, 13, 22, 0.6); padding: 4px; border-radius: var(--radius-sm); border: 1px solid var(--border-color); flex-wrap: wrap; }
-        .cat-tab-btn { flex: 1; min-width: 75px; padding: 6px; border: none; background: transparent; color: var(--text-muted); font-size: 12px; font-weight: 600; cursor: pointer; border-radius: 4px; transition: all 0.2s; text-align: center; }
-        .cat-tab-btn.active { background: var(--primary); color: #fff; }
+        th {
+            background: rgba(15, 23, 42, 0.92);
+            padding: 10px 12px;
+            font-size: 11.5px;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            border-bottom: 1px solid var(--border-color);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            white-space: nowrap;
+        }
 
-        .cat-chip-list { display: flex; flex-wrap: wrap; gap: 8px; max-height: 200px; overflow-y: auto; padding: 8px; background: rgba(9, 13, 22, 0.6); border-radius: var(--radius-sm); border: 1px solid var(--border-color); }
-        .cat-chip { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; background: rgba(255, 255, 255, 0.08); border: 1px solid var(--border-color); border-radius: 16px; font-size: 12px; cursor: grab; user-select: none; }
-        .cat-chip:active { cursor: grabbing; }
-        .cat-chip-del { cursor: pointer; color: var(--text-dim); font-weight: bold; }
-        .cat-chip-del:hover { color: var(--income-color); }
+        select.header-filter-select {
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            background: transparent url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>") no-repeat right center;
+            border: none;
+            border-radius: 0;
+            color: var(--text-muted);
+            font-size: 11.5px;
+            font-weight: 700;
+            text-transform: uppercase;
+            padding: 0 16px 0 0;
+            margin: 0;
+            cursor: pointer;
+            display: inline-block;
+            vertical-align: middle;
+            outline: none;
+            width: 100%;
+        }
 
-        .toast { position: fixed; bottom: 24px; right: 24px; background: #1e293b; color: #fff; padding: 10px 18px; border-radius: var(--radius-sm); border: 1px solid var(--border-active); font-size: 13px; font-weight: 500; z-index: 2000; transform: translateY(100px); opacity: 0; transition: all 0.3s; }
-        .toast.show { transform: translateY(0); opacity: 1; }
+        select.header-filter-select option {
+            background: #0f172a;
+            color: var(--text-main);
+        }
+
+        td {
+            padding: 10px 12px;
+            font-size: 13px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+            color: var(--text-main);
+            vertical-align: middle;
+        }
+
+        tbody tr:hover td {
+            background-color: var(--bg-card-hover);
+        }
+
+        .td-date {
+            font-family: var(--font-mono);
+            font-size: 12px;
+            color: var(--text-muted);
+            white-space: nowrap;
+        }
+
+        .td-amount {
+            font-family: var(--font-mono);
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .td-split {
+            font-family: var(--font-mono);
+            font-size: 12px;
+            color: #cbd5e1;
+            text-align: center;
+        }
+
+        .badge-tag {
+            display: inline-block;
+            font-size: 11px;
+            font-weight: 600;
+            padding: 3px 8px;
+            border-radius: 5px;
+            border: 1px solid transparent;
+            white-space: nowrap;
+        }
+
+        .tag-수입 {
+            background: var(--income-bg);
+            color: var(--income-color);
+            border-color: var(--income-border);
+        }
+
+        .tag-지출 {
+            background: var(--expense-bg);
+            color: var(--expense-color);
+            border-color: var(--expense-border);
+        }
+
+        .tag-저축 {
+            background: var(--savings-bg);
+            color: var(--savings-color);
+            border-color: var(--savings-border);
+        }
+
+        .tag-투자 {
+            background: var(--invest-bg);
+            color: var(--invest-color);
+            border-color: var(--invest-border);
+        }
+
+        .btn-icon {
+            background: none;
+            border: none;
+            color: var(--text-dim);
+            cursor: pointer;
+            font-size: 13px;
+            padding: 4px;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+
+        .btn-icon:hover {
+            color: var(--text-main);
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .btn-icon-del:hover {
+            color: var(--income-color);
+            background: var(--income-bg);
+        }
+
+        .table-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 16px;
+            font-size: 12px;
+            color: var(--text-dim);
+            border-top: 1px solid var(--border-color);
+            background: rgba(15, 23, 42, 0.7);
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(8px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .modal-overlay.open {
+            display: flex;
+        }
+
+        .modal-content {
+            background: #151d2f;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-xl);
+            padding: 24px;
+            width: 90%;
+            max-width: 560px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+        }
+
+        .modal-title {
+            font-size: 17px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .form-group {
+            margin-bottom: 12px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-muted);
+            margin-bottom: 5px;
+        }
+
+        .modal-buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+            margin-top: 18px;
+            border-top: 1px solid var(--border-color);
+            padding-top: 14px;
+        }
+
+        .cat-tabs {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 14px;
+            background: rgba(9, 13, 22, 0.6);
+            padding: 4px;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border-color);
+            flex-wrap: wrap;
+        }
+
+        .cat-tab-btn {
+            flex: 1;
+            min-width: 75px;
+            padding: 6px;
+            border: none;
+            background: transparent;
+            color: var(--text-muted);
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: all 0.2s;
+            text-align: center;
+        }
+
+        .cat-tab-btn.active {
+            background: var(--primary);
+            color: #fff;
+        }
+
+        .cat-chip-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            max-height: 200px;
+            overflow-y: auto;
+            padding: 8px;
+            background: rgba(9, 13, 22, 0.6);
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border-color);
+        }
+
+        .cat-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            font-size: 12px;
+            cursor: grab;
+            user-select: none;
+        }
+
+        .cat-chip:active {
+            cursor: grabbing;
+        }
+
+        .cat-chip-del {
+            cursor: pointer;
+            color: var(--text-dim);
+            font-weight: bold;
+        }
+
+        .cat-chip-del:hover {
+            color: var(--income-color);
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: #1e293b;
+            color: #fff;
+            padding: 10px 18px;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border-active);
+            font-size: 13px;
+            font-weight: 500;
+            z-index: 2000;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s;
+        }
+
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
     </style>
 </head>
 
@@ -281,7 +1001,7 @@
                     </p>
                 </div>
             </div>
-            
+
             <div class="header-actions">
                 <button class="btn" onclick="openCategoryModal()">🏷️ 항목/결제방식 관리</button>
 
@@ -292,8 +1012,10 @@
                         <button onclick="document.getElementById('import-csv-input').click()">CSV 가져오기</button>
                     </div>
                 </div>
-                <input type="file" id="import-file-input" style="display:none" accept=".json" onchange="importJSON(event)" />
-                <input type="file" id="import-csv-input" style="display:none" accept=".csv" onchange="importCSV(event)" />
+                <input type="file" id="import-file-input" style="display:none" accept=".json"
+                    onchange="importJSON(event)" />
+                <input type="file" id="import-csv-input" style="display:none" accept=".csv"
+                    onchange="importCSV(event)" />
 
                 <div class="dropdown" id="download-dropdown">
                     <button class="btn" onclick="toggleDownloadDropdown()">💾 데이터 다운로드 ▼</button>
@@ -303,7 +1025,8 @@
                     </div>
                 </div>
 
-                <button class="btn btn-primary" id="firebase-login-btn" onclick="toggleFirebaseLogin()">Google 로그인</button>
+                <button class="btn btn-primary" id="firebase-login-btn" onclick="toggleFirebaseLogin()">Google
+                    로그인</button>
             </div>
         </header>
 
@@ -315,27 +1038,37 @@
             <div class="kpi-card kpi-income">
                 <div class="kpi-header"><span class="kpi-badge">총 수입</span></div>
                 <div class="kpi-amount" id="kpi-total-income">₩0</div>
-                <div class="kpi-sub"><span class="kpi-sub-dot" style="background:var(--income-color)"></span>이번달&nbsp;<span class="kpi-sub-val" id="kpi-income-month">₩0</span></div>
+                <div class="kpi-sub"><span class="kpi-sub-dot"
+                        style="background:var(--income-color)"></span>이번달&nbsp;<span class="kpi-sub-val"
+                        id="kpi-income-month">₩0</span></div>
             </div>
             <div class="kpi-card kpi-expense">
                 <div class="kpi-header"><span class="kpi-badge">총 지출</span></div>
                 <div class="kpi-amount" id="kpi-total-expense">₩0</div>
-                <div class="kpi-sub"><span class="kpi-sub-dot" style="background:var(--expense-color)"></span>이번달&nbsp;<span class="kpi-sub-val" id="kpi-expense-month">₩0</span></div>
+                <div class="kpi-sub"><span class="kpi-sub-dot"
+                        style="background:var(--expense-color)"></span>이번달&nbsp;<span class="kpi-sub-val"
+                        id="kpi-expense-month">₩0</span></div>
             </div>
             <div class="kpi-card kpi-savings">
                 <div class="kpi-header"><span class="kpi-badge">총 저축</span></div>
                 <div class="kpi-amount" id="kpi-total-savings">₩0</div>
-                <div class="kpi-sub"><span class="kpi-sub-dot" style="background:var(--savings-color)"></span>이번달&nbsp;<span class="kpi-sub-val" id="kpi-savings-month">₩0</span></div>
+                <div class="kpi-sub"><span class="kpi-sub-dot"
+                        style="background:var(--savings-color)"></span>이번달&nbsp;<span class="kpi-sub-val"
+                        id="kpi-savings-month">₩0</span></div>
             </div>
             <div class="kpi-card kpi-invest">
                 <div class="kpi-header"><span class="kpi-badge">총 투자</span></div>
                 <div class="kpi-amount" id="kpi-total-invest">₩0</div>
-                <div class="kpi-sub"><span class="kpi-sub-dot" style="background:var(--invest-color)"></span>이번달&nbsp;<span class="kpi-sub-val" id="kpi-invest-month">₩0</span></div>
+                <div class="kpi-sub"><span class="kpi-sub-dot"
+                        style="background:var(--invest-color)"></span>이번달&nbsp;<span class="kpi-sub-val"
+                        id="kpi-invest-month">₩0</span></div>
             </div>
             <div class="kpi-card kpi-other" style="cursor:pointer;" onclick="openExtrasModal()" title="클릭해서 항목 관리">
-                <div class="kpi-header"><span class="kpi-badge">기타 자산</span><span style="font-size:16px;opacity:.7;">✏️</span></div>
+                <div class="kpi-header"><span class="kpi-badge">기타 자산</span><span
+                        style="font-size:16px;opacity:.7;">✏️</span></div>
                 <div class="kpi-amount" id="kpi-extras-amount">₩0</div>
-                <div class="kpi-sub"><span class="kpi-sub-dot" style="background:#a78bfa"></span><span id="kpi-extras-count" style="color:#a78bfa;font-size:11px;">항목 0개</span></div>
+                <div class="kpi-sub"><span class="kpi-sub-dot" style="background:#a78bfa"></span><span
+                        id="kpi-extras-count" style="color:#a78bfa;font-size:11px;">항목 0개</span></div>
             </div>
         </div>
 
@@ -351,7 +1084,7 @@
                     <input class="extras-input" id="extras-name-input" placeholder="항목명 (예: 보증금)" />
                     <input class="extras-input" id="extras-amount-input" type="number" placeholder="금액 (음수=차감)" />
                     <button class="btn btn-primary" onclick="addExtrasItem()">추가</button>
-                    <p class="extras-hint">• 양수: 총 자산에 합산  |  음수(-): 총 자산에서 차감</p>
+                    <p class="extras-hint">• 양수: 총 자산에 합산 | 음수(-): 총 자산에서 차감</p>
                 </div>
             </div>
         </div>
@@ -362,7 +1095,10 @@
                     <div class="controls-top">
                         <div class="filters">
                             <div class="search-box">
-                                <svg class="search-icon" width="13" height="13" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+                                <svg class="search-icon" width="13" height="13" viewBox="0 0 24 24">
+                                    <path
+                                        d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" />
+                                </svg>
                                 <input type="text" id="search-input" placeholder="검색어 입력..." oninput="handleFilter()" />
                             </div>
                             <select id="filter-year" onchange="handleFilter()" style="padding:7px 8px;">
@@ -373,13 +1109,28 @@
                             </select>
                             <select id="filter-month" onchange="handleFilter()" style="padding:7px 8px;">
                                 <option value="all">전체 월</option>
-                                <option value="1">1월</option><option value="2">2월</option><option value="3">3월</option><option value="4">4월</option><option value="5">5월</option><option value="6">6월</option><option value="7">7월</option><option value="8">8월</option><option value="9">9월</option><option value="10">10월</option><option value="11">11월</option><option value="12">12월</option>
+                                <option value="1">1월</option>
+                                <option value="2">2월</option>
+                                <option value="3">3월</option>
+                                <option value="4">4월</option>
+                                <option value="5">5월</option>
+                                <option value="6">6월</option>
+                                <option value="7">7월</option>
+                                <option value="8">8월</option>
+                                <option value="9">9월</option>
+                                <option value="10">10월</option>
+                                <option value="11">11월</option>
+                                <option value="12">12월</option>
                             </select>
                             <select id="filter-sort" onchange="handleFilter()" style="padding:7px 8px;">
-                                <option value="date-desc">최신순</option><option value="date-asc">과거순</option><option value="amount-desc">높은금액</option><option value="amount-asc">낮은금액</option>
+                                <option value="date-desc">최신순</option>
+                                <option value="date-asc">과거순</option>
+                                <option value="amount-desc">높은금액</option>
+                                <option value="amount-asc">낮은금액</option>
                             </select>
                         </div>
-                        <button class="btn btn-primary" onclick="addNewRow()" style="white-space:nowrap;">+ 새 거래 추가</button>
+                        <button class="btn btn-primary" onclick="addNewRow()" style="white-space:nowrap;">+ 새 거래
+                            추가</button>
                     </div>
                 </div>
 
@@ -399,14 +1150,16 @@
                                         </select>
                                     </th>
                                     <th style="width: 130px;">
-                                        <select id="filter-category" class="header-filter-select" onchange="handleFilter()">
+                                        <select id="filter-category" class="header-filter-select"
+                                            onchange="handleFilter()">
                                             <option value="all">카테고리</option>
                                         </select>
                                     </th>
                                     <th>내용</th>
                                     <th style="width: 120px; text-align: right;">금액</th>
                                     <th style="width: 130px;">
-                                        <select id="filter-method" class="header-filter-select" onchange="handleFilter()">
+                                        <select id="filter-method" class="header-filter-select"
+                                            onchange="handleFilter()">
                                             <option value="all">결제방식</option>
                                         </select>
                                     </th>
@@ -445,8 +1198,9 @@
 
     <div class="modal-overlay" id="category-modal">
         <div class="modal-content">
-            <div class="modal-title"><span>항목 및 결제방식 관리</span><button class="btn-icon" onclick="closeCategoryModal()">✕</button></div>
-            
+            <div class="modal-title"><span>항목 및 결제방식 관리</span><button class="btn-icon"
+                    onclick="closeCategoryModal()">✕</button></div>
+
             <div class="cat-tabs">
                 <button class="cat-tab-btn active" onclick="switchCatTab('지출')" id="cat-tab-지출">지출</button>
                 <button class="cat-tab-btn" onclick="switchCatTab('수입')" id="cat-tab-수입">수입</button>
@@ -459,8 +1213,11 @@
                 <input type="text" id="new-cat-name" placeholder="추가할 명칭 입력..." />
                 <button class="btn btn-primary" onclick="addNewCategory()">등록</button>
             </div>
-            <div style="font-size:11px; color:var(--text-dim); margin-bottom:6px;">💡 칩을 드래그하여 순서를 변경하거나 더블클릭하여 수정할 수 있습니다.</div>
-            <div style="margin-top: 4px;"><div class="cat-chip-list" id="cat-chip-container"></div></div>
+            <div style="font-size:11px; color:var(--text-dim); margin-bottom:6px;">💡 칩을 드래그하여 순서를 변경하거나 더블클릭하여 수정할 수
+                있습니다.</div>
+            <div style="margin-top: 4px;">
+                <div class="cat-chip-list" id="cat-chip-container"></div>
+            </div>
             <div class="modal-buttons"><button class="btn" onclick="closeCategoryModal()">닫기</button></div>
         </div>
     </div>
@@ -486,7 +1243,7 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-        
+
         window.firebaseEnabled = true;
         window.auth = auth;
         window.db = db;
@@ -535,14 +1292,14 @@
         try {
             const savedExtras = JSON.parse(localStorage.getItem('local_extras'));
             if (Array.isArray(savedExtras)) window.extras = savedExtras;
-        } catch(e) {}
+        } catch (e) { }
 
         try {
             const savedCategories = JSON.parse(localStorage.getItem('local_categories'));
             window.categories = savedCategories && typeof savedCategories === 'object'
                 ? { ...DEFAULT_CATEGORIES, ...savedCategories }
                 : DEFAULT_CATEGORIES;
-        } catch(e) { window.categories = DEFAULT_CATEGORIES; }
+        } catch (e) { window.categories = DEFAULT_CATEGORIES; }
 
         window.editingRows = new Set();
         let currentCatTab = '지출';
@@ -599,15 +1356,15 @@
             return CATEGORY_COLOR_PALETTE[hash % CATEGORY_COLOR_PALETTE.length];
         }
 
-        window.showToast = function(msg) {
+        window.showToast = function (msg) {
             const el = document.getElementById('toast-msg');
-            if(!el) return;
+            if (!el) return;
             el.textContent = msg;
             el.classList.add('show');
             setTimeout(() => el.classList.remove('show'), 2600);
         }
 
-        window.toggleFirebaseLogin = async function() {
+        window.toggleFirebaseLogin = async function () {
             try {
                 if (window.currentUser) {
                     await window.signOut(window.auth);
@@ -624,7 +1381,7 @@
             }
         }
 
-        window.saveDataToCloud = async function() {
+        window.saveDataToCloud = async function () {
             saveDataLocally();
             if (window.firebaseEnabled && window.currentUser && window.db) {
                 try {
@@ -635,13 +1392,13 @@
                         extras: window.extras,
                         updatedAt: new Date().toISOString()
                     });
-                } catch(err) {
+                } catch (err) {
                     console.error('Cloud 저장 실패:', err);
                 }
             }
         }
 
-        window.loadCloudData = async function() {
+        window.loadCloudData = async function () {
             if (window.firebaseEnabled && window.currentUser && window.db) {
                 try {
                     const userDocRef = window.doc(window.db, "users", window.currentUser.uid);
@@ -661,7 +1418,7 @@
                         renderAll();
                         showToast('Cloud 데이터를 불러왔습니다.');
                     }
-                } catch(err) {
+                } catch (err) {
                     console.error('Cloud 불러오기 실패:', err);
                 }
             }
@@ -675,15 +1432,15 @@
             } catch (err) { console.error(err); }
         }
 
-        window.toggleUploadDropdown = function() {
+        window.toggleUploadDropdown = function () {
             document.getElementById('upload-dropdown').classList.toggle('open');
             document.getElementById('download-dropdown').classList.remove('open');
         }
-        window.toggleDownloadDropdown = function() {
+        window.toggleDownloadDropdown = function () {
             document.getElementById('download-dropdown').classList.toggle('open');
             document.getElementById('upload-dropdown').classList.remove('open');
         }
-        window.addEventListener('click', function(e) {
+        window.addEventListener('click', function (e) {
             const up = document.getElementById('upload-dropdown');
             const down = document.getElementById('download-dropdown');
             if (up && !up.contains(e.target)) up.classList.remove('open');
@@ -761,11 +1518,11 @@
             return new Date().toISOString().slice(0, 10);
         }
 
-        window.syncDropdowns = function() {
+        window.syncDropdowns = function () {
             const catSelect = document.getElementById('filter-category');
             const methodSelect = document.getElementById('filter-method');
             const typeEl = document.getElementById('filter-type');
-            if(!catSelect || !methodSelect) return;
+            if (!catSelect || !methodSelect) return;
 
             const currentCat = catSelect.value;
             const currentMethod = methodSelect.value;
@@ -794,7 +1551,7 @@
             methodSelect.value = currentMethod;
         }
 
-        window.renderKPIs = function() {
+        window.renderKPIs = function () {
             // 전체 누계
             let inc = 0, exp = 0, sav = 0, inv = 0;
             window.transactions.forEach(t => {
@@ -851,11 +1608,11 @@
         }
 
         // ── 기타 자산 모달 ───────────────────────────────────────
-        window.openExtrasModal = function() {
+        window.openExtrasModal = function () {
             renderExtrasList();
             document.getElementById('extras-modal-overlay').classList.add('open');
         }
-        window.closeExtrasModal = function() {
+        window.closeExtrasModal = function () {
             document.getElementById('extras-modal-overlay').classList.remove('open');
         }
 
@@ -875,23 +1632,23 @@
             `).join('');
         }
 
-        window.addExtrasItem = function() {
+        window.addExtrasItem = function () {
             const nameEl = document.getElementById('extras-name-input');
-            const amtEl  = document.getElementById('extras-amount-input');
-            const name   = nameEl.value.trim();
+            const amtEl = document.getElementById('extras-amount-input');
+            const name = nameEl.value.trim();
             const amount = parseFloat(amtEl.value);
             if (!name) { nameEl.focus(); showToast('항목명을 입력해주세요.'); return; }
             if (isNaN(amount)) { amtEl.focus(); showToast('금액을 입력해주세요.'); return; }
             window.extras.push({ id: 'ex_' + Date.now(), name, amount });
             nameEl.value = '';
-            amtEl.value  = '';
+            amtEl.value = '';
             saveDataToCloud();
             renderExtrasList();
             renderKPIs();
             showToast(`"${name}" 항목이 추가되었습니다.`);
         }
 
-        window.deleteExtrasItem = function(id) {
+        window.deleteExtrasItem = function (id) {
             const item = window.extras.find(e => e.id === id);
             window.extras = window.extras.filter(e => e.id !== id);
             saveDataToCloud();
@@ -901,7 +1658,7 @@
         }
         // ─────────────────────────────────────────────────────────
 
-        window.renderCharts = function() {
+        window.renderCharts = function () {
             const monthlyData = {};
             for (let m = 1; m <= 12; m++) monthlyData[m] = { 수입: 0, 지출: 0, 저축: 0, 투자: 0 };
             window.transactions.forEach(t => {
@@ -925,29 +1682,31 @@
                 if (monthlyChartInstance) monthlyChartInstance.destroy();
                 monthlyChartInstance = new Chart(ctx.getContext('2d'), {
                     type: 'bar',
-                    data: { labels, datasets: [
-                        { label: '수입', data: incomeData, backgroundColor: 'rgba(244, 63, 94, 0.7)' },
-                        { label: '지출', data: expenseData, backgroundColor: 'rgba(59, 130, 246, 0.7)' },
-                        { label: '저축', data: savingsData, backgroundColor: 'rgba(16, 185, 129, 0.7)' },
-                        { label: '투자', data: investData, backgroundColor: 'rgba(234, 179, 8, 0.7)' }
-                    ]},
+                    data: {
+                        labels, datasets: [
+                            { label: '수입', data: incomeData, backgroundColor: 'rgba(244, 63, 94, 0.7)' },
+                            { label: '지출', data: expenseData, backgroundColor: 'rgba(59, 130, 246, 0.7)' },
+                            { label: '저축', data: savingsData, backgroundColor: 'rgba(16, 185, 129, 0.7)' },
+                            { label: '투자', data: investData, backgroundColor: 'rgba(234, 179, 8, 0.7)' }
+                        ]
+                    },
                     options: { responsive: true, maintainAspectRatio: false }
                 });
             }
 
             const catSums = {};
             const catTypes = {};
-            window.transactions.forEach(t => { 
+            window.transactions.forEach(t => {
                 if (t.type === '지출') {
                     const cat = t.category || '기타';
-                    catSums[cat] = (catSums[cat] || 0) + t.amount; 
+                    catSums[cat] = (catSums[cat] || 0) + t.amount;
                     catTypes[cat] = t.type;
                 }
             });
-            const sorted = Object.keys(catSums).map(c => ({ name: c, amount: catSums[c] })).sort((a,b)=>b.amount-a.amount).slice(0,10);
-            
+            const sorted = Object.keys(catSums).map(c => ({ name: c, amount: catSums[c] })).sort((a, b) => b.amount - a.amount).slice(0, 10);
+
             const catListEl = document.getElementById('top-categories');
-            if(catListEl) {
+            if (catListEl) {
                 catListEl.innerHTML = '';
                 const totalExp = Object.values(catSums).reduce((a, b) => a + b, 0) || 1;
                 sorted.forEach(item => {
@@ -971,12 +1730,12 @@
             }
         }
 
-        window.handleFilter = function() { 
+        window.handleFilter = function () {
             syncDropdowns();
-            renderTable(); 
+            renderTable();
         }
 
-        window.toggleEditRow = function(id) {
+        window.toggleEditRow = function (id) {
             if (window.editingRows.has(id)) {
                 window.editingRows.delete(id);
                 saveDataToCloud();
@@ -987,7 +1746,7 @@
             renderAll();
         }
 
-        window.renderTable = function() {
+        window.renderTable = function () {
             const query = document.getElementById('search-input')?.value.toLowerCase().trim() || '';
             const selectedYear = document.getElementById('filter-year')?.value || 'all';
             const selectedMonth = document.getElementById('filter-month')?.value || 'all';
@@ -1014,10 +1773,10 @@
             });
 
             const tbody = document.getElementById('table-body');
-            if(!tbody) return;
+            if (!tbody) return;
             tbody.innerHTML = '';
             let total = 0;
-            
+
             filtered.forEach(item => {
                 total += item.amount;
                 const tr = document.createElement('tr');
@@ -1086,7 +1845,7 @@
             document.getElementById('table-sum-info').textContent = `합계: ${formatWon(total)}`;
         }
 
-        window.addNewRow = function() {
+        window.addNewRow = function () {
             const newItem = {
                 id: 'tx_' + Date.now(),
                 type: '',
@@ -1104,17 +1863,17 @@
             showToast('새 행이 추가되었습니다.');
         }
 
-        window.updateTransactionField = function(id, field, val) {
+        window.updateTransactionField = function (id, field, val) {
             const item = window.transactions.find(t => t.id === id);
-            if(!item) return;
+            if (!item) return;
 
-            if(field === 'date') {
+            if (field === 'date') {
                 item.date = formatDateWithDay(val);
-            } else if(field === 'split') {
+            } else if (field === 'split') {
                 item.split = parseInt(val, 10) || 1;
-            } else if(field === 'amount') {
+            } else if (field === 'amount') {
                 item.amount = parseAmount(val);
-            } else if(field === 'type') {
+            } else if (field === 'type') {
                 item.type = normalizeType(val);
                 renderTable();
             } else {
@@ -1127,13 +1886,13 @@
             syncDropdowns();
         }
 
-        window.handleTableAmountInput = function(el, id) {
+        window.handleTableAmountInput = function (el, id) {
             let val = el.value.replace(/[^0-9]/g, '');
             el.value = val ? Number(val).toLocaleString('ko-KR') : '';
             updateTransactionField(id, 'amount', el.value);
         }
 
-        window.deleteTransaction = function(id) {
+        window.deleteTransaction = function (id) {
             if (confirm('정말 삭제하시겠습니까?')) {
                 window.editingRows.delete(id);
                 window.transactions = window.transactions.filter(t => t.id !== id);
@@ -1143,15 +1902,15 @@
             }
         }
 
-        window.openCategoryModal = function() {
+        window.openCategoryModal = function () {
             renderCategoryChips();
             document.getElementById('category-modal').classList.add('open');
         }
-        window.closeCategoryModal = function() {
+        window.closeCategoryModal = function () {
             document.getElementById('category-modal').classList.remove('open');
         }
 
-        window.switchCatTab = function(tabKey) {
+        window.switchCatTab = function (tabKey) {
             currentCatTab = tabKey;
             ['지출', '수입', '저축', '투자', 'method'].forEach(k => {
                 const btn = document.getElementById('cat-tab-' + k);
@@ -1162,17 +1921,17 @@
             renderCategoryChips();
         }
 
-        window.handleCatDragStart = function(e, index) {
+        window.handleCatDragStart = function (e, index) {
             draggedCatIndex = index;
             e.dataTransfer.effectAllowed = 'move';
         }
 
-        window.handleCatDragOver = function(e) {
+        window.handleCatDragOver = function (e) {
             e.preventDefault();
             e.dataTransfer.dropEffect = 'move';
         }
 
-        window.handleCatDrop = function(e, index) {
+        window.handleCatDrop = function (e, index) {
             e.preventDefault();
             if (draggedCatIndex === null || draggedCatIndex === index) return;
             const list = window.categories[currentCatTab];
@@ -1184,9 +1943,9 @@
             renderAll();
         }
 
-        window.renderCategoryChips = function() {
+        window.renderCategoryChips = function () {
             const container = document.getElementById('cat-chip-container');
-            if(!container) return;
+            if (!container) return;
             container.innerHTML = '';
             const list = window.categories[currentCatTab] || [];
             list.forEach((cat, index) => {
@@ -1208,7 +1967,7 @@
             });
         }
 
-        window.startEditCategory = function(spanEl, index, oldVal) {
+        window.startEditCategory = function (spanEl, index, oldVal) {
             const parent = spanEl.parentElement;
             const input = document.createElement('input');
             input.type = 'text';
@@ -1217,7 +1976,7 @@
             input.style.width = '100px';
             input.style.padding = '2px 4px';
             input.style.fontSize = '12px';
-            
+
             parent.replaceChild(input, spanEl);
             input.focus();
 
@@ -1229,7 +1988,7 @@
                         alert('이미 존재하는 항목입니다.');
                     } else {
                         list[index] = newVal;
-                        
+
                         window.transactions.forEach(t => {
                             if (currentCatTab !== 'method' && t.category === oldVal) t.category = newVal;
                             if (currentCatTab === 'method' && t.method === oldVal) t.method = newVal;
@@ -1251,13 +2010,13 @@
             };
         }
 
-        window.addNewCategory = function() {
+        window.addNewCategory = function () {
             const nameInput = document.getElementById('new-cat-name');
-            if(!nameInput) return;
+            if (!nameInput) return;
             const name = nameInput.value.trim();
-            if(name) {
-                if(!window.categories[currentCatTab]) window.categories[currentCatTab] = [];
-                if(!window.categories[currentCatTab].includes(name)) {
+            if (name) {
+                if (!window.categories[currentCatTab]) window.categories[currentCatTab] = [];
+                if (!window.categories[currentCatTab].includes(name)) {
                     window.categories[currentCatTab].push(name);
                     nameInput.value = '';
                     saveDataToCloud();
@@ -1270,9 +2029,9 @@
             }
         }
 
-        window.removeCategory = function(cat) {
+        window.removeCategory = function (cat) {
             const list = window.categories[currentCatTab] || [];
-            if(list.length <= 1) {
+            if (list.length <= 1) {
                 alert('최소 1개 이상 유지되어야 합니다.');
                 return;
             }
@@ -1283,7 +2042,7 @@
             showToast('항목이 삭제되었습니다.');
         }
 
-        window.exportJSON = function() {
+        window.exportJSON = function () {
             const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(window.transactions, null, 2));
             const dlAnchor = document.createElement('a');
             dlAnchor.setAttribute("href", dataStr);
@@ -1294,20 +2053,20 @@
             showToast('JSON 백업 파일이 다운로드되었습니다.');
         }
 
-        window.importJSON = function(event) {
+        window.importJSON = function (event) {
             const file = event.target.files[0];
-            if(!file) return;
+            if (!file) return;
             const reader = new FileReader();
-            reader.onload = function(e) {
+            reader.onload = function (e) {
                 try {
                     const imported = JSON.parse(e.target.result);
-                    if(Array.isArray(imported)) {
+                    if (Array.isArray(imported)) {
                         window.transactions = imported.map(t => ({ ...t, id: String(t.id || ('tx_' + Date.now())), type: normalizeType(t.type) }));
                         saveDataToCloud();
                         renderAll();
                         showToast('JSON 데이터를 성공적으로 가져왔습니다.');
                     }
-                } catch(err) {
+                } catch (err) {
                     alert('파싱 중 오류가 발생했습니다.');
                 }
             };
@@ -1319,11 +2078,11 @@
             return '"' + text.replace(/"/g, '""') + '"';
         }
 
-        window.exportToCSV = function() {
+        window.exportToCSV = function () {
             let csv = '\uFEFF일자,구분,카테고리,금액,내용,결제방식\n';
             window.transactions.forEach(t => {
                 const rawDate = String(t.date || '').replace(/[^0-9]/g, '').substring(0, 8);
-                const formattedRaw = rawDate.length === 8 ? `${rawDate.substring(0,4)}-${rawDate.substring(4,6)}-${rawDate.substring(6,8)}` : (t.date || '');
+                const formattedRaw = rawDate.length === 8 ? `${rawDate.substring(0, 4)}-${rawDate.substring(4, 6)}-${rawDate.substring(6, 8)}` : (t.date || '');
                 csv += [formattedRaw, t.type, t.category || '', t.amount, t.desc || '', t.method || ''].map(csvCell).join(',') + '\n';
             });
             const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
@@ -1356,14 +2115,14 @@
             return result;
         }
 
-        window.importCSV = function(event) {
+        window.importCSV = function (event) {
             const file = event.target.files[0];
-            if(!file) return;
+            if (!file) return;
             const reader = new FileReader();
-            reader.onload = function(e) {
+            reader.onload = function (e) {
                 try {
                     parseAndLoadCSV(e.target.result);
-                } catch(err) {
+                } catch (err) {
                     alert('CSV 파일을 읽는 중 오류가 발생했습니다.');
                 }
             };
@@ -1419,19 +2178,19 @@
                 if (rawDate && rawType && !isNaN(amount)) {
                     window.transactions.push({
                         id: 'tx_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
-                        date: formatDateWithDay(rawDate.trim()), 
-                        type: mappedType, 
-                        category: category ? category.trim() : '', 
+                        date: formatDateWithDay(rawDate.trim()),
+                        type: mappedType,
+                        category: category ? category.trim() : '',
                         desc: desc ? desc.trim() : '',
-                        amount, 
-                        method: method && method.trim().toLowerCase() !== 'nan' && method.trim() !== '' ? method.trim() : null, 
+                        amount,
+                        method: method && method.trim().toLowerCase() !== 'nan' && method.trim() !== '' ? method.trim() : null,
                         split: 1
                     });
                     addedCount++;
                 }
             }
 
-            if(addedCount > 0) {
+            if (addedCount > 0) {
                 saveDataToCloud();
                 renderAll();
                 showToast(`${addedCount}건의 데이터가 성공적으로 업로드되었습니다.`);
@@ -1441,4 +2200,5 @@
         }
     </script>
 </body>
+
 </html>
