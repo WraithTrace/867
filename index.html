@@ -71,7 +71,9 @@
         }
 
         .container {
+            width: 100%;
             max-width: 1760px;
+            min-width: 1240px;
             margin: 0 auto;
         }
 
@@ -230,24 +232,6 @@
             margin-bottom: 24px;
         }
 
-        @media (max-width: 1000px) {
-            .kpi-grid {
-                grid-template-columns: repeat(3, 1fr);
-            }
-        }
-
-        @media (max-width: 640px) {
-            .kpi-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-        }
-
-        @media (max-width: 420px) {
-            .kpi-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-
         .kpi-card {
             background: var(--bg-card);
             backdrop-filter: blur(16px);
@@ -372,12 +356,6 @@
             align-items: start;
         }
 
-        @media (max-width: 1100px) {
-            .workspace-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-
         .left-pane {
             display: flex;
             flex-direction: column;
@@ -418,9 +396,15 @@
             display: flex;
             flex-direction: column;
             gap: 10px;
-            max-height: 380px;
-            overflow-y: auto;
+            max-height: none;
+            overflow: visible;
             padding-right: 4px;
+        }
+
+        .cat-empty {
+            padding: 8px 4px;
+            color: var(--text-dim);
+            font-size: 12px;
         }
 
         .cat-item {
@@ -665,14 +649,14 @@
             -webkit-appearance: none;
             -moz-appearance: none;
             appearance: none;
-            background: transparent url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>") no-repeat right center;
+            background: transparent;
             border: none;
             border-radius: 0;
             color: var(--text-muted);
             font-size: 11.5px;
             font-weight: 700;
             text-transform: uppercase;
-            padding: 0 16px 0 0;
+            padding: 0;
             margin: 0;
             cursor: pointer;
             display: inline-block;
@@ -687,13 +671,6 @@
             color: var(--text-main);
         }
 
-        .th-type .header-filter-select {
-            text-align: center;
-            text-align-last: center;
-        }
-
-        th.th-type,
-        td.td-type,
         th.th-split,
         td.td-split,
         th.th-actions,
@@ -701,9 +678,11 @@
             text-align: center;
         }
 
+        th.th-type,
+        td.td-type,
         th.th-amount,
         td.td-amount {
-            text-align: right;
+            text-align: left;
         }
 
         .td-type .table-cell-input {
@@ -1137,10 +1116,34 @@
 
                 <div class="card">
                     <div class="card-title">
-                        <span>📊 카테고리별 분석 TOP</span>
+                        <span>📊 수입 카테고리 TOP</span>
+                        <span style="font-size: 11px; color: var(--text-dim);">수입 기준</span>
+                    </div>
+                    <div class="cat-list" id="top-categories-income"></div>
+                </div>
+
+                <div class="card">
+                    <div class="card-title">
+                        <span>📊 지출 카테고리 TOP</span>
                         <span style="font-size: 11px; color: var(--text-dim);">지출 기준</span>
                     </div>
-                    <div class="cat-list" id="top-categories"></div>
+                    <div class="cat-list" id="top-categories-expense"></div>
+                </div>
+
+                <div class="card">
+                    <div class="card-title">
+                        <span>📊 저축 카테고리 TOP</span>
+                        <span style="font-size: 11px; color: var(--text-dim);">저축 기준</span>
+                    </div>
+                    <div class="cat-list" id="top-categories-savings"></div>
+                </div>
+
+                <div class="card">
+                    <div class="card-title">
+                        <span>📊 투자 카테고리 TOP</span>
+                        <span style="font-size: 11px; color: var(--text-dim);">투자 기준</span>
+                    </div>
+                    <div class="cat-list" id="top-categories-invest"></div>
                 </div>
             </div>
         </div>
@@ -1694,40 +1697,49 @@
                 });
             }
 
-            const catSums = {};
-            const catTypes = {};
+            const categoryPanels = [
+                { type: '수입', id: 'top-categories-income' },
+                { type: '지출', id: 'top-categories-expense' },
+                { type: '저축', id: 'top-categories-savings' },
+                { type: '투자', id: 'top-categories-invest' }
+            ];
+            const categorySums = Object.fromEntries(categoryPanels.map(({ type }) => [type, {}]));
             window.transactions.forEach(t => {
-                if (t.type === '지출') {
-                    const cat = t.category || '기타';
-                    catSums[cat] = (catSums[cat] || 0) + t.amount;
-                    catTypes[cat] = t.type;
-                }
+                if (!categorySums[t.type]) return;
+                const category = t.category || '기타';
+                categorySums[t.type][category] = (categorySums[t.type][category] || 0) + t.amount;
             });
-            const sorted = Object.keys(catSums).map(c => ({ name: c, amount: catSums[c] })).sort((a, b) => b.amount - a.amount).slice(0, 10);
 
-            const catListEl = document.getElementById('top-categories');
-            if (catListEl) {
-                catListEl.innerHTML = '';
-                const totalExp = Object.values(catSums).reduce((a, b) => a + b, 0) || 1;
-                sorted.forEach(item => {
-                    const pct = Math.round((item.amount / totalExp) * 100);
-                    const itemType = catTypes[item.name] || getCategoryType(item.name);
-                    const catColor = getTypeColor(itemType);
+            categoryPanels.forEach(({ type, id }) => {
+                const list = document.getElementById(id);
+                if (!list) return;
+                const entries = Object.entries(categorySums[type])
+                    .map(([name, amount]) => ({ name, amount }))
+                    .sort((a, b) => Math.abs(b.amount) - Math.abs(a.amount))
+                    .slice(0, 10);
+                const total = entries.reduce((sum, item) => sum + Math.abs(item.amount), 0) || 1;
+                const color = getTypeColor(type);
 
-                    const div = document.createElement('div');
-                    div.className = 'cat-item';
-                    div.innerHTML = `
-                        <div class="cat-top">
-                            <span class="cat-name" style="color: ${catColor};">
-                                <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${catColor};margin-right:4px;"></span>${escapeHtml(item.name)}
-                            </span>
-                            <span class="cat-amount">${formatWon(item.amount)} (${pct}%)</span>
+                if (!entries.length) {
+                    list.innerHTML = '<div class="cat-empty">거래내역이 없습니다.</div>';
+                    return;
+                }
+
+                list.innerHTML = entries.map(item => {
+                    const pct = Math.round((Math.abs(item.amount) / total) * 100);
+                    return `
+                        <div class="cat-item">
+                            <div class="cat-top">
+                                <span class="cat-name" style="color: ${color};">
+                                    <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${color};margin-right:4px;"></span>${escapeHtml(item.name)}
+                                </span>
+                                <span class="cat-amount">${formatWon(item.amount)} (${pct}%)</span>
+                            </div>
+                            <div class="cat-progress"><div class="cat-bar" style="width: ${pct}%; background: ${color}; box-shadow: 0 0 6px ${color}55;"></div></div>
                         </div>
-                        <div class="cat-progress"><div class="cat-bar" style="width: ${pct}%; background: ${catColor}; box-shadow: 0 0 6px ${catColor}55;"></div></div>
                     `;
-                    catListEl.appendChild(div);
-                });
-            }
+                }).join('');
+            });
         }
 
         window.handleFilter = function () {
@@ -1822,7 +1834,7 @@
                             </div>
                         </td>
                         <td><input type="text" class="table-cell-input" value="${escapeHtml(item.desc || '')}" onchange="updateTransactionField('${item.id}', 'desc', this.value)" placeholder="내용 입력" /></td>
-                        <td style="text-align:right;"><input type="text" class="table-cell-input" style="text-align:right;" value="${item.amount ? item.amount.toLocaleString('ko-KR') : ''}" oninput="handleTableAmountInput(this, '${item.id}')" placeholder="0" /></td>
+                        <td><input type="text" class="table-cell-input" value="${item.amount ? item.amount.toLocaleString('ko-KR') : ''}" oninput="handleTableAmountInput(this, '${item.id}')" placeholder="0" /></td>
                         <td>
                             <div class="table-autocomplete">
                                 <input type="text" class="table-cell-input" value="${escapeHtml(item.method || '')}" onfocus="showTableAutocomplete(this)" oninput="filterTableAutocomplete(this)" onblur="hideTableAutocomplete(this)" onchange="updateTransactionField('${item.id}', 'method', this.value)" placeholder="결제방식" />
