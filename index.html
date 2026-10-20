@@ -67,7 +67,7 @@
             background-attachment: fixed;
             min-height: 100vh;
             line-height: 1.5;
-            padding: 24px 20px 60px;
+            padding: 20px 12px 60px;
         }
 
         .container {
@@ -225,24 +225,24 @@
 
         .kpi-grid {
             display: grid;
-            grid-template-columns: repeat(6, 1fr);
+            grid-template-columns: repeat(5, minmax(0, 1fr));
             gap: 14px;
             margin-bottom: 24px;
         }
 
-        @media (max-width: 1500px) {
+        @media (max-width: 1000px) {
             .kpi-grid {
                 grid-template-columns: repeat(3, 1fr);
             }
         }
 
-        @media (max-width: 800px) {
+        @media (max-width: 640px) {
             .kpi-grid {
                 grid-template-columns: repeat(2, 1fr);
             }
         }
 
-        @media (max-width: 520px) {
+        @media (max-width: 420px) {
             .kpi-grid {
                 grid-template-columns: 1fr;
             }
@@ -326,133 +326,6 @@
             border: 1px solid var(--savings-border);
         }
 
-        .kpi-other::before {
-            background: #a78bfa;
-        }
-
-        .kpi-other .kpi-badge {
-            background: rgba(167, 139, 250, 0.15);
-            color: #a78bfa;
-            border: 1px solid rgba(167, 139, 250, 0.35);
-        }
-
-        /* 기타 자산 모달 */
-        .extras-modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.75);
-            backdrop-filter: blur(8px);
-            display: none;
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-        }
-
-        .extras-modal-overlay.open {
-            display: flex;
-        }
-
-        .extras-modal {
-            background: var(--bg-secondary);
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius-lg);
-            padding: 24px;
-            width: 460px;
-            max-width: 95vw;
-            max-height: 85vh;
-            overflow-y: auto;
-            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6);
-        }
-
-        .extras-modal-title {
-            font-size: 16px;
-            font-weight: 700;
-            color: var(--text-main);
-            margin-bottom: 18px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        .extras-list {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            margin-bottom: 16px;
-            min-height: 40px;
-        }
-
-        .extras-row {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            background: rgba(255, 255, 255, 0.04);
-            border-radius: 8px;
-            padding: 10px 12px;
-        }
-
-        .extras-row-name {
-            flex: 1;
-            font-size: 13px;
-            color: var(--text-main);
-        }
-
-        .extras-row-amount {
-            font-family: var(--font-mono);
-            font-size: 13px;
-            font-weight: 600;
-            min-width: 120px;
-            text-align: right;
-        }
-
-        .extras-row-amount.pos {
-            color: #10b981;
-        }
-
-        .extras-row-amount.neg {
-            color: #f43f5e;
-        }
-
-        .extras-add-form {
-            display: grid;
-            grid-template-columns: 1fr 1fr auto;
-            gap: 8px;
-            align-items: center;
-            padding: 12px;
-            background: rgba(255, 255, 255, 0.03);
-            border-radius: 8px;
-            border: 1px dashed var(--border-color);
-        }
-
-        .extras-input {
-            background: rgba(255, 255, 255, 0.06);
-            border: 1px solid var(--border-color);
-            border-radius: 6px;
-            padding: 8px 10px;
-            font-size: 13px;
-            color: var(--text-main);
-            outline: none;
-            width: 100%;
-        }
-
-        .extras-input:focus {
-            border-color: #a78bfa;
-        }
-
-        .extras-input::placeholder {
-            color: var(--text-dim);
-        }
-
-        .extras-hint {
-            font-size: 11px;
-            color: var(--text-dim);
-            margin-top: 6px;
-            grid-column: 1/-1;
-        }
-
         .kpi-amount {
             font-family: var(--font-mono);
             font-size: 24px;
@@ -494,12 +367,12 @@
 
         .workspace-grid {
             display: grid;
-            grid-template-columns: 2fr 1fr;
-            gap: 20px;
+            grid-template-columns: minmax(0, 2.5fr) minmax(320px, 1fr);
+            gap: 14px;
             align-items: start;
         }
 
-        @media (max-width: 1400px) {
+        @media (max-width: 1100px) {
             .workspace-grid {
                 grid-template-columns: 1fr;
             }
@@ -812,6 +685,29 @@
         select.header-filter-select option {
             background: #0f172a;
             color: var(--text-main);
+        }
+
+        .th-type .header-filter-select {
+            text-align: center;
+            text-align-last: center;
+        }
+
+        th.th-type,
+        td.td-type,
+        th.th-split,
+        td.td-split,
+        th.th-actions,
+        td.td-actions {
+            text-align: center;
+        }
+
+        th.th-amount,
+        td.td-amount {
+            text-align: right;
+        }
+
+        .td-type .table-cell-input {
+            text-align: center;
         }
 
         td {
@@ -1142,30 +1038,6 @@
                         style="background:var(--invest-color)"></span>이번달&nbsp;<span class="kpi-sub-val"
                         id="kpi-invest-month">₩0</span></div>
             </div>
-            <div class="kpi-card kpi-other" style="cursor:pointer;" onclick="openExtrasModal()" title="클릭해서 항목 관리">
-                <div class="kpi-header"><span class="kpi-badge">기타 자산</span><span
-                        style="font-size:16px;opacity:.7;">✏️</span></div>
-                <div class="kpi-amount" id="kpi-extras-amount">₩0</div>
-                <div class="kpi-sub"><span class="kpi-sub-dot" style="background:#a78bfa"></span><span
-                        id="kpi-extras-count" style="color:#a78bfa;font-size:11px;">항목 0개</span></div>
-            </div>
-        </div>
-
-        <!-- 기타 자산 모달 -->
-        <div class="extras-modal-overlay" id="extras-modal-overlay" onclick="if(event.target===this)closeExtrasModal()">
-            <div class="extras-modal">
-                <div class="extras-modal-title">
-                    <span>💰 기타 자산 관리</span>
-                    <button class="btn-icon" onclick="closeExtrasModal()">✕</button>
-                </div>
-                <div class="extras-list" id="extras-list"></div>
-                <div class="extras-add-form">
-                    <input class="extras-input" id="extras-name-input" placeholder="항목명 (예: 보증금)" />
-                    <input class="extras-input" id="extras-amount-input" type="number" placeholder="금액 (음수=차감)" />
-                    <button class="btn btn-primary" onclick="addExtrasItem()">추가</button>
-                    <p class="extras-hint">• 양수: 총 자산에 합산 | 음수(-): 총 자산에서 차감</p>
-                </div>
-            </div>
         </div>
 
         <div class="workspace-grid">
@@ -1217,8 +1089,8 @@
                         <table id="transaction-table">
                             <thead>
                                 <tr>
-                                    <th style="width: 120px;">날짜</th>
-                                    <th style="width: 110px;">
+                                    <th style="width: 160px;">날짜</th>
+                                    <th class="th-type" style="width: 100px;">
                                         <select id="filter-type" class="header-filter-select" onchange="handleFilter()">
                                             <option value="all">구분</option>
                                             <option value="수입">수입</option>
@@ -1234,15 +1106,15 @@
                                         </select>
                                     </th>
                                     <th>내용</th>
-                                    <th style="width: 120px;">금액</th>
-                                    <th style="width: 130px;">
+                                    <th class="th-amount" style="width: 125px;">금액</th>
+                                    <th style="width: 135px;">
                                         <select id="filter-method" class="header-filter-select"
                                             onchange="handleFilter()">
                                             <option value="all">결제방식</option>
                                         </select>
                                     </th>
-                                    <th style="width: 60px;">1/N</th>
-                                    <th style="width: 80px;">관리</th>
+                                    <th class="th-split" style="width: 70px;">1/N</th>
+                                    <th class="th-actions" style="width: 75px;">관리</th>
                                 </tr>
                             </thead>
                             <tbody id="table-body"></tbody>
@@ -1365,13 +1237,6 @@
         };
 
         window.transactions = [];
-        window.extras = []; // { id, name, amount } - 기타 자산 항목
-
-        try {
-            const savedExtras = JSON.parse(localStorage.getItem('local_extras'));
-            if (Array.isArray(savedExtras)) window.extras = savedExtras;
-        } catch (e) { }
-
         try {
             const savedCategories = JSON.parse(localStorage.getItem('local_categories'));
             window.categories = savedCategories && typeof savedCategories === 'object'
@@ -1554,7 +1419,6 @@
                     await window.setDoc(userDocRef, {
                         transactions: window.transactions.filter(t => !isBlankTransaction(t)),
                         categories: window.categories,
-                        extras: window.extras,
                         updatedAt: new Date().toISOString()
                     });
                 } catch (err) {
@@ -1579,9 +1443,6 @@
                         if (data.categories) {
                             window.categories = { ...DEFAULT_CATEGORIES, ...data.categories };
                         }
-                        if (Array.isArray(data.extras)) {
-                            window.extras = data.extras;
-                        }
                         if (removedBlankTransactions) await window.saveDataToCloud();
                         else saveDataLocally();
                         renderAll();
@@ -1597,7 +1458,6 @@
             try {
                 localStorage.setItem('local_transactions', JSON.stringify(window.transactions.filter(t => !isBlankTransaction(t))));
                 localStorage.setItem('local_categories', JSON.stringify(window.categories));
-                localStorage.setItem('local_extras', JSON.stringify(window.extras));
             } catch (err) { console.error(err); }
         }
 
@@ -1761,24 +1621,14 @@
                 else if (t.type === '저축') sav += t.amount;
                 else if (t.type === '투자') inv += t.amount;
             });
-            // 총 자산 = 투자 + 저축 + (수입 - 지출) + 기타 자산 합계
-            const extrasTotal = (window.extras || []).reduce((s, e) => s + (Number(e.amount) || 0), 0);
-            const net = inv + sav + (inc - exp) + extrasTotal;
+            // 총 자산 = 투자 + 저축 + (수입 - 지출)
+            const net = inv + sav + (inc - exp);
 
             document.getElementById('kpi-net-amount').textContent = formatWon(net);
             document.getElementById('kpi-total-income').textContent = formatWon(inc);
             document.getElementById('kpi-total-expense').textContent = formatWon(exp);
             document.getElementById('kpi-total-savings').textContent = formatWon(sav);
             document.getElementById('kpi-total-invest').textContent = formatWon(inv);
-
-            // 기타 자산 카드
-            const extEl = document.getElementById('kpi-extras-amount');
-            const extCnt = document.getElementById('kpi-extras-count');
-            if (extEl) {
-                extEl.textContent = formatWon(extrasTotal);
-                extEl.style.color = extrasTotal < 0 ? 'var(--income-color)' : '';
-            }
-            if (extCnt) extCnt.textContent = `항목 ${(window.extras || []).length}개`;
 
             // 이번달 현재까지 흐름
             const now = new Date();
@@ -1793,7 +1643,7 @@
                     else if (t.type === '투자') mInv += t.amount;
                 }
             });
-            const mNet = mInv + mSav + (mInc - mExp) + extrasTotal;
+            const mNet = mInv + mSav + (mInc - mExp);
 
             const setMonthEl = (id, val, signed) => {
                 const el = document.getElementById(id);
@@ -1807,57 +1657,6 @@
             setMonthEl('kpi-savings-month', mSav, false);
             setMonthEl('kpi-invest-month', mInv, false);
         }
-
-        // ── 기타 자산 모달 ───────────────────────────────────────
-        window.openExtrasModal = function () {
-            renderExtrasList();
-            document.getElementById('extras-modal-overlay').classList.add('open');
-        }
-        window.closeExtrasModal = function () {
-            document.getElementById('extras-modal-overlay').classList.remove('open');
-        }
-
-        function renderExtrasList() {
-            const list = document.getElementById('extras-list');
-            if (!list) return;
-            if (!window.extras.length) {
-                list.innerHTML = '<p style="font-size:13px;color:var(--text-dim);padding:8px 4px;">아직 항목이 없습니다. 아래에서 추가하세요.</p>';
-                return;
-            }
-            list.innerHTML = window.extras.map(e => `
-                <div class="extras-row">
-                    <span class="extras-row-name">🏷️ ${escapeHtml(e.name)}</span>
-                    <span class="extras-row-amount ${e.amount >= 0 ? 'pos' : 'neg'}">${e.amount >= 0 ? '+' : ''}${formatWon(Math.abs(e.amount))} ${e.amount < 0 ? '<span style="font-size:10px;opacity:.6;">(차감)</span>' : ''}</span>
-                    <button class="btn-icon" style="color:#f43f5e;font-size:14px;" onclick="deleteExtrasItem('${escapeHtml(e.id)}')">🗑</button>
-                </div>
-            `).join('');
-        }
-
-        window.addExtrasItem = function () {
-            const nameEl = document.getElementById('extras-name-input');
-            const amtEl = document.getElementById('extras-amount-input');
-            const name = nameEl.value.trim();
-            const amount = parseFloat(amtEl.value);
-            if (!name) { nameEl.focus(); showToast('항목명을 입력해주세요.'); return; }
-            if (isNaN(amount)) { amtEl.focus(); showToast('금액을 입력해주세요.'); return; }
-            window.extras.push({ id: 'ex_' + Date.now(), name, amount });
-            nameEl.value = '';
-            amtEl.value = '';
-            saveDataToCloud();
-            renderExtrasList();
-            renderKPIs();
-            showToast(`"${name}" 항목이 추가되었습니다.`);
-        }
-
-        window.deleteExtrasItem = function (id) {
-            const item = window.extras.find(e => e.id === id);
-            window.extras = window.extras.filter(e => e.id !== id);
-            saveDataToCloud();
-            renderExtrasList();
-            renderKPIs();
-            if (item) showToast(`"${item.name}" 항목을 삭제했습니다.`);
-        }
-        // ─────────────────────────────────────────────────────────
 
         window.renderCharts = function () {
             const monthlyData = {};
@@ -1963,16 +1762,22 @@
             const sortMode = document.getElementById('filter-sort')?.value || 'date-desc';
 
             let filtered = window.transactions.filter(item => {
-                if (selectedType !== 'all' && item.type !== selectedType) return false;
-                if (selectedYear !== 'all' && parseYear(item.date) !== parseInt(selectedYear, 10)) return false;
-                if (selectedMonth !== 'all' && parseMonth(item.date) !== parseInt(selectedMonth, 10)) return false;
-                if (selectedCat !== 'all' && item.category !== selectedCat) return false;
-                if (selectedMethod !== 'all' && item.method !== selectedMethod) return false;
-                if (query && !JSON.stringify(item).toLowerCase().includes(query)) return false;
+                // Keep in-progress edits visible so active filters do not hide a new draft.
+                if (!window.editingRows.has(item.id)) {
+                    if (selectedType !== 'all' && item.type !== selectedType) return false;
+                    if (selectedYear !== 'all' && parseYear(item.date) !== parseInt(selectedYear, 10)) return false;
+                    if (selectedMonth !== 'all' && parseMonth(item.date) !== parseInt(selectedMonth, 10)) return false;
+                    if (selectedCat !== 'all' && item.category !== selectedCat) return false;
+                    if (selectedMethod !== 'all' && item.method !== selectedMethod) return false;
+                    if (query && !JSON.stringify(item).toLowerCase().includes(query)) return false;
+                }
                 return true;
             });
 
             filtered.sort((a, b) => {
+                const aIsEditing = window.editingRows.has(a.id);
+                const bIsEditing = window.editingRows.has(b.id);
+                if (aIsEditing !== bIsEditing) return aIsEditing ? -1 : 1;
                 if (sortMode === 'date-desc') return parseDateForSort(b.date) - parseDateForSort(a.date);
                 if (sortMode === 'date-asc') return parseDateForSort(a.date) - parseDateForSort(b.date);
                 if (sortMode === 'amount-desc') return b.amount - a.amount;
@@ -2004,7 +1809,7 @@
 
                     tr.innerHTML = `
                         <td class="td-date"><input type="date" class="table-cell-input" value="${escapeHtml(formatToInputDate(item.date))}" onchange="updateTransactionField('${item.id}', 'date', this.value)" /></td>
-                        <td>
+                        <td class="td-type">
                             <div class="table-autocomplete">
                                 <input type="text" class="table-cell-input" value="${escapeHtml(item.type || '')}" onfocus="showTableAutocomplete(this)" oninput="filterTableAutocomplete(this)" onblur="hideTableAutocomplete(this)" onchange="updateTransactionField('${item.id}', 'type', this.value)" placeholder="구분 입력" />
                                 <div class="table-autocomplete-menu">${typeOptionsHtml}</div>
@@ -2025,7 +1830,7 @@
                             </div>
                         </td>
                         <td class="td-split"><input type="number" class="table-cell-input" style="text-align:center;" value="${item.split || 1}" min="1" onchange="updateTransactionField('${item.id}', 'split', this.value)" /></td>
-                        <td style="text-align:center; white-space:nowrap;">
+                        <td class="td-actions" style="white-space:nowrap;">
                             <button class="btn-icon" onclick="toggleEditRow('${item.id}')" title="수정 완료">✅</button>
                             <button class="btn-icon btn-icon-del" onclick="deleteTransaction('${item.id}')" title="삭제">🗑️</button>
                         </td>
@@ -2033,13 +1838,13 @@
                 } else {
                     tr.innerHTML = `
                         <td class="td-date">${escapeHtml(item.date)}</td>
-                        <td><span class="badge-tag tag-${escapeHtml(item.type)}">${escapeHtml(item.type || '-')}</span></td>
+                        <td class="td-type"><span class="badge-tag tag-${escapeHtml(item.type)}">${escapeHtml(item.type || '-')}</span></td>
                         <td>${escapeHtml(item.category || '-')}</td>
                         <td>${escapeHtml(item.desc || '-')}</td>
-                        <td class="td-amount" style="text-align:right;">${formatWon(item.amount)}</td>
+                        <td class="td-amount">${formatWon(item.amount)}</td>
                         <td>${escapeHtml(item.method || '-')}</td>
                         <td class="td-split">${splitText}</td>
-                        <td style="text-align:center; white-space:nowrap;">
+                        <td class="td-actions" style="white-space:nowrap;">
                             <button class="btn-icon" onclick="toggleEditRow('${item.id}')" title="수정">✏️</button>
                             <button class="btn-icon btn-icon-del" onclick="deleteTransaction('${item.id}')" title="삭제">🗑️</button>
                         </td>
@@ -2053,23 +1858,8 @@
         }
 
         window.addNewRow = function () {
-            // Keep only one untouched draft row so repeated clicks do not fill the table with blank rows.
-            const blankDraftIds = window.transactions.filter(isBlankTransaction).map(item => item.id);
-            if (blankDraftIds.length) {
-                window.transactions = window.transactions.filter(item => !blankDraftIds.includes(item.id));
-                blankDraftIds.forEach(id => window.editingRows.delete(id));
-            }
-
-            // Reset active filters so the new editable row is immediately visible.
-            document.getElementById('search-input').value = '';
-            document.getElementById('filter-year').value = 'all';
-            document.getElementById('filter-month').value = 'all';
-            document.getElementById('filter-type').value = 'all';
-            document.getElementById('filter-category').value = 'all';
-            document.getElementById('filter-method').value = 'all';
-
             const newItem = {
-                id: 'tx_' + Date.now(),
+                id: `tx_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
                 type: '',
                 date: formatDateWithDay(new Date().toISOString().slice(0, 10)),
                 category: '',
