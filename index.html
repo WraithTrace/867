@@ -283,6 +283,7 @@
         }
 
         .kpi-savings .kpi-header, .kpi-invest .kpi-header { justify-content: space-between; }
+        .kpi-net .kpi-header { justify-content: space-between; }
         .kpi-manage-btn { padding: 5px 8px; font-size: 10px; white-space: nowrap; }
 
         .kpi-badge {
@@ -404,6 +405,14 @@
         .recurring-saved-list { display: flex; flex-direction: column; gap: 8px; max-height: 180px; overflow-y: auto; }
         .recurring-saved-row { display: flex; align-items: center; gap: 10px; padding: 9px 10px; background: rgba(0, 0, 0, 0.28); border: 1px solid var(--border-color); border-radius: 8px; font-size: 12px; }
         .recurring-saved-info { flex: 1; min-width: 0; color: var(--text-muted); }
+        .formula-modal-overlay { position: fixed; inset: 0; z-index: 1002; display: none; align-items: center; justify-content: center; padding: 20px; background: rgba(2, 6, 23, 0.78); }
+        .formula-modal-overlay.open { display: flex; }
+        .formula-modal { width: min(440px, 100%); padding: 20px; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-lg); box-shadow: var(--shadow-glow); }
+        .formula-modal-heading { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 12px; font-weight: 700; }
+        .formula-options { display: flex; flex-direction: column; gap: 10px; margin: 16px 0; }
+        .formula-option { display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: rgba(0,0,0,.25); border: 1px solid var(--border-color); border-radius: 8px; }
+        .formula-option input { accent-color: var(--primary); }
+        .formula-modal-note { color: var(--text-dim); font-size: 11px; line-height: 1.5; }
         .recurring-preview { flex: 1; min-width: 200px; margin-right: auto; color: var(--text-muted); font-size: 12px; }
         @media (max-width: 900px) {
             .recurring-plan-labels { display: none; }
@@ -1093,8 +1102,10 @@
 
         <div class="kpi-grid">
             <div class="kpi-card kpi-net">
-                <div class="kpi-header"><span class="kpi-badge">총 자산</span></div>
+                <div class="kpi-header"><span class="kpi-badge">총 자산</span><button class="btn kpi-manage-btn" onclick="openAssetFormulaModal()">+ 계산 기준</button></div>
                 <div class="kpi-amount" id="kpi-net-amount">₩0</div>
+                <div class="kpi-sub" id="kpi-net-period-label">선택 연도 잔액</div>
+                <div class="kpi-sub"><span class="kpi-sub-dot" style="background:var(--primary)"></span><span id="kpi-net-month-label">이번달 수입 - 지출</span>&nbsp;<span class="kpi-sub-val" id="kpi-net-month">₩0</span></div>
             </div>
             <div class="kpi-card kpi-income">
                 <div class="kpi-header"><span class="kpi-badge">총 수입</span></div>
@@ -1128,6 +1139,22 @@
                 <div class="kpi-header"><span class="kpi-badge">기타 자산</span></div>
                 <div class="kpi-amount" id="kpi-total-other">₩0</div>
                 <div class="kpi-sub">항목 <span class="kpi-sub-val" id="kpi-other-count">0개</span></div>
+            </div>
+        </div>
+
+        <div class="formula-modal-overlay" id="formula-modal-overlay" onclick="if(event.target===this)closeAssetFormulaModal()">
+            <div class="formula-modal" role="dialog" aria-modal="true" aria-labelledby="formula-modal-title">
+                <div class="formula-modal-heading"><span id="formula-modal-title">총 자산 계산 기준</span><button class="btn" onclick="closeAssetFormulaModal()">닫기</button></div>
+                <p class="recurring-modal-intro">체크한 항목을 선택 연도의 총 자산 계산에 반영합니다. 지출은 체크하면 차감됩니다.</p>
+                <div class="formula-options">
+                    <label class="formula-option"><input type="checkbox" id="formula-income"> 수입 더하기</label>
+                    <label class="formula-option"><input type="checkbox" id="formula-expense"> 지출 빼기</label>
+                    <label class="formula-option"><input type="checkbox" id="formula-savings"> 저축 더하기</label>
+                    <label class="formula-option"><input type="checkbox" id="formula-invest"> 투자 더하기</label>
+                    <label class="formula-option"><input type="checkbox" id="formula-extras"> 기타 자산 더하기</label>
+                </div>
+                <p class="formula-modal-note">기본 계산은 선택 연도의 수입 - 지출입니다. 아래 월 잔액은 선택 월의 수입 - 지출로 표시됩니다.</p>
+                <div class="recurring-modal-actions"><button class="btn btn-primary" onclick="saveAssetFormula()">계산 기준 저장</button></div>
             </div>
         </div>
 
@@ -1381,6 +1408,7 @@
             '투자': ['가상화폐', 'ISA계좌', '연금계좌', '종합계좌', '기타'],
             'method': ['신용카드', '체크카드', '현금', '계좌이체', '우리카드(신용)', '삼성카드(신용)', '토스카드(체크)', '기타']
         };
+        const DEFAULT_ASSET_FORMULA = { income: true, expense: true, savings: false, invest: false, extras: false };
 
         window.transactions = [];
         try {
@@ -1414,6 +1442,12 @@
             const savedRecurringPlans = JSON.parse(localStorage.getItem('local_recurring_plans'));
             if (Array.isArray(savedRecurringPlans)) window.recurringPlans = savedRecurringPlans;
         } catch (e) { window.recurringPlans = []; }
+
+        window.assetFormula = { ...DEFAULT_ASSET_FORMULA };
+        try {
+            const savedFormula = JSON.parse(localStorage.getItem('local_asset_formula'));
+            if (savedFormula && typeof savedFormula === 'object') window.assetFormula = { ...DEFAULT_ASSET_FORMULA, ...savedFormula };
+        } catch (e) { window.assetFormula = { ...DEFAULT_ASSET_FORMULA }; }
 
         window.editingRows = new Set();
         let currentCatTab = '지출';
@@ -1592,6 +1626,7 @@
                         categories: window.categories,
                         extras: window.extras,
                         recurringPlans: window.recurringPlans,
+                        assetFormula: window.assetFormula,
                         updatedAt: new Date().toISOString()
                     });
                 } catch (err) {
@@ -1642,6 +1677,9 @@
                     if (Array.isArray(data.recurringPlans) && (data.recurringPlans.length || !window.recurringPlans.length)) {
                         window.recurringPlans = data.recurringPlans;
                     }
+                    if (data.assetFormula && typeof data.assetFormula === 'object') {
+                        window.assetFormula = { ...DEFAULT_ASSET_FORMULA, ...data.assetFormula };
+                    }
                     if (removedBlankTransactions && !usedLocalFallback) await window.saveDataToCloud();
                     else saveDataLocally();
                     renderAll();
@@ -1667,6 +1705,7 @@
                 localStorage.setItem('local_categories', JSON.stringify(window.categories));
                 localStorage.setItem('local_extras', JSON.stringify(window.extras));
                 localStorage.setItem('local_recurring_plans', JSON.stringify(window.recurringPlans));
+                localStorage.setItem('local_asset_formula', JSON.stringify(window.assetFormula));
             } catch (err) { console.error(err); }
         }
 
@@ -1849,7 +1888,6 @@
         }
 
         window.renderKPIs = function () {
-            // 전체 누계
             let inc = 0, exp = 0, sav = 0, inv = 0;
             window.transactions.forEach(t => {
                 if (t.type === '수입') inc += t.amount;
@@ -1858,10 +1896,33 @@
                 else if (t.type === '투자') inv += t.amount;
             });
             const extrasTotal = (window.extras || []).reduce((sum, item) => sum + (Number(item.amount) || 0), 0);
-            // 총 자산 = 투자 + 저축 + 기타 자산 + (수입 - 지출)
-            const net = inv + sav + extrasTotal + (inc - exp);
+
+            const now = new Date();
+            const currentYear = now.getFullYear();
+            const currentMonth = now.getMonth() + 1;
+            const yearSelectValue = document.getElementById('filter-year')?.value || String(currentYear);
+            const customYearValue = document.getElementById('filter-year-custom')?.value.trim() || '';
+            const selectedYear = yearSelectValue === 'all'
+                ? null
+                : yearSelectValue === 'custom'
+                    ? (/^\d{4}$/.test(customYearValue) ? Number(customYearValue) : null)
+                    : Number(yearSelectValue);
+            const periodTransactions = selectedYear === null
+                ? window.transactions
+                : window.transactions.filter(t => parseYear(t.date) === selectedYear);
+
+            let net = 0;
+            periodTransactions.forEach(t => {
+                if (t.type === '수입' && window.assetFormula.income) net += t.amount;
+                else if (t.type === '지출' && window.assetFormula.expense) net -= t.amount;
+                else if (t.type === '저축' && window.assetFormula.savings) net += t.amount;
+                else if (t.type === '투자' && window.assetFormula.invest) net += t.amount;
+            });
+            if (window.assetFormula.extras) net += extrasTotal;
 
             document.getElementById('kpi-net-amount').textContent = formatWon(net);
+            const periodLabel = document.getElementById('kpi-net-period-label');
+            if (periodLabel) periodLabel.textContent = selectedYear === null ? '전체 연도 기준' : `${selectedYear}년 기준`;
             document.getElementById('kpi-total-income').textContent = formatWon(inc);
             document.getElementById('kpi-total-expense').textContent = formatWon(exp);
             document.getElementById('kpi-total-savings').textContent = formatWon(sav);
@@ -1869,10 +1930,9 @@
             document.getElementById('kpi-total-other').textContent = formatWon(extrasTotal);
             document.getElementById('kpi-other-count').textContent = `${(window.extras || []).length}개`;
 
-            // 이번달 현재까지 흐름
-            const now = new Date();
-            const curYear = now.getFullYear();
-            const curMonth = now.getMonth() + 1;
+            // 다른 KPI는 현재 월 기준
+            const curYear = currentYear;
+            const curMonth = currentMonth;
             let mInc = 0, mExp = 0, mSav = 0, mInv = 0;
             window.transactions.forEach(t => {
                 if (parseYear(t.date) === curYear && parseMonth(t.date) === curMonth) {
@@ -1882,19 +1942,52 @@
                     else if (t.type === '투자') mInv += t.amount;
                 }
             });
-            const mNet = mInv + mSav + (mInc - mExp);
-
             const setMonthEl = (id, val, signed) => {
                 const el = document.getElementById(id);
                 if (!el) return;
                 el.textContent = (signed && val > 0 ? '+' : '') + formatWon(val);
                 el.className = 'kpi-sub-val' + (signed ? (val >= 0 ? ' kpi-sub-pos' : ' kpi-sub-neg') : '');
             };
-            setMonthEl('kpi-net-month', mNet, true);
+
+            const selectedMonthValue = document.getElementById('filter-month')?.value || 'all';
+            const netMonth = selectedMonthValue === 'all' ? currentMonth : Number(selectedMonthValue);
+            const netYear = selectedYear === null ? currentYear : selectedYear;
+            let netMonthIncome = 0, netMonthExpense = 0;
+            window.transactions.forEach(t => {
+                if (parseYear(t.date) !== netYear || parseMonth(t.date) !== netMonth) return;
+                if (t.type === '수입') netMonthIncome += t.amount;
+                else if (t.type === '지출') netMonthExpense += t.amount;
+            });
+            const netMonthLabel = document.getElementById('kpi-net-month-label');
+            if (netMonthLabel) netMonthLabel.textContent = `${netYear}년 ${netMonth}월 수입 - 지출`;
+            setMonthEl('kpi-net-month', netMonthIncome - netMonthExpense, true);
             setMonthEl('kpi-income-month', mInc, false);
             setMonthEl('kpi-expense-month', mExp, false);
             setMonthEl('kpi-savings-month', mSav, false);
             setMonthEl('kpi-invest-month', mInv, false);
+        }
+
+        window.openAssetFormulaModal = function () {
+            Object.keys(DEFAULT_ASSET_FORMULA).forEach(key => {
+                const input = document.getElementById(`formula-${key}`);
+                if (input) input.checked = Boolean(window.assetFormula[key]);
+            });
+            document.getElementById('formula-modal-overlay')?.classList.add('open');
+        }
+
+        window.closeAssetFormulaModal = function () {
+            document.getElementById('formula-modal-overlay')?.classList.remove('open');
+        }
+
+        window.saveAssetFormula = function () {
+            window.assetFormula = Object.fromEntries(Object.keys(DEFAULT_ASSET_FORMULA).map(key => [
+                key,
+                Boolean(document.getElementById(`formula-${key}`)?.checked)
+            ]));
+            saveDataToCloud();
+            closeAssetFormulaModal();
+            renderKPIs();
+            showToast('총 자산 계산 기준을 저장했습니다.');
         }
 
         window.openExtrasModal = function () {
@@ -2243,6 +2336,7 @@
         window.handleFilter = function () {
             syncDropdowns();
             renderTable();
+            renderKPIs();
         }
 
         window.toggleEditRow = function (id) {
