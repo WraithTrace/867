@@ -282,6 +282,9 @@
             margin-bottom: 10px;
         }
 
+        .kpi-savings .kpi-header, .kpi-invest .kpi-header { justify-content: space-between; }
+        .kpi-manage-btn { padding: 5px 8px; font-size: 10px; white-space: nowrap; }
+
         .kpi-badge {
             font-size: 13px;
             font-weight: 700;
@@ -366,6 +369,46 @@
         .extras-add-form { flex-wrap: wrap; }
         .extras-input { min-width: 0; flex: 1; }
         .extras-hint { width: 100%; margin: 0; color: var(--text-dim); font-size: 11px; }
+
+        .recurring-modal-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 1001;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            background: rgba(2, 6, 23, 0.78);
+        }
+
+        .recurring-modal-overlay.open { display: flex; }
+        .recurring-modal { 
+            width: min(900px, 100%);
+            max-height: 85vh;
+            overflow: auto;
+            padding: 20px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-glow);
+        }
+        .recurring-modal-heading, .recurring-modal-actions { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+        .recurring-modal-heading { margin-bottom: 8px; font-size: 16px; font-weight: 700; }
+        .recurring-modal-intro, .recurring-modal-note { color: var(--text-dim); font-size: 12px; line-height: 1.6; }
+        .recurring-plan-list { display: flex; flex-direction: column; gap: 10px; margin: 16px 0; }
+        .recurring-plan-row { display: grid; grid-template-columns: minmax(85px, 0.7fr) minmax(105px, 1fr) minmax(110px, 1.1fr) minmax(130px, 1fr) minmax(130px, 1fr) minmax(110px, 0.9fr) auto; gap: 8px; align-items: center; padding: 10px; background: rgba(0, 0, 0, 0.28); border: 1px solid var(--border-color); border-radius: 10px; }
+        .recurring-plan-labels { display: grid; grid-template-columns: minmax(85px, 0.7fr) minmax(105px, 1fr) minmax(110px, 1.1fr) minmax(130px, 1fr) minmax(130px, 1fr) minmax(110px, 0.9fr) auto; gap: 8px; padding: 0 10px; color: var(--text-dim); font-size: 11px; }
+        .recurring-plan-row select, .recurring-plan-row input { min-width: 0; width: 100%; }
+        .recurring-modal-actions { justify-content: flex-end; flex-wrap: wrap; }
+        .recurring-section-title { margin: 16px 0 8px; font-size: 13px; font-weight: 700; }
+        .recurring-saved-list { display: flex; flex-direction: column; gap: 8px; max-height: 180px; overflow-y: auto; }
+        .recurring-saved-row { display: flex; align-items: center; gap: 10px; padding: 9px 10px; background: rgba(0, 0, 0, 0.28); border: 1px solid var(--border-color); border-radius: 8px; font-size: 12px; }
+        .recurring-saved-info { flex: 1; min-width: 0; color: var(--text-muted); }
+        .recurring-preview { flex: 1; min-width: 200px; margin-right: auto; color: var(--text-muted); font-size: 12px; }
+        @media (max-width: 900px) {
+            .recurring-plan-labels { display: none; }
+            .recurring-plan-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        }
 
         .kpi-amount {
             font-family: var(--font-mono);
@@ -519,6 +562,15 @@
             align-items: center;
             gap: 10px;
             flex-wrap: wrap;
+        }
+
+        #filter-year-custom {
+            background: rgba(22, 30, 49, 0.8);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            color: var(--text-main);
+            font-size: 12.5px;
+            outline: none;
         }
 
         .filters {
@@ -1059,14 +1111,14 @@
                         id="kpi-expense-month">₩0</span></div>
             </div>
             <div class="kpi-card kpi-savings">
-                <div class="kpi-header"><span class="kpi-badge">총 저축</span></div>
+                <div class="kpi-header"><span class="kpi-badge">총 저축</span><button class="btn kpi-manage-btn" onclick="openRecurringModal('저축')">+ 추가</button></div>
                 <div class="kpi-amount" id="kpi-total-savings">₩0</div>
                 <div class="kpi-sub"><span class="kpi-sub-dot"
                         style="background:var(--savings-color)"></span>이번달&nbsp;<span class="kpi-sub-val"
                         id="kpi-savings-month">₩0</span></div>
             </div>
             <div class="kpi-card kpi-invest">
-                <div class="kpi-header"><span class="kpi-badge">총 투자</span></div>
+                <div class="kpi-header"><span class="kpi-badge">총 투자</span><button class="btn kpi-manage-btn" onclick="openRecurringModal('투자')">+ 추가</button></div>
                 <div class="kpi-amount" id="kpi-total-invest">₩0</div>
                 <div class="kpi-sub"><span class="kpi-sub-dot"
                         style="background:var(--invest-color)"></span>이번달&nbsp;<span class="kpi-sub-val"
@@ -1092,6 +1144,26 @@
             </div>
         </div>
 
+        <div class="recurring-modal-overlay" id="recurring-modal-overlay" onclick="if(event.target===this)closeRecurringModal()">
+            <div class="recurring-modal" role="dialog" aria-modal="true" aria-labelledby="recurring-modal-title">
+                <div class="recurring-modal-heading"><span id="recurring-modal-title">정기 납입 내역 일괄 추가</span><button class="btn" onclick="closeRecurringModal()">닫기</button></div>
+                <p class="recurring-modal-intro">거래 추가와 같은 입력 방식으로 정기 납입 설정을 추가·수정·삭제합니다. 시작일의 일자에 맞춰 매월 생성하며, 내용에 월 표시가 없으면 `26/1`을 붙이고 끝에 `- 1회차`처럼 회차를 자동으로 더합니다. `{월}`과 `{회차}`를 입력하면 원하는 위치에 각각 연·월과 회차를 넣습니다. 생성 후에도 개별 내역을 직접 수정할 수 있습니다.</p>
+                <div class="recurring-section-title">저장된 정기 납입</div>
+                <div class="recurring-saved-list" id="recurring-saved-list"></div>
+                <div class="recurring-section-title" id="recurring-form-title">새 정기 납입 설정</div>
+                <datalist id="recurring-type-options"><option value="저축"></option><option value="투자"></option></datalist>
+                <datalist id="recurring-category-options"></datalist>
+                <div class="recurring-plan-labels"><span>구분</span><span>카테고리</span><span>내용</span><span>시작일</span><span>종료일</span><span>월 납입금액</span><span></span></div>
+                <div class="recurring-plan-list" id="recurring-plan-list"></div>
+                <div class="recurring-modal-actions">
+                    <span class="recurring-preview" id="recurring-preview">계좌별 납입 계획을 입력해주세요.</span>
+                    <button class="btn" onclick="addRecurringPlanRow()">+ 입력 행 추가</button>
+                    <button class="btn btn-primary" onclick="generateRecurringTransactions()">설정 저장 및 내역 생성</button>
+                </div>
+                <p class="recurring-modal-note">설정 수정은 해당 설정으로 생성된 미수정 내역에 적용됩니다. 거래내역에서 개별 내역을 수정하면 설정에서 분리되어 이후 설정 수정에도 유지되고, 개별 삭제도 가능합니다.</p>
+            </div>
+        </div>
+
         <div class="workspace-grid">
             <div class="left-pane">
                 <div class="controls-card">
@@ -1104,12 +1176,10 @@
                                 </svg>
                                 <input type="text" id="search-input" placeholder="검색어 입력..." oninput="handleFilter()" />
                             </div>
-                            <select id="filter-year" onchange="handleFilter()" style="padding:7px 8px;">
+                            <select id="filter-year" onchange="handleYearFilterChange()" style="padding:7px 8px;">
                                 <option value="all">전체 연도</option>
-                                <option value="2026" selected>2026년</option>
-                                <option value="2027">2027년</option>
-                                <option value="2028">2028년</option>
                             </select>
+                            <input id="filter-year-custom" type="number" min="1900" max="2200" placeholder="연도 입력" aria-label="조회할 연도 직접 입력" oninput="handleFilter()" style="display:none;width:94px;padding:7px 8px;" />
                             <select id="filter-month" onchange="handleFilter()" style="padding:7px 8px;">
                                 <option value="all">전체 월</option>
                                 <option value="1">1월</option>
@@ -1339,6 +1409,12 @@
             }
         } catch (e) { window.extras = []; }
 
+        window.recurringPlans = [];
+        try {
+            const savedRecurringPlans = JSON.parse(localStorage.getItem('local_recurring_plans'));
+            if (Array.isArray(savedRecurringPlans)) window.recurringPlans = savedRecurringPlans;
+        } catch (e) { window.recurringPlans = []; }
+
         window.editingRows = new Set();
         let currentCatTab = '지출';
         let draggedCatIndex = null;
@@ -1515,6 +1591,7 @@
                         transactions: window.transactions.filter(t => !isBlankTransaction(t)),
                         categories: window.categories,
                         extras: window.extras,
+                        recurringPlans: window.recurringPlans,
                         updatedAt: new Date().toISOString()
                     });
                 } catch (err) {
@@ -1562,6 +1639,9 @@
                             .filter(item => item && typeof item.name === 'string' && Number.isFinite(Number(item.amount)))
                             .map(item => ({ id: String(item.id || ('ex_' + Date.now())), name: item.name, amount: Number(item.amount) }));
                     }
+                    if (Array.isArray(data.recurringPlans) && (data.recurringPlans.length || !window.recurringPlans.length)) {
+                        window.recurringPlans = data.recurringPlans;
+                    }
                     if (removedBlankTransactions && !usedLocalFallback) await window.saveDataToCloud();
                     else saveDataLocally();
                     renderAll();
@@ -1586,6 +1666,7 @@
                 localStorage.setItem('local_transactions', JSON.stringify(window.transactions.filter(t => !isBlankTransaction(t))));
                 localStorage.setItem('local_categories', JSON.stringify(window.categories));
                 localStorage.setItem('local_extras', JSON.stringify(window.extras));
+                localStorage.setItem('local_recurring_plans', JSON.stringify(window.recurringPlans));
             } catch (err) { console.error(err); }
         }
 
@@ -1619,7 +1700,34 @@
             });
         }, true);
 
+        function initYearFilter() {
+            const select = document.getElementById('filter-year');
+            if (!select) return;
+            const year = new Date().getFullYear();
+            select.innerHTML = '<option value="all">전체 연도</option>';
+            [year - 1, year, year + 1].forEach(value => {
+                const option = document.createElement('option');
+                option.value = String(value);
+                option.textContent = `${value}년`;
+                if (value === year) option.selected = true;
+                select.appendChild(option);
+            });
+            const customOption = document.createElement('option');
+            customOption.value = 'custom';
+            customOption.textContent = '직접 입력…';
+            select.appendChild(customOption);
+        }
+
+        window.handleYearFilterChange = function () {
+            const select = document.getElementById('filter-year');
+            const customInput = document.getElementById('filter-year-custom');
+            if (customInput) customInput.style.display = select?.value === 'custom' ? '' : 'none';
+            if (select?.value === 'custom') customInput?.focus();
+            handleFilter();
+        }
+
         window.addEventListener('DOMContentLoaded', () => {
+            initYearFilter();
             renderAll();
         });
 
@@ -1840,6 +1948,217 @@
             showToast('기타 자산 항목을 삭제했습니다.');
         }
 
+        let recurringDefaultType = '저축';
+        window.openRecurringModal = function (type = '저축') {
+            recurringDefaultType = type === '투자' ? '투자' : '저축';
+            document.getElementById('recurring-plan-list').innerHTML = '';
+            const categoryOptions = document.getElementById('recurring-category-options');
+            categoryOptions.innerHTML = [...new Set([...(window.categories['저축'] || []), ...(window.categories['투자'] || [])])]
+                .map(name => `<option value="${escapeHtml(name)}"></option>`).join('');
+            renderRecurringPlanList();
+            addRecurringPlanRow();
+            document.getElementById('recurring-form-title').textContent = '새 정기 납입 설정';
+            document.getElementById('recurring-modal-overlay').classList.add('open');
+            updateRecurringPreview();
+        }
+
+        window.closeRecurringModal = function () {
+            document.getElementById('recurring-modal-overlay')?.classList.remove('open');
+        }
+
+        function renderRecurringPlanList() {
+            const list = document.getElementById('recurring-saved-list');
+            if (!list) return;
+            if (!window.recurringPlans.length) {
+                list.innerHTML = '<div class="cat-empty">저장된 설정이 없습니다.</div>';
+                return;
+            }
+            list.innerHTML = window.recurringPlans.map(plan => `
+                <div class="recurring-saved-row">
+                    <span class="badge-tag tag-${escapeHtml(plan.type)}">${escapeHtml(plan.type)}</span>
+                    <span class="recurring-saved-info">${escapeHtml(plan.name)} · ${escapeHtml(plan.desc || '내용 없음')} · ${formatWon(plan.amount)}/월 · ${escapeHtml(plan.start)} ~ ${escapeHtml(plan.end)}</span>
+                    <button class="btn" onclick="editRecurringPlan('${escapeHtml(plan.id)}')">수정</button>
+                    <button class="btn" onclick="deleteRecurringPlan('${escapeHtml(plan.id)}')">삭제</button>
+                </div>`).join('');
+        }
+
+        window.addRecurringPlanRow = function (plan = null) {
+            const list = document.getElementById('recurring-plan-list');
+            if (!list) return;
+            const row = document.createElement('div');
+            row.className = 'recurring-plan-row';
+            if (plan?.id) row.dataset.planId = plan.id;
+            const type = plan?.type || recurringDefaultType;
+            row.innerHTML = `
+                <input type="text" class="table-cell-input plan-type" list="recurring-type-options" value="${escapeHtml(type)}" placeholder="구분 입력" aria-label="구분">
+                <input type="text" class="table-cell-input plan-name" list="recurring-category-options" value="${escapeHtml(plan?.name || '')}" placeholder="카테고리 입력" maxlength="40" aria-label="카테고리">
+                <input type="text" class="table-cell-input plan-desc" value="${escapeHtml(plan?.desc || '')}" placeholder="내용 입력" aria-label="내용">
+                <input type="date" class="table-cell-input plan-start" value="${escapeHtml(plan?.start || '')}" aria-label="시작일">
+                <input type="date" class="table-cell-input plan-end" value="${escapeHtml(plan?.end || '')}" aria-label="종료일">
+                <input type="text" inputmode="numeric" class="table-cell-input plan-amount" value="${plan ? Number(plan.amount).toLocaleString('ko-KR') : ''}" oninput="formatRecurringPlanAmount(this)" placeholder="월 납입금액" aria-label="월 납입금액">
+                <button class="btn" type="button" aria-label="입력 행 삭제" onclick="removeRecurringPlanRow(this)">삭제</button>`;
+            row.addEventListener('input', updateRecurringPreview);
+            row.addEventListener('change', updateRecurringPreview);
+            list.appendChild(row);
+            updateRecurringPreview();
+        }
+
+        window.removeRecurringPlanRow = function (button) {
+            button.closest('.recurring-plan-row')?.remove();
+            if (!document.querySelector('.recurring-plan-row')) addRecurringPlanRow();
+            updateRecurringPreview();
+        }
+
+        window.editRecurringPlan = function (id) {
+            const plan = window.recurringPlans.find(item => item.id === id);
+            if (!plan) return;
+            recurringDefaultType = plan.type;
+            document.getElementById('recurring-plan-list').innerHTML = '';
+            addRecurringPlanRow(plan);
+            document.getElementById('recurring-form-title').textContent = '정기 납입 설정 수정';
+            updateRecurringPreview();
+        }
+
+        window.deleteRecurringPlan = function (id) {
+            const plan = window.recurringPlans.find(item => item.id === id);
+            if (!plan || !confirm(`'${plan.name}' 설정과 이 설정으로 생성된 미수정 거래내역을 삭제할까요?`)) return;
+            window.recurringPlans = window.recurringPlans.filter(item => item.id !== id);
+            window.transactions = window.transactions.filter(item => item.recurringPlanId !== id);
+            Array.from(document.querySelectorAll('.recurring-plan-row')).find(row => row.dataset.planId === id)?.remove();
+            if (!document.querySelector('.recurring-plan-row')) {
+                addRecurringPlanRow();
+                document.getElementById('recurring-form-title').textContent = '새 정기 납입 설정';
+            }
+            saveDataToCloud();
+            renderRecurringPlanList();
+            renderAll();
+            showToast('정기 납입 설정을 삭제했습니다.');
+        }
+
+        function getRecurringPlans() {
+            return Array.from(document.querySelectorAll('.recurring-plan-row')).map(row => ({
+                id: row.dataset.planId || '',
+                type: normalizeType(row.querySelector('.plan-type').value),
+                name: row.querySelector('.plan-name').value.trim(),
+                desc: row.querySelector('.plan-desc').value.trim(),
+                amount: parseAmount(row.querySelector('.plan-amount').value),
+                start: row.querySelector('.plan-start').value,
+                end: row.querySelector('.plan-end').value
+            }));
+        }
+
+        window.formatRecurringPlanAmount = function (input) {
+            const digits = input.value.replace(/[^0-9]/g, '');
+            input.value = digits ? Number(digits).toLocaleString('ko-KR') : '';
+        }
+
+        function recurringDates(start, end) {
+            if (!/^\d{4}-\d{2}-\d{2}$/.test(start) || !/^\d{4}-\d{2}-\d{2}$/.test(end) || start > end) return [];
+            const [startYear, startMonth, startDay] = start.split('-').map(Number);
+            const [endYear, endMonth] = end.split('-').map(Number);
+            const startDateCheck = new Date(startYear, startMonth - 1, startDay);
+            const endDateCheck = new Date(endYear, endMonth - 1, Number(end.slice(8, 10)));
+            if (startDateCheck.getFullYear() !== startYear || startDateCheck.getMonth() !== startMonth - 1 || startDateCheck.getDate() !== startDay ||
+                endDateCheck.getFullYear() !== endYear || endDateCheck.getMonth() !== endMonth - 1 || endDateCheck.getDate() !== Number(end.slice(8, 10))) return [];
+            const monthSpan = (endYear - startYear) * 12 + endMonth - startMonth + 1;
+            if (monthSpan < 1 || monthSpan > 600) return [];
+            const dates = [];
+            for (let offset = 0; offset < monthSpan; offset++) {
+                const monthIndex = startYear * 12 + startMonth - 1 + offset;
+                const year = Math.floor(monthIndex / 12);
+                const month = monthIndex % 12 + 1;
+                const day = Math.min(startDay, new Date(year, month, 0).getDate());
+                const date = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                if (date >= start && date <= end) dates.push(date);
+            }
+            return dates;
+        }
+
+        function updateRecurringPreview() {
+            let count = 0, total = 0;
+            getRecurringPlans().forEach(plan => {
+                const dates = recurringDates(plan.start, plan.end);
+                if (plan.name && Number.isInteger(plan.amount) && plan.amount > 0) {
+                    count += dates.length;
+                    total += dates.length * plan.amount;
+                }
+            });
+            const preview = document.getElementById('recurring-preview');
+            if (preview) preview.textContent = count
+                ? `예상 ${count}건 · 합계 ${formatWon(total)}`
+                : '구분, 카테고리, 월 납입금액, 시작일과 종료일을 입력해주세요.';
+        }
+
+        function recurringDescription(template, date, installment) {
+            const [year, month] = date.split('-').map(Number);
+            const period = `${String(year).slice(-2)}/${month}`;
+            const text = String(template || '').trim();
+            let description = text.includes('{월}')
+                ? text.replaceAll('{월}', period)
+                : text.includes('월분')
+                    ? text.replace(/월분/g, `${period}월분`)
+                    : `${text} ${period}`.trim();
+            const installmentText = `${installment}회차`;
+            if (description.includes('{회차}')) description = description.replaceAll('{회차}', installmentText);
+            else description = `${description} - ${installmentText}`.trim();
+            return description;
+        }
+
+        window.generateRecurringTransactions = function () {
+            const plans = getRecurringPlans();
+            if (!plans.length || plans.some(plan => !['저축', '투자'].includes(plan.type) || !plan.name ||
+                !Number.isInteger(plan.amount) || plan.amount <= 0 || !recurringDates(plan.start, plan.end).length)) {
+                showToast('각 행의 구분, 카테고리, 월 납입금액, 시작일과 종료일을 확인해주세요.');
+                return;
+            }
+
+            let createdCount = 0, skipped = 0;
+            plans.forEach(input => {
+                const id = input.id || `rp_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+                const oldGenerated = window.transactions.filter(item => item.recurringPlanId === id);
+                window.transactions = window.transactions.filter(item => item.recurringPlanId !== id);
+                const plan = { ...input, id };
+                window.recurringPlans = window.recurringPlans.filter(item => item.id !== id);
+                window.recurringPlans.push(plan);
+                if (!Array.isArray(window.categories[plan.type])) window.categories[plan.type] = [];
+                if (!window.categories[plan.type].includes(plan.name)) window.categories[plan.type].push(plan.name);
+
+                const dateKey = date => String(date || '').replace(/[^0-9]/g, '').slice(0, 8);
+                const existing = new Set(window.transactions
+                    .filter(item => !isBlankTransaction(item))
+                    .map(item => [item.type, item.category || '', dateKey(item.date), Number(item.amount)].join('|')));
+                recurringDates(plan.start, plan.end).forEach((date, index) => {
+                    const key = [plan.type, plan.name, dateKey(date), plan.amount].join('|');
+                    if (existing.has(key)) {
+                        skipped++;
+                        return;
+                    }
+                    existing.add(key);
+                    window.transactions.push({
+                        id: `tx_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`,
+                        date: formatDateWithDay(date),
+                        type: plan.type,
+                        category: plan.name,
+                        desc: recurringDescription(plan.desc, date, index + 1),
+                        amount: plan.amount,
+                        method: null,
+                        split: 1,
+                        recurringPlanId: id
+                    });
+                    createdCount++;
+                });
+                skipped += Math.max(0, oldGenerated.length - recurringDates(plan.start, plan.end).length);
+            });
+
+            saveDataToCloud();
+            renderRecurringPlanList();
+            renderAll();
+            document.getElementById('recurring-plan-list').innerHTML = '';
+            addRecurringPlanRow();
+            document.getElementById('recurring-form-title').textContent = '새 정기 납입 설정';
+            showToast(`설정을 저장했습니다. 새 내역 ${createdCount}건${skipped ? ` · 중복/기간 제외 ${skipped}건` : ''}`);
+        }
+
         window.renderCharts = function () {
             const monthlyData = {};
             for (let m = 1; m <= 12; m++) monthlyData[m] = { 수입: 0, 지출: 0, 저축: 0, 투자: 0 };
@@ -1945,7 +2264,11 @@
 
         window.renderTable = function () {
             const query = document.getElementById('search-input')?.value.toLowerCase().trim() || '';
-            const selectedYear = document.getElementById('filter-year')?.value || 'all';
+            const yearFilterValue = document.getElementById('filter-year')?.value || 'all';
+            const customYear = document.getElementById('filter-year-custom')?.value.trim() || '';
+            const selectedYear = yearFilterValue === 'custom'
+                ? (/^\d{4}$/.test(customYear) ? customYear : 'all')
+                : yearFilterValue;
             const selectedMonth = document.getElementById('filter-month')?.value || 'all';
             const selectedType = document.getElementById('filter-type')?.value || 'all';
             const selectedCat = document.getElementById('filter-category')?.value || 'all';
@@ -2068,6 +2391,8 @@
         window.updateTransactionField = function (id, field, val) {
             const item = window.transactions.find(t => t.id === id);
             if (!item) return;
+            // A manually changed generated installment becomes independent from its recurring plan.
+            delete item.recurringPlanId;
 
             if (field === 'date') {
                 item.date = formatDateWithDay(val);
