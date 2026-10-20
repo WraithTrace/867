@@ -681,9 +681,12 @@
             display: none;
             position: absolute;
             top: calc(100% + 4px);
-            left: 0;
+            left: auto;
             right: 0;
             z-index: 60;
+            width: max-content;
+            min-width: max(100%, 190px);
+            max-width: min(280px, calc(100vw - 32px));
             max-height: 220px;
             overflow-y: auto;
             background: var(--bg-card);
@@ -704,12 +707,17 @@
         .table-autocomplete-option {
             display: block;
             width: 100%;
+            min-height: 36px;
             padding: 8px 10px;
             border: 0;
             background: transparent;
             color: var(--text-main);
             font-size: 12px;
+            line-height: 20px;
             text-align: left;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
             cursor: pointer;
         }
 
