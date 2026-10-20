@@ -227,7 +227,7 @@
 
         .kpi-grid {
             display: grid;
-            grid-template-columns: repeat(5, minmax(0, 1fr));
+            grid-template-columns: repeat(6, minmax(0, 1fr));
             gap: 14px;
             margin-bottom: 24px;
         }
@@ -272,6 +272,10 @@
             background: var(--invest-color);
         }
 
+        .kpi-other::before {
+            background: #a78bfa;
+        }
+
         .kpi-header {
             display: flex;
             align-items: center;
@@ -309,6 +313,59 @@
             color: var(--savings-color);
             border: 1px solid var(--savings-border);
         }
+
+        .kpi-invest .kpi-badge {
+            background: var(--invest-bg);
+            color: var(--invest-color);
+            border: 1px solid var(--invest-border);
+        }
+
+        .kpi-other .kpi-badge {
+            background: rgba(167, 139, 250, 0.15);
+            color: #a78bfa;
+            border: 1px solid rgba(167, 139, 250, 0.3);
+        }
+
+        .extras-modal-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 1000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            background: rgba(2, 6, 23, 0.72);
+        }
+
+        .extras-modal-overlay.open { display: flex; }
+
+        .extras-modal {
+            width: min(480px, 100%);
+            max-height: 80vh;
+            overflow: auto;
+            padding: 20px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-glow);
+        }
+
+        .extras-modal-title, .extras-row, .extras-add-form {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .extras-modal-title { justify-content: space-between; margin-bottom: 16px; font-weight: 700; }
+        .extras-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
+        .extras-row { padding: 10px; border: 1px solid var(--border-color); border-radius: 8px; }
+        .extras-row-name { flex: 1; }
+        .extras-row-amount { font-family: var(--font-mono); font-weight: 600; }
+        .extras-row-amount.pos { color: #10b981; }
+        .extras-row-amount.neg { color: #f43f5e; }
+        .extras-add-form { flex-wrap: wrap; }
+        .extras-input { min-width: 0; flex: 1; }
+        .extras-hint { width: 100%; margin: 0; color: var(--text-dim); font-size: 11px; }
 
         .kpi-amount {
             font-family: var(--font-mono);
@@ -351,7 +408,7 @@
 
         .workspace-grid {
             display: grid;
-            grid-template-columns: minmax(0, 2.5fr) minmax(320px, 1fr);
+            grid-template-columns: minmax(0, 1.5fr) minmax(320px, 1fr);
             gap: 14px;
             align-items: start;
         }
@@ -1017,6 +1074,24 @@
                         style="background:var(--invest-color)"></span>이번달&nbsp;<span class="kpi-sub-val"
                         id="kpi-invest-month">₩0</span></div>
             </div>
+            <div class="kpi-card kpi-other" onclick="openExtrasModal()" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openExtrasModal()}">
+                <div class="kpi-header"><span class="kpi-badge">기타 자산</span></div>
+                <div class="kpi-amount" id="kpi-total-other">₩0</div>
+                <div class="kpi-sub">항목 <span class="kpi-sub-val" id="kpi-other-count">0개</span></div>
+            </div>
+        </div>
+
+        <div class="extras-modal-overlay" id="extras-modal-overlay" onclick="if(event.target===this)closeExtrasModal()">
+            <div class="extras-modal" role="dialog" aria-modal="true" aria-labelledby="extras-modal-title">
+                <div class="extras-modal-title"><span id="extras-modal-title">💰 기타 자산 관리</span><button class="btn" onclick="closeExtrasModal()">닫기</button></div>
+                <div class="extras-list" id="extras-list"></div>
+                <div class="extras-add-form">
+                    <input class="table-cell-input extras-input" id="extras-name-input" placeholder="항목명" maxlength="40">
+                    <input class="table-cell-input extras-input" id="extras-amount-input" type="number" placeholder="금액">
+                    <button class="btn btn-primary" onclick="addExtrasItem()">추가</button>
+                    <p class="extras-hint">양수는 자산에 더하고, 음수는 자산에서 뺍니다.</p>
+                </div>
+            </div>
         </div>
 
         <div class="workspace-grid">
@@ -1241,11 +1316,30 @@
 
         window.transactions = [];
         try {
+            const savedTransactions = JSON.parse(localStorage.getItem('local_transactions'));
+            if (Array.isArray(savedTransactions)) {
+                window.transactions = savedTransactions
+                    .map(t => ({ ...t, id: String(t.id || ('tx_' + Date.now())), type: normalizeType(t.type) }))
+                    .filter(t => !isBlankTransaction(t));
+            }
+        } catch (e) { window.transactions = []; }
+
+        try {
             const savedCategories = JSON.parse(localStorage.getItem('local_categories'));
             window.categories = savedCategories && typeof savedCategories === 'object'
                 ? { ...DEFAULT_CATEGORIES, ...savedCategories }
                 : DEFAULT_CATEGORIES;
         } catch (e) { window.categories = DEFAULT_CATEGORIES; }
+
+        window.extras = [];
+        try {
+            const savedExtras = JSON.parse(localStorage.getItem('local_extras'));
+            if (Array.isArray(savedExtras)) {
+                window.extras = savedExtras
+                    .filter(item => item && typeof item.name === 'string' && Number.isFinite(Number(item.amount)))
+                    .map(item => ({ id: String(item.id || ('ex_' + Date.now())), name: item.name, amount: Number(item.amount) }));
+            }
+        } catch (e) { window.extras = []; }
 
         window.editingRows = new Set();
         let currentCatTab = '지출';
@@ -1422,6 +1516,7 @@
                     await window.setDoc(userDocRef, {
                         transactions: window.transactions.filter(t => !isBlankTransaction(t)),
                         categories: window.categories,
+                        extras: window.extras,
                         updatedAt: new Date().toISOString()
                     });
                 } catch (err) {
@@ -1435,24 +1530,55 @@
                 try {
                     const userDocRef = window.doc(window.db, "users", window.currentUser.uid);
                     const docSnap = await window.getDoc(userDocRef);
-                    if (docSnap && docSnap.exists()) {
-                        const data = docSnap.data();
-                        let removedBlankTransactions = false;
-                        if (data.transactions) {
-                            const loadedTransactions = data.transactions.map(t => ({ ...t, id: String(t.id || ('tx_' + Date.now())), type: normalizeType(t.type) }));
-                            window.transactions = loadedTransactions.filter(t => !isBlankTransaction(t));
-                            removedBlankTransactions = window.transactions.length !== loadedTransactions.length;
-                        }
-                        if (data.categories) {
-                            window.categories = { ...DEFAULT_CATEGORIES, ...data.categories };
-                        }
-                        if (removedBlankTransactions) await window.saveDataToCloud();
-                        else saveDataLocally();
+                    if (!docSnap || !docSnap.exists()) {
                         renderAll();
-                        showToast('Cloud 데이터를 불러왔습니다.');
+                        showToast(window.transactions.length
+                            ? `Firebase 문서가 없습니다. 로컬 백업 ${window.transactions.length}건을 표시합니다.`
+                            : 'Firebase 문서가 없고 로컬 백업도 비어 있습니다.');
+                        return;
+                    }
+
+                    const data = docSnap.data() || {};
+                    let removedBlankTransactions = false;
+                    let usedLocalFallback = false;
+                    if (Array.isArray(data.transactions)) {
+                        const loadedTransactions = data.transactions
+                            .map(t => ({ ...t, id: String(t.id || ('tx_' + Date.now())), type: normalizeType(t.type) }))
+                            .filter(t => !isBlankTransaction(t));
+                        removedBlankTransactions = loadedTransactions.length !== data.transactions.length;
+
+                        if (loadedTransactions.length > 0 || window.transactions.length === 0) {
+                            window.transactions = loadedTransactions;
+                        } else {
+                            usedLocalFallback = true;
+                        }
+                    } else if (window.transactions.length > 0) {
+                        usedLocalFallback = true;
+                    }
+
+                    if (data.categories) {
+                        window.categories = { ...DEFAULT_CATEGORIES, ...data.categories };
+                    }
+                    if (Array.isArray(data.extras)) {
+                        window.extras = data.extras
+                            .filter(item => item && typeof item.name === 'string' && Number.isFinite(Number(item.amount)))
+                            .map(item => ({ id: String(item.id || ('ex_' + Date.now())), name: item.name, amount: Number(item.amount) }));
+                    }
+                    if (removedBlankTransactions && !usedLocalFallback) await window.saveDataToCloud();
+                    else saveDataLocally();
+                    renderAll();
+
+                    if (usedLocalFallback) {
+                        showToast(`Firebase 거래내역이 비어 있어 로컬 백업 ${window.transactions.length}건을 표시합니다.`);
+                    } else if (window.transactions.length) {
+                        showToast(`Firebase 거래내역 ${window.transactions.length}건을 불러왔습니다.`);
+                    } else {
+                        showToast('Firebase에 저장된 거래내역이 없습니다.');
                     }
                 } catch (err) {
                     console.error('Cloud 불러오기 실패:', err);
+                    renderAll();
+                    showToast('Firebase 데이터 불러오기에 실패했습니다. 연결과 권한을 확인해주세요.');
                 }
             }
         }
@@ -1461,6 +1587,7 @@
             try {
                 localStorage.setItem('local_transactions', JSON.stringify(window.transactions.filter(t => !isBlankTransaction(t))));
                 localStorage.setItem('local_categories', JSON.stringify(window.categories));
+                localStorage.setItem('local_extras', JSON.stringify(window.extras));
             } catch (err) { console.error(err); }
         }
 
@@ -1624,14 +1751,17 @@
                 else if (t.type === '저축') sav += t.amount;
                 else if (t.type === '투자') inv += t.amount;
             });
-            // 총 자산 = 투자 + 저축 + (수입 - 지출)
-            const net = inv + sav + (inc - exp);
+            const extrasTotal = (window.extras || []).reduce((sum, item) => sum + (Number(item.amount) || 0), 0);
+            // 총 자산 = 투자 + 저축 + 기타 자산 + (수입 - 지출)
+            const net = inv + sav + extrasTotal + (inc - exp);
 
             document.getElementById('kpi-net-amount').textContent = formatWon(net);
             document.getElementById('kpi-total-income').textContent = formatWon(inc);
             document.getElementById('kpi-total-expense').textContent = formatWon(exp);
             document.getElementById('kpi-total-savings').textContent = formatWon(sav);
             document.getElementById('kpi-total-invest').textContent = formatWon(inv);
+            document.getElementById('kpi-total-other').textContent = formatWon(extrasTotal);
+            document.getElementById('kpi-other-count').textContent = `${(window.extras || []).length}개`;
 
             // 이번달 현재까지 흐름
             const now = new Date();
@@ -1659,6 +1789,57 @@
             setMonthEl('kpi-expense-month', mExp, false);
             setMonthEl('kpi-savings-month', mSav, false);
             setMonthEl('kpi-invest-month', mInv, false);
+        }
+
+        window.openExtrasModal = function () {
+            renderExtrasList();
+            document.getElementById('extras-modal-overlay')?.classList.add('open');
+        }
+
+        window.closeExtrasModal = function () {
+            document.getElementById('extras-modal-overlay')?.classList.remove('open');
+        }
+
+        function renderExtrasList() {
+            const list = document.getElementById('extras-list');
+            if (!list) return;
+            if (!window.extras.length) {
+                list.innerHTML = '<p class="cat-empty">아직 등록된 기타 자산이 없습니다.</p>';
+                return;
+            }
+            list.innerHTML = window.extras.map(item => `
+                <div class="extras-row">
+                    <span class="extras-row-name">🏷️ ${escapeHtml(item.name)}</span>
+                    <span class="extras-row-amount ${item.amount >= 0 ? 'pos' : 'neg'}">${item.amount < 0 ? '-' : ''}${formatWon(Math.abs(item.amount))}</span>
+                    <button class="btn" aria-label="${escapeHtml(item.name)} 삭제" onclick="deleteExtrasItem('${escapeHtml(item.id)}')">삭제</button>
+                </div>`).join('');
+        }
+
+        window.addExtrasItem = function () {
+            const nameInput = document.getElementById('extras-name-input');
+            const amountInput = document.getElementById('extras-amount-input');
+            const name = nameInput.value.trim();
+            const rawAmount = amountInput.value.trim();
+            const amount = Number(rawAmount);
+            if (!name || !rawAmount || !Number.isFinite(amount)) {
+                showToast('항목명과 금액을 입력해주세요.');
+                return;
+            }
+            window.extras.push({ id: 'ex_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7), name, amount });
+            nameInput.value = '';
+            amountInput.value = '';
+            saveDataToCloud();
+            renderExtrasList();
+            renderKPIs();
+            showToast('기타 자산 항목을 추가했습니다.');
+        }
+
+        window.deleteExtrasItem = function (id) {
+            window.extras = window.extras.filter(item => item.id !== id);
+            saveDataToCloud();
+            renderExtrasList();
+            renderKPIs();
+            showToast('기타 자산 항목을 삭제했습니다.');
         }
 
         window.renderCharts = function () {
