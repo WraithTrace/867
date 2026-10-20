@@ -699,6 +699,17 @@
             display: block;
         }
 
+        .table-autocomplete-menu.is-portal {
+            display: block;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: auto;
+            width: max-content;
+            max-width: min(280px, calc(100vw - 16px));
+            z-index: 3000;
+        }
+
         .table-autocomplete.open-up .table-autocomplete-menu {
             top: auto;
             bottom: calc(100% + 4px);
@@ -756,6 +767,7 @@
 
         table {
             width: 100%;
+            table-layout: fixed;
             border-collapse: collapse;
             text-align: left;
         }
@@ -767,6 +779,7 @@
             font-weight: 700;
             text-transform: uppercase;
             color: var(--text-muted);
+            text-align: left;
             border-bottom: 1px solid var(--border-color);
             position: sticky;
             top: 0;
@@ -792,6 +805,7 @@
             vertical-align: middle;
             outline: none;
             width: 100%;
+            text-align: left;
         }
 
         select.header-filter-select option {
@@ -1219,15 +1233,15 @@
                                         </select>
                                     </th>
                                     <th>내용</th>
-                                    <th style="width: 120px; text-align: right;">금액</th>
+                                    <th style="width: 120px;">금액</th>
                                     <th style="width: 130px;">
                                         <select id="filter-method" class="header-filter-select"
                                             onchange="handleFilter()">
                                             <option value="all">결제방식</option>
                                         </select>
                                     </th>
-                                    <th style="width: 60px; text-align: center;">1/N</th>
-                                    <th style="width: 80px; text-align: center;">관리</th>
+                                    <th style="width: 60px;">1/N</th>
+                                    <th style="width: 80px;">관리</th>
                                 </tr>
                             </thead>
                             <tbody id="table-body"></tbody>
@@ -1387,22 +1401,48 @@
             const wrapper = input.closest('.table-autocomplete');
             if (!wrapper) return;
             wrapper.classList.add('open');
+            const menu = wrapper._autocompleteMenu || wrapper.querySelector('.table-autocomplete-menu');
+            if (!menu) return;
+            wrapper._autocompleteMenu = menu;
+            menu._autocompleteWrapper = wrapper;
+            menu.classList.add('is-portal');
+            if (menu.parentElement !== document.body) document.body.appendChild(menu);
 
-            const viewport = input.closest('.table-responsive');
             const inputRect = input.getBoundingClientRect();
-            const viewportRect = viewport ? viewport.getBoundingClientRect() : { top: 0, bottom: window.innerHeight };
-            const visibleCount = wrapper.querySelectorAll('.table-autocomplete-option:not([hidden])').length;
-            const menuHeight = Math.min(220, visibleCount * 36 + 2);
-            const roomBelow = viewportRect.bottom - inputRect.bottom;
-            const roomAbove = inputRect.top - viewportRect.top;
-            wrapper.classList.toggle('open-up', roomBelow < menuHeight && roomAbove > menuHeight);
+            const visibleCount = menu.querySelectorAll('.table-autocomplete-option:not([hidden])').length;
+            const desiredHeight = Math.min(220, visibleCount * 36 + 2);
+            const roomBelow = window.innerHeight - inputRect.bottom - 8;
+            const roomAbove = inputRect.top - 8;
+            const openUp = roomBelow < Math.min(desiredHeight, 140) && roomAbove > roomBelow;
+            const availableHeight = Math.max(72, Math.min(desiredHeight, openUp ? roomAbove : roomBelow));
+            menu.style.maxHeight = `${availableHeight}px`;
+            menu.style.minWidth = `${Math.min(inputRect.width, 190)}px`;
+            menu.style.left = `${Math.max(8, Math.min(inputRect.right - Math.max(inputRect.width, 190), window.innerWidth - Math.min(Math.max(inputRect.width, 190), 280) - 8))}px`;
+            menu.style.top = openUp
+                ? `${Math.max(8, inputRect.top - availableHeight - 4)}px`
+                : `${inputRect.bottom + 4}px`;
+        }
+
+        function restoreTableAutocomplete(wrapper) {
+            const menu = wrapper?._autocompleteMenu || wrapper?.querySelector('.table-autocomplete-menu')
+                || document.querySelector('.table-autocomplete-menu.is-portal');
+            if (!menu) return;
+            menu.classList.remove('is-portal');
+            menu.style.left = '';
+            menu.style.top = '';
+            menu.style.maxHeight = '';
+            menu.style.minWidth = '';
+            if (menu._autocompleteWrapper) menu._autocompleteWrapper.appendChild(menu);
+            menu._autocompleteWrapper = null;
+            if (wrapper) wrapper._autocompleteMenu = null;
         }
 
         window.filterTableAutocomplete = function (input) {
             const wrapper = input.closest('.table-autocomplete');
             if (!wrapper) return;
             const query = input.value.trim().toLocaleLowerCase();
-            wrapper.querySelectorAll('.table-autocomplete-option').forEach(option => {
+            const menu = wrapper._autocompleteMenu || wrapper.querySelector('.table-autocomplete-menu');
+            menu?.querySelectorAll('.table-autocomplete-option').forEach(option => {
                 option.hidden = query.length > 0 && !option.dataset.value.toLocaleLowerCase().includes(query);
             });
             window.showTableAutocomplete(input);
@@ -1412,17 +1452,22 @@
             const wrapper = input.closest('.table-autocomplete');
             if (!wrapper) return;
             setTimeout(() => {
-                if (!wrapper.contains(document.activeElement)) wrapper.classList.remove('open', 'open-up');
+                if (!wrapper.contains(document.activeElement)) {
+                    wrapper.classList.remove('open', 'open-up');
+                    restoreTableAutocomplete(wrapper);
+                }
             }, 120);
         }
 
         window.selectTableAutocompleteOption = function (option) {
-            const wrapper = option.closest('.table-autocomplete');
+            const menu = option.closest('.table-autocomplete-menu');
+            const wrapper = option.closest('.table-autocomplete') || menu?._autocompleteWrapper;
             const input = wrapper?.querySelector('input');
             if (!input) return;
             input.value = option.dataset.value;
             input.dispatchEvent(new Event('change', { bubbles: true }));
             wrapper.classList.remove('open', 'open-up');
+            restoreTableAutocomplete(wrapper);
         }
 
         function isBlankTransaction(item) {
@@ -1569,9 +1614,21 @@
             if (up && !up.contains(e.target)) up.classList.remove('open');
             if (down && !down.contains(e.target)) down.classList.remove('open');
             document.querySelectorAll('.table-autocomplete.open').forEach(wrapper => {
-                if (!wrapper.contains(e.target)) wrapper.classList.remove('open', 'open-up');
+                const menu = wrapper._autocompleteMenu || wrapper.querySelector('.table-autocomplete-menu')
+                    || document.querySelector('.table-autocomplete-menu.is-portal');
+                if (!wrapper.contains(e.target) && !menu?.contains(e.target)) {
+                    wrapper.classList.remove('open', 'open-up');
+                    restoreTableAutocomplete(wrapper);
+                }
             });
         });
+
+        window.addEventListener('scroll', () => {
+            document.querySelectorAll('.table-autocomplete.open').forEach(wrapper => {
+                const input = wrapper.querySelector('input');
+                if (input) window.showTableAutocomplete(input);
+            });
+        }, true);
 
         window.addEventListener('DOMContentLoaded', () => {
             renderAll();
@@ -1932,25 +1989,25 @@
                 const isEditing = window.editingRows.has(item.id);
                 const splitText = item.split > 1 ? `1/${item.split}` : '1/1';
 
-                const allowedCats = (item.type && window.categories[item.type]) ? window.categories[item.type] : [];
+                const allowedCats = item.type && window.categories[item.type]
+                    ? window.categories[item.type]
+                    : [...new Set(['수입', '지출', '저축', '투자'].flatMap(type => window.categories[type] || []))];
                 const allowedMethods = window.categories.method || [];
 
                 if (isEditing) {
-                    let typeDatalistId = `type-list-${item.id}`;
                     let catMenuId = `cat-list-${item.id}`;
                     let methodMenuId = `method-list-${item.id}`;
-
-                    let typeOptionsHtml = '';
-                    ['수입', '지출', '저축', '투자'].forEach(t => { typeOptionsHtml += `<option value="${t}">`; });
-
+                    const typeOptionsHtml = buildTableAutocompleteOptions(['수입', '지출', '저축', '투자']);
                     const catOptionsHtml = buildTableAutocompleteOptions(allowedCats);
                     const methodOptionsHtml = buildTableAutocompleteOptions(allowedMethods);
 
                     tr.innerHTML = `
                         <td class="td-date"><input type="date" class="table-cell-input" value="${escapeHtml(formatToInputDate(item.date))}" onchange="updateTransactionField('${item.id}', 'date', this.value)" /></td>
                         <td>
-                            <input type="text" class="table-cell-input" list="${typeDatalistId}" value="${escapeHtml(item.type || '')}" onchange="updateTransactionField('${item.id}', 'type', this.value)" placeholder="구분 입력" />
-                            <datalist id="${typeDatalistId}">${typeOptionsHtml}</datalist>
+                            <div class="table-autocomplete">
+                                <input type="text" class="table-cell-input" value="${escapeHtml(item.type || '')}" onfocus="showTableAutocomplete(this)" oninput="filterTableAutocomplete(this)" onblur="hideTableAutocomplete(this)" onchange="updateTransactionField('${item.id}', 'type', this.value)" placeholder="구분 입력" />
+                                <div class="table-autocomplete-menu">${typeOptionsHtml}</div>
+                            </div>
                         </td>
                         <td>
                             <div class="table-autocomplete">
@@ -1995,6 +2052,13 @@
         }
 
         window.addNewRow = function () {
+            // Keep only one untouched draft row so repeated clicks do not fill the table with blank rows.
+            const blankDraftIds = window.transactions.filter(isBlankTransaction).map(item => item.id);
+            if (blankDraftIds.length) {
+                window.transactions = window.transactions.filter(item => !blankDraftIds.includes(item.id));
+                blankDraftIds.forEach(id => window.editingRows.delete(id));
+            }
+
             // Reset active filters so the new editable row is immediately visible.
             document.getElementById('search-input').value = '';
             document.getElementById('filter-year').value = 'all';
