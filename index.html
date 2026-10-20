@@ -466,7 +466,7 @@
             display: grid;
             grid-template-columns: minmax(0, 3fr) minmax(320px, 1fr);
             gap: 16px;
-            align-items: stretch;
+            align-items: start;
         }
 
         .left-pane {
@@ -474,12 +474,14 @@
             flex-direction: column;
             gap: 16px;
             min-height: 0;
+            min-width: 0;
         }
 
         .right-pane {
             display: flex;
             flex-direction: column;
             gap: 16px;
+            min-width: 0;
         }
 
         .card {
@@ -1843,6 +1845,7 @@
         window.addEventListener('DOMContentLoaded', () => {
             initYearFilter();
             renderAll();
+            setupDashboardColumnSync();
         });
 
         function renderAll() {
@@ -1850,6 +1853,44 @@
             renderKPIs();
             renderCharts();
             renderTable();
+            syncDashboardColumnHeights();
+        }
+
+        let dashboardColumnObserver = null;
+        let dashboardColumnSyncFrame = 0;
+
+        function syncDashboardColumnHeights() {
+            const leftPane = document.querySelector('.left-pane');
+            const rightPane = document.querySelector('.right-pane');
+            if (!leftPane || !rightPane) return;
+
+            // On narrow screens the panes stack; let the table use its own mobile scroll height.
+            if (window.matchMedia('(max-width: 900px)').matches) {
+                leftPane.style.height = '';
+                return;
+            }
+
+            const sidebarHeight = Math.ceil(rightPane.getBoundingClientRect().height);
+            if (sidebarHeight > 0) leftPane.style.height = `${sidebarHeight}px`;
+        }
+
+        function scheduleDashboardColumnSync() {
+            if (dashboardColumnSyncFrame) cancelAnimationFrame(dashboardColumnSyncFrame);
+            dashboardColumnSyncFrame = requestAnimationFrame(() => {
+                dashboardColumnSyncFrame = 0;
+                syncDashboardColumnHeights();
+            });
+        }
+
+        function setupDashboardColumnSync() {
+            const rightPane = document.querySelector('.right-pane');
+            if (!rightPane) return;
+            if (window.ResizeObserver) {
+                dashboardColumnObserver = new ResizeObserver(scheduleDashboardColumnSync);
+                dashboardColumnObserver.observe(rightPane);
+            }
+            window.addEventListener('resize', scheduleDashboardColumnSync);
+            scheduleDashboardColumnSync();
         }
 
         function parseAmount(val) {
