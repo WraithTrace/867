@@ -620,8 +620,8 @@
             position: relative;
             display: flex;
             align-items: center;
-            min-width: 120px;
-            flex: 0 1 180px;
+            min-width: 220px;
+            flex: 1 1 320px;
         }
 
         .search-box input {
@@ -1845,6 +1845,14 @@
         }
 
         window.addNewRow = function () {
+            // Reset active filters so the new editable row is immediately visible.
+            document.getElementById('search-input').value = '';
+            document.getElementById('filter-year').value = 'all';
+            document.getElementById('filter-month').value = 'all';
+            document.getElementById('filter-type').value = 'all';
+            document.getElementById('filter-category').value = 'all';
+            document.getElementById('filter-method').value = 'all';
+
             const newItem = {
                 id: 'tx_' + Date.now(),
                 type: '',
