@@ -855,8 +855,6 @@
             color: var(--text-main);
         }
 
-        th.th-split,
-        td.td-split,
         th.th-actions,
         td.td-actions {
             text-align: center;
@@ -902,16 +900,6 @@
             font-variant-numeric: tabular-nums;
             font-feature-settings: "tnum";
             white-space: nowrap;
-        }
-
-        .td-split {
-            font-family: var(--font-sans);
-            font-size: 13px;
-            font-weight: 500;
-            font-variant-numeric: tabular-nums;
-            font-feature-settings: "tnum";
-            color: #cbd5e1;
-            text-align: center;
         }
 
         .badge-tag {
@@ -1385,7 +1373,6 @@
                                             <option value="all">결제방식</option>
                                         </select>
                                     </th>
-                                    <th class="th-split" style="width: 70px;">1/N</th>
                                     <th class="th-actions" style="width: 75px;">관리</th>
                                 </tr>
                             </thead>
@@ -1982,14 +1969,20 @@
             return 0;
         }
 
+        function getLocalDateISO() {
+            const now = new Date();
+            return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+        }
+
         function formatDateWithDay(dateInput) {
-            if (!dateInput) return formatDateWithDay(new Date().toISOString().slice(0, 10));
+            if (!dateInput) return formatDateWithDay(getLocalDateISO());
             const clean = dateInput.toString().replace(/[^0-9]/g, '');
             if (clean.length >= 8) {
                 const y = clean.substring(0, 4);
                 const m = String(parseInt(clean.substring(4, 6), 10)).padStart(2, '0');
                 const d = String(parseInt(clean.substring(6, 8), 10)).padStart(2, '0');
-                const dateObj = new Date(`${y}-${m}-${d}`);
+                const dateObj = new Date(Number(y), Number(m) - 1, Number(d));
+                if (dateObj.getFullYear() !== Number(y) || dateObj.getMonth() !== Number(m) - 1 || dateObj.getDate() !== Number(d)) return dateInput;
                 const dayName = WEEK_DAYS[dateObj.getDay()] || '수';
                 return `${y}. ${m}. ${d}. (${dayName})`;
             }
@@ -1997,12 +1990,12 @@
         }
 
         function formatToInputDate(dateStr) {
-            if (!dateStr) return new Date().toISOString().slice(0, 10);
+            if (!dateStr) return getLocalDateISO();
             const clean = dateStr.toString().replace(/[^0-9]/g, '');
             if (clean.length >= 8) {
                 return `${clean.substring(0, 4)}-${clean.substring(4, 6)}-${clean.substring(6, 8)}`;
             }
-            return new Date().toISOString().slice(0, 10);
+            return getLocalDateISO();
         }
 
         window.syncDropdowns = function () {
@@ -2321,7 +2314,6 @@
                 total += item.amount;
                 const tr = document.createElement('tr');
                 const isEditing = window.editingRows.has(item.id);
-                const splitText = item.split > 1 ? `1/${item.split}` : '1/1';
 
                 const allowedCats = item.type && window.categories[item.type]
                     ? window.categories[item.type]
@@ -2363,7 +2355,6 @@
                                 <div class="table-autocomplete-menu" id="${methodMenuId}">${methodOptionsHtml}</div>
                             </div>
                         </td>
-                        <td class="td-split"><input type="number" class="table-cell-input" style="text-align:center;" value="${item.split || 1}" min="1" onchange="updateTransactionField('${item.id}', 'split', this.value)" /></td>
                         <td class="td-actions" style="white-space:nowrap;">
                             <button class="btn-icon" onclick="toggleEditRow('${item.id}')" title="수정 완료">✅</button>
                             <button class="btn-icon btn-icon-del" onclick="deleteTransaction('${item.id}')" title="삭제">🗑️</button>
@@ -2377,7 +2368,6 @@
                         <td>${renderTransactionContent(item)}</td>
                         <td class="td-amount">${formatWon(item.amount)}</td>
                         <td>${escapeHtml(item.method || '-')}</td>
-                        <td class="td-split">${splitText}</td>
                         <td class="td-actions" style="white-space:nowrap;">
                             <button class="btn-icon" onclick="toggleEditRow('${item.id}')" title="수정">✏️</button>
                             <button class="btn-icon btn-icon-del" onclick="deleteTransaction('${item.id}')" title="삭제">🗑️</button>
@@ -2395,7 +2385,7 @@
             const newItem = {
                 id: `tx_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
                 type: '',
-                date: formatDateWithDay(new Date().toISOString().slice(0, 10)),
+                date: formatDateWithDay(getLocalDateISO()),
                 category: '',
                 desc: '',
                 merchant: '',
@@ -2610,13 +2600,15 @@
         }
 
         window.exportJSON = function () {
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(window.transactions.filter(t => !isBlankTransaction(t)), null, 2));
+            const blob = new Blob([JSON.stringify(window.transactions.filter(t => !isBlankTransaction(t)), null, 2)], { type: 'application/json;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
             const dlAnchor = document.createElement('a');
-            dlAnchor.setAttribute("href", dataStr);
+            dlAnchor.setAttribute("href", url);
             dlAnchor.setAttribute("download", "transactions_backup.json");
             document.body.appendChild(dlAnchor);
             dlAnchor.click();
             dlAnchor.remove();
+            setTimeout(() => URL.revokeObjectURL(url), 1000);
             showToast('JSON 백업 파일이 다운로드되었습니다.');
         }
 
@@ -2638,6 +2630,7 @@
                 }
             };
             reader.readAsText(file);
+            event.target.value = '';
         }
 
         function csvCell(value) {
@@ -2660,26 +2653,35 @@
             document.body.appendChild(dlAnchor);
             dlAnchor.click();
             dlAnchor.remove();
+            setTimeout(() => URL.revokeObjectURL(url), 1000);
             showToast('CSV 백업 파일이 다운로드되었습니다.');
         }
 
-        function parseCSVLine(text) {
-            const result = [];
-            let insideQuote = false;
-            let entry = '';
+        function parseCSV(text) {
+            const rows = [];
+            let row = [];
+            let cell = '';
+            let inQuotes = false;
             for (let i = 0; i < text.length; i++) {
-                const char = text[i];
-                if (char === '"') {
-                    insideQuote = !insideQuote;
-                } else if (char === ',' && !insideQuote) {
-                    result.push(entry.trim().replace(/^"(.*)"$/, '$1'));
-                    entry = '';
+                const ch = text[i];
+                if (ch === '"') {
+                    if (inQuotes && text[i + 1] === '"') { cell += '"'; i++; }
+                    else inQuotes = !inQuotes;
+                } else if (ch === ',' && !inQuotes) {
+                    row.push(cell.trim()); cell = '';
+                } else if ((ch === '\n' || ch === '\r') && !inQuotes) {
+                    if (ch === '\r' && text[i + 1] === '\n') i++;
+                    row.push(cell.trim());
+                    if (row.some(value => value !== '')) rows.push(row);
+                    row = []; cell = '';
                 } else {
-                    entry += char;
+                    cell += ch;
                 }
             }
-            result.push(entry.trim().replace(/^"(.*)"$/, '$1'));
-            return result;
+            if (inQuotes) throw new Error('닫히지 않은 CSV 따옴표가 있습니다.');
+            row.push(cell.trim());
+            if (row.some(value => value !== '')) rows.push(row);
+            return rows;
         }
 
         window.importCSV = function (event) {
@@ -2697,14 +2699,14 @@
         }
 
         function parseAndLoadCSV(text) {
-            const lines = text.split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 0);
-            if (lines.length === 0) return;
+            const rows = parseCSV(String(text || '').replace(/^\uFEFF/, ''));
+            if (rows.length === 0) return;
 
             let addedCount = 0;
             let headerMap = null;
             let startIndex = 0;
 
-            const firstLineCols = parseCSVLine(lines[0]);
+            const firstLineCols = rows[0];
             const keywords = ['날짜', '일자', '구분', '카테고리', '내용', '금액', '결제'];
             const isHeader = firstLineCols.some(col => keywords.some(kw => col.includes(kw)));
 
@@ -2724,8 +2726,8 @@
                 });
             }
 
-            for (let i = startIndex; i < lines.length; i++) {
-                const parts = parseCSVLine(lines[i]);
+            for (let i = startIndex; i < rows.length; i++) {
+                const parts = rows[i];
                 if (parts.length < 2) continue;
 
                 let rawDate, rawType, category, amountStr, desc, merchant, serviceProvider, method;
@@ -2748,7 +2750,7 @@
 
                 if (rawDate && rawType && !isNaN(amount)) {
                     window.transactions.push({
-                        id: 'tx_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
+                        id: `tx_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
                         date: formatDateWithDay(rawDate.trim()),
                         type: mappedType,
                         category: category ? category.trim() : '',
