@@ -282,7 +282,7 @@
             margin-bottom: 10px;
         }
 
-        .kpi-savings .kpi-header, .kpi-invest .kpi-header, .kpi-expense .kpi-header { justify-content: space-between; }
+        .kpi-savings .kpi-header, .kpi-invest .kpi-header, .kpi-expense .kpi-header, .kpi-other .kpi-header { justify-content: space-between; }
         .kpi-net .kpi-header { justify-content: space-between; }
         .kpi-manage-btn { padding: 5px 8px; font-size: 10px; white-space: nowrap; }
 
@@ -2101,7 +2101,7 @@
             const el = document.getElementById('installment-preview-text');
             if (!el) return;
             el.textContent = total > 0 && months >= 2 && start
-                ? `월 약 ${formatWon(Math.trunc(total/months)} · ${months}개월, 시작 ${start.slice(0,7)} (마지막 회차는 원 단위 차액 반영)`
+                ? `월 약 ${formatWon(Math.trunc(total/months))} · ${months}개월, 시작 ${start.slice(0,7)} (마지막 회차는 원 단위 차액 반영)`
                 : '항목명, 총 금액, 2개월 이상의 개월수, 시작일을 입력해 주세요.';
         };
 
