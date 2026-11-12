@@ -1131,7 +1131,7 @@
                     <p>
                         수입(빨강) · 지출(파랑) · 저축(초록) · 투자(노랑) 스마트 재정 관리
                         <span class="storage-status" id="storage-status-tag">
-                            <span class="storage-dot"></span> 로컬 저장소 모드
+                            <span class="storage-dot"></span> Firebase 로그인 필요
                         </span>
                     </p>
                 </div>
@@ -1478,6 +1478,7 @@
         const db = getFirestore(app);
 
         window.firebaseEnabled = true;
+        window.firebaseDataReady = false;
         window.auth = auth;
         window.db = db;
         window.GoogleAuthProvider = GoogleAuthProvider;
@@ -1487,8 +1488,9 @@
         window.setDoc = setDoc;
         window.getDoc = getDoc;
 
-        onAuthStateChanged(auth, (user) => {
+        onAuthStateChanged(auth, async (user) => {
             window.currentUser = user;
+            window.firebaseDataReady = false;
             const statusTag = document.getElementById('storage-status-tag');
             const loginBtn = document.getElementById('firebase-login-btn');
             if (user) {
@@ -1501,10 +1503,12 @@
                     statusTag.append(dot, document.createTextNode(` ${user.displayName || user.email} 연동됨`));
                 }
                 if (loginBtn) loginBtn.textContent = '로그아웃';
-                if (typeof window.loadCloudData === 'function') window.loadCloudData();
+                if (typeof window.loadCloudData === 'function') await window.loadCloudData();
             } else {
-                if (statusTag) statusTag.innerHTML = `<span class="storage-dot"></span> 로컬 저장소 모드 (로그인 필요)`;
+                if (statusTag) statusTag.innerHTML = `<span class="storage-dot"></span> Firebase 로그인 필요`;
                 if (loginBtn) loginBtn.textContent = 'Google 로그인';
+                if (typeof window.clearFirebaseData === 'function') window.clearFirebaseData();
+                if (typeof window.renderAll === 'function') window.renderAll();
             }
         });
     </script>
@@ -1520,44 +1524,15 @@
         };
         const DEFAULT_ASSET_FORMULA = { income: true, expense: true, savings: false, invest: false, extras: false };
 
+        const cloneDefaultCategories = () => Object.fromEntries(
+            Object.entries(DEFAULT_CATEGORIES).map(([key, values]) => [key, [...values]])
+        );
         window.transactions = [];
-        try {
-            const savedTransactions = JSON.parse(localStorage.getItem('local_transactions'));
-            if (Array.isArray(savedTransactions)) {
-                window.transactions = savedTransactions
-                    .map(t => ({ ...t, id: String(t.id || ('tx_' + Date.now())), type: normalizeType(t.type) }))
-                    .filter(t => !isBlankTransaction(t));
-            }
-        } catch (e) { window.transactions = []; }
-
-        try {
-            const savedCategories = JSON.parse(localStorage.getItem('local_categories'));
-            window.categories = savedCategories && typeof savedCategories === 'object'
-                ? { ...DEFAULT_CATEGORIES, ...savedCategories }
-                : DEFAULT_CATEGORIES;
-        } catch (e) { window.categories = DEFAULT_CATEGORIES; }
-
+        window.categories = cloneDefaultCategories();
         window.extras = [];
-        try {
-            const savedExtras = JSON.parse(localStorage.getItem('local_extras'));
-            if (Array.isArray(savedExtras)) {
-                window.extras = savedExtras
-                    .filter(item => item && typeof item.name === 'string' && Number.isFinite(Number(item.amount)))
-                    .map(item => ({ id: String(item.id || ('ex_' + Date.now())), name: item.name, amount: Number(item.amount) }));
-            }
-        } catch (e) { window.extras = []; }
-
         window.recurringPlans = [];
-        try {
-            const savedRecurringPlans = JSON.parse(localStorage.getItem('local_recurring_plans'));
-            if (Array.isArray(savedRecurringPlans)) window.recurringPlans = savedRecurringPlans;
-        } catch (e) { window.recurringPlans = []; }
-
+        window.installments = [];
         window.assetFormula = { ...DEFAULT_ASSET_FORMULA };
-        try {
-            const savedFormula = JSON.parse(localStorage.getItem('local_asset_formula'));
-            if (savedFormula && typeof savedFormula === 'object') window.assetFormula = { ...DEFAULT_ASSET_FORMULA, ...savedFormula };
-        } catch (e) { window.assetFormula = { ...DEFAULT_ASSET_FORMULA }; }
 
         window.editingRows = new Set();
         let currentCatTab = '지출';
@@ -1726,103 +1701,90 @@
             }
         }
 
+        window.clearFirebaseData = function () {
+            window.firebaseDataReady = false;
+            window.transactions = [];
+            window.categories = cloneDefaultCategories();
+            window.extras = [];
+            window.recurringPlans = [];
+            window.installments = [];
+            window.assetFormula = { ...DEFAULT_ASSET_FORMULA };
+            window.editingRows?.clear();
+        };
+
+        window.requireFirebaseWrite = function () {
+            if (window.firebaseEnabled && window.currentUser && window.db && window.firebaseDataReady) return true;
+            showToast('Google 로그인 후 Firebase 데이터가 불러와지면 수정할 수 있습니다.');
+            return false;
+        };
+
         window.saveDataToCloud = async function () {
-            saveDataLocally();
-            if (window.firebaseEnabled && window.currentUser && window.db) {
-                try {
-                    const userDocRef = window.doc(window.db, "users", window.currentUser.uid);
-                    await window.setDoc(userDocRef, {
-                        transactions: window.transactions.filter(t => !isBlankTransaction(t)),
-                        categories: window.categories,
-                        extras: window.extras,
-                        recurringPlans: window.recurringPlans,
-                        installments: window.installments || [],
-                        assetFormula: window.assetFormula,
-                        updatedAt: new Date().toISOString()
-                    });
-                } catch (err) {
-                    console.error('Cloud 저장 실패:', err);
-                }
+            if (!window.requireFirebaseWrite()) return false;
+            try {
+                const userDocRef = window.doc(window.db, 'users', window.currentUser.uid);
+                await window.setDoc(userDocRef, {
+                    transactions: window.transactions.filter(t => !isBlankTransaction(t)),
+                    categories: window.categories,
+                    extras: window.extras,
+                    recurringPlans: window.recurringPlans,
+                    installments: window.installments,
+                    assetFormula: window.assetFormula,
+                    updatedAt: new Date().toISOString()
+                });
+                return true;
+            } catch (err) {
+                console.error('Firebase 저장 실패:', err);
+                showToast('Firebase 저장에 실패했습니다. 연결과 보안 규칙을 확인해주세요.');
+                return false;
             }
-        }
+        };
 
         window.loadCloudData = async function () {
-            if (window.firebaseEnabled && window.currentUser && window.db) {
-                try {
-                    const userDocRef = window.doc(window.db, "users", window.currentUser.uid);
-                    const docSnap = await window.getDoc(userDocRef);
-                    if (!docSnap || !docSnap.exists()) {
-                        renderAll();
-                        showToast(window.transactions.length
-                            ? `Firebase 문서가 없습니다. 로컬 백업 ${window.transactions.length}건을 표시합니다.`
-                            : 'Firebase 문서가 없고 로컬 백업도 비어 있습니다.');
-                        return;
-                    }
-
-                    const data = docSnap.data() || {};
-                    let removedBlankTransactions = false;
-                    let usedLocalFallback = false;
-                    if (Array.isArray(data.transactions)) {
-                        const loadedTransactions = data.transactions
-                            .map(t => ({ ...t, id: String(t.id || ('tx_' + Date.now())), type: normalizeType(t.type) }))
-                            .filter(t => !isBlankTransaction(t));
-                        removedBlankTransactions = loadedTransactions.length !== data.transactions.length;
-
-                        if (loadedTransactions.length > 0 || window.transactions.length === 0) {
-                            window.transactions = loadedTransactions;
-                        } else {
-                            usedLocalFallback = true;
-                        }
-                    } else if (window.transactions.length > 0) {
-                        usedLocalFallback = true;
-                    }
-
-                    if (data.categories) {
-                        window.categories = { ...DEFAULT_CATEGORIES, ...data.categories };
-                    }
-                    if (Array.isArray(data.extras)) {
-                        window.extras = data.extras
-                            .filter(item => item && typeof item.name === 'string' && Number.isFinite(Number(item.amount)))
-                            .map(item => ({ id: String(item.id || ('ex_' + Date.now())), name: item.name, amount: Number(item.amount) }));
-                    }
-                    if (Array.isArray(data.recurringPlans) && (data.recurringPlans.length || !window.recurringPlans.length)) {
-                        window.recurringPlans = data.recurringPlans;
-                    }
-                    if (Array.isArray(data.installments) && (data.installments.length || !window.installments.length)) {
-                        window.installments = data.installments;
-                    }
-                    if (data.assetFormula && typeof data.assetFormula === 'object') {
-                        window.assetFormula = { ...DEFAULT_ASSET_FORMULA, ...data.assetFormula };
-                    }
-                    if (removedBlankTransactions && !usedLocalFallback) await window.saveDataToCloud();
-                    else saveDataLocally();
-                    renderAll();
-
-                    if (usedLocalFallback) {
-                        showToast(`Firebase 거래내역이 비어 있어 로컬 백업 ${window.transactions.length}건을 표시합니다.`);
-                    } else if (window.transactions.length) {
-                        showToast(`Firebase 거래내역 ${window.transactions.length}건을 불러왔습니다.`);
-                    } else {
-                        showToast('Firebase에 저장된 거래내역이 없습니다.');
-                    }
-                } catch (err) {
-                    console.error('Cloud 불러오기 실패:', err);
-                    renderAll();
-                    showToast('Firebase 데이터 불러오기에 실패했습니다. 연결과 권한을 확인해주세요.');
-                }
-            }
-        }
-
-        function saveDataLocally() {
+            window.firebaseDataReady = false;
+            if (!window.firebaseEnabled || !window.currentUser || !window.db) return false;
             try {
-                localStorage.setItem('local_transactions', JSON.stringify(window.transactions.filter(t => !isBlankTransaction(t))));
-                localStorage.setItem('local_categories', JSON.stringify(window.categories));
-                localStorage.setItem('local_extras', JSON.stringify(window.extras));
-                localStorage.setItem('local_recurring_plans', JSON.stringify(window.recurringPlans));
-                localStorage.setItem('local_installments', JSON.stringify(window.installments || []));
-                localStorage.setItem('local_asset_formula', JSON.stringify(window.assetFormula));
-            } catch (err) { console.error(err); }
-        }
+                const userDocRef = window.doc(window.db, 'users', window.currentUser.uid);
+                const docSnap = await window.getDoc(userDocRef);
+                if (!docSnap || !docSnap.exists()) {
+                    window.clearFirebaseData();
+                    window.firebaseDataReady = true;
+                    renderAll();
+                    showToast('Firebase에 저장된 데이터가 없습니다.');
+                    return true;
+                }
+
+                const data = docSnap.data() || {};
+                const rawTransactions = Array.isArray(data.transactions) ? data.transactions : [];
+                window.transactions = rawTransactions
+                    .map(t => ({ ...t, id: String(t.id || `tx_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`), type: normalizeType(t.type) }))
+                    .filter(t => !isBlankTransaction(t));
+                window.categories = data.categories && typeof data.categories === 'object'
+                    ? { ...cloneDefaultCategories(), ...data.categories }
+                    : cloneDefaultCategories();
+                window.extras = Array.isArray(data.extras)
+                    ? data.extras.filter(item => item && typeof item.name === 'string' && Number.isFinite(Number(item.amount)))
+                        .map(item => ({ id: String(item.id || `ex_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`), name: item.name, amount: Number(item.amount) }))
+                    : [];
+                window.recurringPlans = Array.isArray(data.recurringPlans) ? data.recurringPlans : [];
+                window.installments = Array.isArray(data.installments) ? data.installments : [];
+                window.assetFormula = data.assetFormula && typeof data.assetFormula === 'object'
+                    ? { ...DEFAULT_ASSET_FORMULA, ...data.assetFormula }
+                    : { ...DEFAULT_ASSET_FORMULA };
+
+                window.firebaseDataReady = true;
+                renderAll();
+                showToast(window.transactions.length
+                    ? `Firebase 거래내역 ${window.transactions.length}건을 불러왔습니다.`
+                    : 'Firebase에 저장된 거래내역이 없습니다.');
+                return true;
+            } catch (err) {
+                console.error('Firebase 불러오기 실패:', err);
+                window.clearFirebaseData();
+                renderAll();
+                showToast('Firebase 데이터 불러오기에 실패했습니다. 로그인 계정과 보안 규칙을 확인해주세요.');
+                return false;
+            }
+        };
 
         window.toggleUploadDropdown = function () {
             document.getElementById('upload-dropdown').classList.toggle('open');
@@ -1893,6 +1855,7 @@
             renderTable();
             syncDashboardColumnHeights();
         }
+        window.renderAll = renderAll;
 
         let dashboardColumnObserver = null;
         let dashboardColumnSyncFrame = 0;
@@ -2045,6 +2008,66 @@
                 const opt = document.createElement('option'); opt.value = m; opt.textContent = m; methodSelect.appendChild(opt);
             });
             methodSelect.value = currentMethod;
+        }
+
+        function getInstallmentMonthIndex(value) {
+            if (!value) return null;
+            if (value instanceof Date && Number.isFinite(value.getTime())) {
+                return value.getFullYear() * 12 + value.getMonth();
+            }
+            const text = String(value);
+            const match = text.match(/(\d{4})\D+(\d{1,2})/);
+            if (!match) return null;
+            const year = Number(match[1]);
+            const month = Number(match[2]);
+            if (month < 1 || month > 12) return null;
+            return year * 12 + month - 1;
+        }
+
+        function getInstallmentPeriod(installment) {
+            const startMonth = getInstallmentMonthIndex(installment?.startDate ?? installment?.start);
+            let endMonth = getInstallmentMonthIndex(installment?.endDate ?? installment?.end);
+            const months = Math.max(1, parseInt(installment?.months ?? installment?.monthCount, 10) || 1);
+            if (startMonth === null) return null;
+            if (endMonth === null) endMonth = startMonth + months - 1;
+            if (endMonth < startMonth) return null;
+            return { startMonth, endMonth };
+        }
+
+        function getInstallmentInfo(installment, atDate = new Date()) {
+            const period = getInstallmentPeriod(installment);
+            if (!period) return { isActive: false };
+            const currentMonth = atDate.getFullYear() * 12 + atDate.getMonth();
+            return {
+                ...period,
+                isActive: currentMonth >= period.startMonth && currentMonth <= period.endMonth
+            };
+        }
+
+        function getInstallmentMonthlySum(year, month) {
+            const targetMonth = Number(year) * 12 + Number(month) - 1;
+            if (!Number.isFinite(targetMonth)) return 0;
+            return (Array.isArray(window.installments) ? window.installments : []).reduce((sum, installment) => {
+                const period = getInstallmentPeriod(installment);
+                if (!period || targetMonth < period.startMonth || targetMonth > period.endMonth) return sum;
+                const amount = Number(installment.amount ?? installment.monthlyAmount);
+                return sum + (Number.isFinite(amount) ? amount : 0);
+            }, 0);
+        }
+
+        function getInstallmentTotalForPeriod(year = null) {
+            return (Array.isArray(window.installments) ? window.installments : []).reduce((sum, installment) => {
+                const period = getInstallmentPeriod(installment);
+                if (!period) return sum;
+                let months = period.endMonth - period.startMonth + 1;
+                if (year !== null && year !== undefined) {
+                    const yearStart = Number(year) * 12;
+                    const yearEnd = yearStart + 11;
+                    months = Math.max(0, Math.min(period.endMonth, yearEnd) - Math.max(period.startMonth, yearStart) + 1);
+                }
+                const amount = Number(installment.amount ?? installment.monthlyAmount);
+                return sum + months * (Number.isFinite(amount) ? amount : 0);
+            }, 0);
         }
 
         window.renderKPIs = function () {
@@ -2253,6 +2276,7 @@
         }
 
         window.toggleEditRow = function (id) {
+            if (!window.requireFirebaseWrite()) return;
             if (window.editingRows.has(id)) {
                 window.editingRows.delete(id);
                 const item = window.transactions.find(t => t.id === id);
@@ -2382,6 +2406,7 @@
         }
 
         window.addNewRow = function () {
+            if (!window.requireFirebaseWrite()) return;
             const newItem = {
                 id: `tx_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
                 type: '',
@@ -2412,6 +2437,7 @@
         }
 
         window.updateTransactionField = function (id, field, val) {
+            if (!window.requireFirebaseWrite()) return;
             const item = window.transactions.find(t => t.id === id);
             if (!item) return;
             // A manually changed generated installment becomes independent from its recurring plan.
@@ -2440,6 +2466,7 @@
         }
 
         window.handleTableAmountInput = function (el, id) {
+            if (!window.requireFirebaseWrite()) return;
             const normalized = el.value.replace(/[−–—]/g, '-');
             const isNegative = normalized.trimStart().startsWith('-');
             const digits = normalized.replace(/[^0-9]/g, '');
@@ -2450,6 +2477,7 @@
         }
 
         window.deleteTransaction = function (id) {
+            if (!window.requireFirebaseWrite()) return;
             if (confirm('정말 삭제하시겠습니까?')) {
                 window.editingRows.delete(id);
                 window.transactions = window.transactions.filter(t => t.id !== id);
@@ -2490,6 +2518,7 @@
 
         window.handleCatDrop = function (e, index) {
             e.preventDefault();
+            if (!window.requireFirebaseWrite()) return;
             if (draggedCatIndex === null || draggedCatIndex === index) return;
             const list = window.categories[currentCatTab];
             const item = list.splice(draggedCatIndex, 1)[0];
@@ -2525,6 +2554,7 @@
         }
 
         window.startEditCategory = function (spanEl, index, oldVal) {
+            if (!window.requireFirebaseWrite()) return;
             const parent = spanEl.parentElement;
             const input = document.createElement('input');
             input.type = 'text';
@@ -2568,6 +2598,7 @@
         }
 
         window.addNewCategory = function () {
+            if (!window.requireFirebaseWrite()) return;
             const nameInput = document.getElementById('new-cat-name');
             if (!nameInput) return;
             const name = nameInput.value.trim();
@@ -2587,6 +2618,7 @@
         }
 
         window.removeCategory = function (cat) {
+            if (!window.requireFirebaseWrite()) return;
             const list = window.categories[currentCatTab] || [];
             if (list.length <= 1) {
                 alert('최소 1개 이상 유지되어야 합니다.');
@@ -2600,6 +2632,7 @@
         }
 
         window.exportJSON = function () {
+            if (!window.requireFirebaseWrite()) return;
             const blob = new Blob([JSON.stringify(window.transactions.filter(t => !isBlankTransaction(t)), null, 2)], { type: 'application/json;charset=utf-8' });
             const url = URL.createObjectURL(blob);
             const dlAnchor = document.createElement('a');
@@ -2613,6 +2646,7 @@
         }
 
         window.importJSON = function (event) {
+            if (!window.requireFirebaseWrite()) { event.target.value = ''; return; }
             const file = event.target.files[0];
             if (!file) return;
             const reader = new FileReader();
@@ -2639,6 +2673,7 @@
         }
 
         window.exportToCSV = function () {
+            if (!window.requireFirebaseWrite()) return;
             let csv = '\uFEFF일자,구분,카테고리,금액,내용,구매처,판매처,결제방식\n';
             window.transactions.forEach(t => {
                 const rawDate = String(t.date || '').replace(/[^0-9]/g, '').substring(0, 8);
@@ -2685,6 +2720,7 @@
         }
 
         window.importCSV = function (event) {
+            if (!window.requireFirebaseWrite()) { event.target.value = ''; return; }
             const file = event.target.files[0];
             if (!file) return;
             const reader = new FileReader();
@@ -2699,6 +2735,7 @@
         }
 
         function parseAndLoadCSV(text) {
+            if (!window.requireFirebaseWrite()) return;
             const rows = parseCSV(String(text || '').replace(/^\uFEFF/, ''));
             if (rows.length === 0) return;
 
