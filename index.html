@@ -1180,7 +1180,7 @@
                         id="kpi-income-month">₩0</span></div>
             </div>
             <div class="kpi-card kpi-expense">
-                <div class="kpi-header"><span class="kpi-badge">총 지출</span><div style="display:flex;gap:4px;"><button class="btn kpi-manage-btn" onclick="openRecurringModal('지출')">+ 정기</button><button class="btn kpi-manage-btn" onclick="openInstallmentModal()">+ 할부</button></div></div>
+                <div class="kpi-header"><span class="kpi-badge">총 지출</span><button class="btn kpi-manage-btn" onclick="openRecurringModal('지출')">+ 추가</button></div>
                 <div class="kpi-amount" id="kpi-total-expense">₩0</div>
                 <div class="kpi-sub"><span class="kpi-sub-dot"
                         style="background:var(--expense-color)"></span>이번달&nbsp;<span class="kpi-sub-val"
@@ -1272,6 +1272,7 @@
                 <div class="recurring-modal-actions">
                     <span class="recurring-preview" id="recurring-preview">계좌별 납입 계획을 입력해주세요.</span>
                     <button class="btn" onclick="addRecurringPlanRow()">+ 입력 행 추가</button>
+                    <button class="btn" id="recurring-installment-action" style="display:none" onclick="openInstallmentsFromRecurring()">할부 내역 관리</button>
                     <button class="btn btn-primary" onclick="generateRecurringTransactions()">설정 저장 및 내역 생성</button>
                 </div>
                 <p class="recurring-modal-note">설정 수정은 해당 설정으로 생성된 미수정 내역에 적용됩니다. 거래내역에서 개별 내역을 수정하면 설정에서 분리되어 이후 설정 수정에도 유지되고, 개별 삭제도 가능합니다.</p>
@@ -1706,7 +1707,7 @@
                     installments: window.installments,
                     assetFormula: window.assetFormula,
                     updatedAt: new Date().toISOString()
-                });
+                }, { merge: true });
                 return true;
             } catch (err) {
                 console.error('Firebase 저장 실패:', err);
@@ -1723,14 +1724,26 @@
                 const docSnap = await window.getDoc(userDocRef);
                 if (!docSnap || !docSnap.exists()) {
                     window.clearFirebaseData();
-                    window.firebaseDataReady = true;
+                    const tag = document.getElementById('storage-status-tag');
+                    if (tag) tag.innerHTML = '<span class="storage-dot" style="background:#f59e0b"></span> Firebase 문서 없음 · 계정 확인';
                     renderAll();
-                    showToast('Firebase에 저장된 데이터가 없습니다.');
-                    return true;
+                    showToast('현재 로그인 계정의 Firebase 문서를 찾지 못했습니다. 다른 Google 계정으로 로그인했는지 확인해 주세요. 데이터 보호를 위해 저장을 잠갔습니다.');
+                    return false;
                 }
 
                 const data = docSnap.data() || {};
-                const rawTransactions = Array.isArray(data.transactions) ? data.transactions : [];
+                const txSource = data.transactions ?? data.transactionData ?? data.records ?? data.transaction;
+                const rawTransactions = Array.isArray(txSource)
+                    ? txSource
+                    : (txSource && typeof txSource === 'object' ? Object.values(txSource) : []);
+                if (txSource == null) {
+                    window.clearFirebaseData();
+                    const tag = document.getElementById('storage-status-tag');
+                    if (tag) tag.innerHTML = '<span class="storage-dot" style="background:#f59e0b"></span> Firebase 문서 확인 필요';
+                    renderAll();
+                    showToast(`Firebase 문서는 찾았지만 거래 데이터 필드가 없습니다. 문서 필드: ${Object.keys(data).join(', ') || '없음'} · 데이터 보호를 위해 저장을 잠갔습니다.`);
+                    return false;
+                }
                 window.transactions = rawTransactions
                     .map(t => ({ ...t, id: String(t.id || `tx_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`), type: normalizeType(t.type) }))
                     .filter(t => !isBlankTransaction(t));
@@ -1748,6 +1761,8 @@
                     : { ...DEFAULT_ASSET_FORMULA };
 
                 window.firebaseDataReady = true;
+                const tag = document.getElementById('storage-status-tag');
+                if (tag) tag.innerHTML = `<span class="storage-dot" style="background:#10b981"></span> Firebase 연동 · ${window.transactions.length}건`;
                 renderAll();
                 showToast(window.transactions.length
                     ? `Firebase 거래내역 ${window.transactions.length}건을 불러왔습니다.`
@@ -1756,8 +1771,10 @@
             } catch (err) {
                 console.error('Firebase 불러오기 실패:', err);
                 window.clearFirebaseData();
+                const tag = document.getElementById('storage-status-tag');
+                if (tag) tag.innerHTML = '<span class="storage-dot" style="background:#ef4444"></span> Firebase 읽기 실패';
                 renderAll();
-                showToast('Firebase 데이터 불러오기에 실패했습니다. 로그인 계정과 보안 규칙을 확인해주세요.');
+                showToast(`Firebase 읽기 실패: ${err.code || err.message || '로그인 계정과 Firestore 보안 규칙을 확인해 주세요.'}`);
                 return false;
             }
         };
@@ -2161,9 +2178,12 @@
             const rows = document.getElementById('recurring-plan-list');
             if (rows) rows.innerHTML = recurringRowHtml({type:currentRecurringType});
             document.getElementById('recurring-form-title').textContent = `새 ${currentRecurringType} 정기 계획`;
+            const installmentAction = document.getElementById('recurring-installment-action');
+            if (installmentAction) installmentAction.style.display = currentRecurringType === '지출' ? '' : 'none';
             document.getElementById('recurring-modal-overlay')?.classList.add('open');
         };
         window.closeRecurringModal = function() { document.getElementById('recurring-modal-overlay')?.classList.remove('open'); };
+        window.openInstallmentsFromRecurring = function() { window.closeRecurringModal(); window.openInstallmentModal(); };
         window.addRecurringPlanRow = function() {
             const rows = document.getElementById('recurring-plan-list');
             if (rows) rows.insertAdjacentHTML('beforeend', recurringRowHtml({type:currentRecurringType}));
@@ -2241,6 +2261,66 @@
             window.transactions=oldTxs.filter(t=>t.recurringPlanId!==id);
             if (!await window.saveDataToCloud()) {window.recurringPlans=oldPlans;window.transactions=oldTxs;return;}
             renderRecurringSavedPlans(); renderAll(); showToast('정기 계획과 연결된 미수정 거래를 삭제했습니다.');
+        };
+
+        window.openAssetFormulaModal = function() {
+            for (const key of ['income','expense','savings','invest','extras']) {
+                const input = document.getElementById(`formula-${key}`);
+                if (input) input.checked = !!window.assetFormula[key];
+            }
+            document.getElementById('formula-modal-overlay')?.classList.add('open');
+        };
+        window.closeAssetFormulaModal = function() {
+            document.getElementById('formula-modal-overlay')?.classList.remove('open');
+        };
+        window.saveAssetFormula = async function() {
+            if (!window.requireFirebaseWrite()) return;
+            const previous = window.assetFormula;
+            const next = {};
+            for (const key of ['income','expense','savings','invest','extras']) {
+                next[key] = !!document.getElementById(`formula-${key}`)?.checked;
+            }
+            window.assetFormula = next;
+            if (!await window.saveDataToCloud()) { window.assetFormula = previous; return; }
+            window.closeAssetFormulaModal(); renderAll(); showToast('자산 계산 기준을 Firebase에 저장했습니다.');
+        };
+        window.openExtrasModal = function() {
+            window.renderExtrasList();
+            document.getElementById('extras-modal-overlay')?.classList.add('open');
+        };
+        window.closeExtrasModal = function() {
+            document.getElementById('extras-modal-overlay')?.classList.remove('open');
+        };
+        window.renderExtrasList = function() {
+            const list = document.getElementById('extras-list');
+            if (!list) return;
+            list.innerHTML = (window.extras || []).map(item => `
+                <div class="extras-row">
+                    <span class="extras-row-name">${escapeHtml(item.name)}</span>
+                    <span class="extras-row-amount ${Number(item.amount) >= 0 ? 'pos' : 'neg'}">${formatWon(Number(item.amount) || 0)}</span>
+                    <button class="btn" onclick="deleteExtrasItem('${escapeHtml(item.id)}')">삭제</button>
+                </div>`).join('') || '<div class="cat-empty">등록된 기타 자산이 없습니다.</div>';
+        };
+        window.addExtrasItem = async function() {
+            if (!window.requireFirebaseWrite()) return;
+            const nameInput = document.getElementById('extras-name-input');
+            const amountInput = document.getElementById('extras-amount-input');
+            const name = nameInput?.value.trim();
+            const amount = parseAmount(amountInput?.value);
+            if (!name || amount === 0) { showToast('항목명과 0이 아닌 금액을 입력해 주세요.'); return; }
+            const previous = window.extras;
+            window.extras = [...previous, { id: `ex_${Date.now()}_${Math.random().toString(36).slice(2,8)}`, name, amount }];
+            if (!await window.saveDataToCloud()) { window.extras = previous; return; }
+            if (nameInput) nameInput.value = '';
+            if (amountInput) amountInput.value = '';
+            window.renderExtrasList(); renderAll(); showToast('기타 자산을 Firebase에 저장했습니다.');
+        };
+        window.deleteExtrasItem = async function(id) {
+            if (!window.requireFirebaseWrite()) return;
+            const previous = window.extras;
+            window.extras = previous.filter(item => item.id !== id);
+            if (!await window.saveDataToCloud()) { window.extras = previous; return; }
+            window.renderExtrasList(); renderAll(); showToast('기타 자산을 삭제했습니다.');
         };
 
         window.renderKPIs = function () {
