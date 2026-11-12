@@ -1201,7 +1201,7 @@
                         id="kpi-invest-month">₩0</span></div>
             </div>
             <div class="kpi-card kpi-other" onclick="openExtrasModal()" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openExtrasModal()}">
-                <div class="kpi-header" style="justify-content:flex-start;"><button class="btn kpi-manage-btn" onclick="event.stopPropagation();openExtrasModal()">+ 추가</button><span class="kpi-badge">기타 자산</span></div>
+                <div class="kpi-header"><span class="kpi-badge">기타 자산</span><button class="btn kpi-manage-btn" onclick="event.stopPropagation();openExtrasModal()">+ 추가</button></div>
                 <div class="kpi-amount" id="kpi-total-other">₩0</div>
                 <div class="kpi-sub">항목 <span class="kpi-sub-val" id="kpi-other-count">0개</span></div>
             </div>
@@ -1480,7 +1480,13 @@
                     statusTag.append(dot, document.createTextNode(` ${user.displayName || user.email} 연동됨`));
                 }
                 if (loginBtn) loginBtn.textContent = '로그아웃';
-                if (typeof window.loadCloudData === 'function') await window.loadCloudData();
+                if (typeof window.loadCloudData === 'function') {
+                    await window.loadCloudData();
+                } else {
+                    window.clearFirebaseData?.();
+                    if (statusTag) statusTag.innerHTML = '<span class="storage-dot" style="background:#ef4444"></span> 앱 스크립트 초기화 실패';
+                    window.showToast?.('앱 초기화가 완료되지 않아 Firebase 데이터를 불러오지 못했습니다. 최신 index.html을 다시 배포해 주세요.');
+                }
             } else {
                 if (statusTag) statusTag.innerHTML = `<span class="storage-dot"></span> Firebase 로그인 필요`;
                 if (loginBtn) loginBtn.textContent = 'Google 로그인';
