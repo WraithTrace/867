@@ -1201,7 +1201,7 @@
                         id="kpi-invest-month">₩0</span></div>
             </div>
             <div class="kpi-card kpi-other" onclick="openExtrasModal()" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openExtrasModal()}">
-                <div class="kpi-header"><span class="kpi-badge">기타 자산</span></div>
+                <div class="kpi-header" style="justify-content:flex-start;"><button class="btn kpi-manage-btn" onclick="event.stopPropagation();openExtrasModal()">+ 추가</button><span class="kpi-badge">기타 자산</span></div>
                 <div class="kpi-amount" id="kpi-total-other">₩0</div>
                 <div class="kpi-sub">항목 <span class="kpi-sub-val" id="kpi-other-count">0개</span></div>
             </div>
@@ -1492,6 +1492,16 @@
 
     <!-- App Logic Script -->
     <script>
+        window.addEventListener('error', event => {
+            console.error('화면 스크립트 오류:', event.error || event.message);
+            const tag = document.getElementById('storage-status-tag');
+            if (tag) tag.innerHTML = `<span class="storage-dot" style="background:#ef4444"></span> 화면 오류: ${escapeHtml(event.message || '스크립트 오류')}`;
+        });
+        window.addEventListener('unhandledrejection', event => {
+            console.error('처리되지 않은 비동기 오류:', event.reason);
+            const tag = document.getElementById('storage-status-tag');
+            if (tag) tag.innerHTML = `<span class="storage-dot" style="background:#ef4444"></span> 연결 오류: ${escapeHtml(event.reason?.message || 'Firebase 오류')}`;
+        });
         const DEFAULT_CATEGORIES = {
             '지출': ['食(식)', '住(주)', '衣(의)', '생활', '취미', '교통', '배달', '보험', '렌탈', '공과금', '구독', '의료', '뷰티', '기타'],
             '수입': ['급여', '배당', '지원금', '판매내역', '인센티브', '이자', '기타'],
