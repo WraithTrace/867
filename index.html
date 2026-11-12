@@ -282,7 +282,7 @@
             margin-bottom: 10px;
         }
 
-        .kpi-savings .kpi-header, .kpi-invest .kpi-header { justify-content: space-between; }
+        .kpi-savings .kpi-header, .kpi-invest .kpi-header, .kpi-expense .kpi-header { justify-content: space-between; }
         .kpi-net .kpi-header { justify-content: space-between; }
         .kpi-manage-btn { padding: 5px 8px; font-size: 10px; white-space: nowrap; }
 
@@ -1192,11 +1192,11 @@
                         id="kpi-income-month">₩0</span></div>
             </div>
             <div class="kpi-card kpi-expense">
-                <div class="kpi-header"><span class="kpi-badge">총 지출</span></div>
+                <div class="kpi-header"><span class="kpi-badge">총 지출</span><button class="btn kpi-manage-btn" onclick="openInstallmentModal()">+ 할부</button></div>
                 <div class="kpi-amount" id="kpi-total-expense">₩0</div>
                 <div class="kpi-sub"><span class="kpi-sub-dot"
                         style="background:var(--expense-color)"></span>이번달&nbsp;<span class="kpi-sub-val"
-                        id="kpi-expense-month">₩0</span></div>
+                        id="kpi-expense-month">₩0</span><span id="kpi-installment-sub" style="margin-left:4px;color:var(--text-dim);font-size:11px;"></span></div>
             </div>
             <div class="kpi-card kpi-savings">
                 <div class="kpi-header"><span class="kpi-badge">총 저축</span><button class="btn kpi-manage-btn" onclick="openRecurringModal('저축')">+ 추가</button></div>
@@ -1245,6 +1245,52 @@
                     <button class="btn btn-primary" onclick="addExtrasItem()">추가</button>
                     <p class="extras-hint">양수는 자산에 더하고, 음수는 자산에서 뺍니다.</p>
                 </div>
+            </div>
+        </div>
+
+        
+        <!-- 할부 거래 관리 모달 -->
+        <div class="recurring-modal-overlay" id="installment-modal-overlay" onclick="if(event.target===this)closeInstallmentModal()">
+            <div class="recurring-modal" role="dialog" aria-modal="true" aria-labelledby="installment-modal-title" style="max-width:850px;">
+                <div class="recurring-modal-heading">
+                    <span id="installment-modal-title">💳 할부 거래 관리 (총 지출 연동)</span>
+                    <button class="btn" onclick="closeInstallmentModal()">닫기</button>
+                </div>
+                <p class="recurring-modal-intro">
+                    일시불 지출은 아래 거래내역 테이블에 직접 작성하고, 할부로 결제하여 매월 고정 납부하는 항목은 여기서 별도로 등록·관리합니다.<br>
+                    등록된 할부는 해당 기간 동안 매달 <strong>총 지출</strong> 및 <strong>월별 지출</strong>에 자동으로 합산 반영됩니다.
+                </p>
+
+                <div class="recurring-section-title" style="display:flex;justify-content:space-between;align-items:center;">
+                    <span>등록된 할부 목록</span>
+                    <span id="installment-summary-text" style="font-size:12px;color:var(--expense-color);font-weight:600;"></span>
+                </div>
+                <div class="recurring-saved-list" id="installment-saved-list" style="max-height:220px;"></div>
+
+                <div class="recurring-section-title" id="installment-form-title">새 할부 등록</div>
+                <datalist id="installment-category-options"></datalist>
+
+                <div class="recurring-plan-labels" style="grid-template-columns: minmax(130px, 1.3fr) minmax(105px, 1fr) minmax(115px, 1fr) minmax(85px, 0.7fr) minmax(125px, 1fr) minmax(125px, 1fr) auto;">
+                    <span>할부 항목명</span><span>카테고리</span><span>월 납부금액</span><span>개월수</span><span>시작일</span><span>종료일</span><span></span>
+                </div>
+                <div class="recurring-plan-row" style="grid-template-columns: minmax(130px, 1.3fr) minmax(105px, 1fr) minmax(115px, 1fr) minmax(85px, 0.7fr) minmax(125px, 1fr) minmax(125px, 1fr) auto;" id="installment-input-form">
+                    <input type="text" class="table-cell-input" id="inst-input-name" placeholder="예: 맥북 프로, 건조기" maxlength="50" aria-label="할부 항목명">
+                    <input type="text" class="table-cell-input" id="inst-input-category" list="installment-category-options" placeholder="카테고리 선택" aria-label="카테고리">
+                    <input type="text" inputmode="numeric" class="table-cell-input" id="inst-input-amount" oninput="formatInstallmentAmount(this)" placeholder="월 납부액" aria-label="월 납부액">
+                    <input type="number" min="2" max="120" class="table-cell-input" id="inst-input-months" oninput="handleInstallmentMonthsChange()" placeholder="개월수 (예: 12)" aria-label="개월수">
+                    <input type="date" class="table-cell-input" id="inst-input-start" onchange="handleInstallmentStartChange()" aria-label="시작일">
+                    <input type="date" class="table-cell-input" id="inst-input-end" aria-label="종료일">
+                    <input type="hidden" id="inst-edit-id" value="">
+                    <button class="btn btn-primary" type="button" style="white-space:nowrap;" onclick="saveInstallment()">저장</button>
+                </div>
+
+                <div class="recurring-modal-actions" style="margin-top:12px;">
+                    <span class="recurring-preview" id="installment-preview-text">할부 항목과 개월수, 월 금액을 입력해 주세요.</span>
+                    <button class="btn" type="button" onclick="resetInstallmentForm()">입력창 초기화</button>
+                </div>
+                <p class="recurring-modal-note" style="margin-top:10px;">
+                    💡 <strong>안내</strong>: 시작일과 개월수를 입력하면 종료일이 자동 계산됩니다. 할부 기간이 종료되면 자동으로 '완료' 처리되어 이후 달의 지출에는 더 이상 합산되지 않습니다.
+                </p>
             </div>
         </div>
 
@@ -1703,6 +1749,7 @@
                         categories: window.categories,
                         extras: window.extras,
                         recurringPlans: window.recurringPlans,
+                        installments: window.installments || [],
                         assetFormula: window.assetFormula,
                         updatedAt: new Date().toISOString()
                     });
@@ -1754,6 +1801,9 @@
                     if (Array.isArray(data.recurringPlans) && (data.recurringPlans.length || !window.recurringPlans.length)) {
                         window.recurringPlans = data.recurringPlans;
                     }
+                    if (Array.isArray(data.installments) && (data.installments.length || !window.installments.length)) {
+                        window.installments = data.installments;
+                    }
                     if (data.assetFormula && typeof data.assetFormula === 'object') {
                         window.assetFormula = { ...DEFAULT_ASSET_FORMULA, ...data.assetFormula };
                     }
@@ -1782,6 +1832,7 @@
                 localStorage.setItem('local_categories', JSON.stringify(window.categories));
                 localStorage.setItem('local_extras', JSON.stringify(window.extras));
                 localStorage.setItem('local_recurring_plans', JSON.stringify(window.recurringPlans));
+                localStorage.setItem('local_installments', JSON.stringify(window.installments || []));
                 localStorage.setItem('local_asset_formula', JSON.stringify(window.assetFormula));
             } catch (err) { console.error(err); }
         }
@@ -2027,6 +2078,10 @@
                 ? window.transactions
                 : window.transactions.filter(t => parseYear(t.date) === selectedYear);
 
+            // 할부 누적액 계산 (선택 연도 기준 및 전체 연도 기준)
+            const allTimeInstallments = getInstallmentTotalForPeriod(null);
+            const periodInstallments = getInstallmentTotalForPeriod(selectedYear);
+
             let net = 0;
             periodTransactions.forEach(t => {
                 if (t.type === '수입' && window.assetFormula.income) net += t.amount;
@@ -2035,12 +2090,17 @@
                 else if (t.type === '투자' && window.assetFormula.invest) net += t.amount;
             });
             if (window.assetFormula.extras) net += extrasTotal;
+            if (window.assetFormula.expense) net -= periodInstallments;
 
             document.getElementById('kpi-net-amount').textContent = formatWon(net);
             const periodLabel = document.getElementById('kpi-net-period-label');
             if (periodLabel) periodLabel.textContent = selectedYear === null ? '전체 연도 기준' : `${selectedYear}년 기준`;
             document.getElementById('kpi-total-income').textContent = formatWon(inc);
-            document.getElementById('kpi-total-expense').textContent = formatWon(exp);
+            
+            // 총 지출: 거래내역 지출 + 할부 지출 합산
+            const totalExpWithInst = exp + (selectedYear === null ? allTimeInstallments : periodInstallments);
+            document.getElementById('kpi-total-expense').textContent = formatWon(totalExpWithInst);
+            
             document.getElementById('kpi-total-savings').textContent = formatWon(sav);
             document.getElementById('kpi-total-invest').textContent = formatWon(inv);
             document.getElementById('kpi-total-other').textContent = formatWon(extrasTotal);
@@ -2076,297 +2136,25 @@
             });
             const netMonthLabel = document.getElementById('kpi-net-month-label');
             if (netMonthLabel) netMonthLabel.textContent = `${netYear}년 ${netMonth}월 수입 - 지출`;
-            setMonthEl('kpi-net-month', netMonthIncome - netMonthExpense, true);
+            const netMonthInstallment = getInstallmentMonthlySum(netYear, netMonth);
+            setMonthEl('kpi-net-month', netMonthIncome - (netMonthExpense + netMonthInstallment), true);
             setMonthEl('kpi-income-month', mInc, false);
+
+            // 이번달 일시불 지출 표시 + 옆에 '+ 할부 ₩00,000' 추가 표시
+            const curMonthInstallment = getInstallmentMonthlySum(curYear, curMonth);
             setMonthEl('kpi-expense-month', mExp, false);
+            const instSubEl = document.getElementById('kpi-installment-sub');
+            if (instSubEl) {
+                if (curMonthInstallment > 0) {
+                    instSubEl.innerHTML = ` <span style="color:#60a5fa;font-weight:700;margin-left:2px;">+ 할부 ${formatWon(curMonthInstallment)}</span>`;
+                } else {
+                    instSubEl.innerHTML = '';
+                }
+            }
+
             setMonthEl('kpi-savings-month', mSav, false);
             setMonthEl('kpi-invest-month', mInv, false);
-        }
-
-        window.openAssetFormulaModal = function () {
-            Object.keys(DEFAULT_ASSET_FORMULA).forEach(key => {
-                const input = document.getElementById(`formula-${key}`);
-                if (input) input.checked = Boolean(window.assetFormula[key]);
-            });
-            document.getElementById('formula-modal-overlay')?.classList.add('open');
-        }
-
-        window.closeAssetFormulaModal = function () {
-            document.getElementById('formula-modal-overlay')?.classList.remove('open');
-        }
-
-        window.saveAssetFormula = function () {
-            window.assetFormula = Object.fromEntries(Object.keys(DEFAULT_ASSET_FORMULA).map(key => [
-                key,
-                Boolean(document.getElementById(`formula-${key}`)?.checked)
-            ]));
-            saveDataToCloud();
-            closeAssetFormulaModal();
-            renderKPIs();
-            showToast('총 자산 계산 기준을 저장했습니다.');
-        }
-
-        window.openExtrasModal = function () {
-            renderExtrasList();
-            document.getElementById('extras-modal-overlay')?.classList.add('open');
-        }
-
-        window.closeExtrasModal = function () {
-            document.getElementById('extras-modal-overlay')?.classList.remove('open');
-        }
-
-        function renderExtrasList() {
-            const list = document.getElementById('extras-list');
-            if (!list) return;
-            if (!window.extras.length) {
-                list.innerHTML = '<p class="cat-empty">아직 등록된 기타 자산이 없습니다.</p>';
-                return;
-            }
-            list.innerHTML = window.extras.map(item => `
-                <div class="extras-row">
-                    <span class="extras-row-name">🏷️ ${escapeHtml(item.name)}</span>
-                    <span class="extras-row-amount ${item.amount >= 0 ? 'pos' : 'neg'}">${item.amount < 0 ? '-' : ''}${formatWon(Math.abs(item.amount))}</span>
-                    <button class="btn" aria-label="${escapeHtml(item.name)} 삭제" onclick="deleteExtrasItem('${escapeHtml(item.id)}')">삭제</button>
-                </div>`).join('');
-        }
-
-        window.addExtrasItem = function () {
-            const nameInput = document.getElementById('extras-name-input');
-            const amountInput = document.getElementById('extras-amount-input');
-            const name = nameInput.value.trim();
-            const rawAmount = amountInput.value.trim();
-            const amount = Number(rawAmount);
-            if (!name || !rawAmount || !Number.isFinite(amount)) {
-                showToast('항목명과 금액을 입력해주세요.');
-                return;
-            }
-            window.extras.push({ id: 'ex_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7), name, amount });
-            nameInput.value = '';
-            amountInput.value = '';
-            saveDataToCloud();
-            renderExtrasList();
-            renderKPIs();
-            showToast('기타 자산 항목을 추가했습니다.');
-        }
-
-        window.deleteExtrasItem = function (id) {
-            window.extras = window.extras.filter(item => item.id !== id);
-            saveDataToCloud();
-            renderExtrasList();
-            renderKPIs();
-            showToast('기타 자산 항목을 삭제했습니다.');
-        }
-
-        let recurringDefaultType = '저축';
-        window.openRecurringModal = function (type = '저축') {
-            recurringDefaultType = type === '투자' ? '투자' : '저축';
-            document.getElementById('recurring-plan-list').innerHTML = '';
-            const categoryOptions = document.getElementById('recurring-category-options');
-            categoryOptions.innerHTML = [...new Set([...(window.categories['저축'] || []), ...(window.categories['투자'] || [])])]
-                .map(name => `<option value="${escapeHtml(name)}"></option>`).join('');
-            renderRecurringPlanList();
-            addRecurringPlanRow();
-            document.getElementById('recurring-form-title').textContent = '새 정기 납입 설정';
-            document.getElementById('recurring-modal-overlay').classList.add('open');
-            updateRecurringPreview();
-        }
-
-        window.closeRecurringModal = function () {
-            document.getElementById('recurring-modal-overlay')?.classList.remove('open');
-        }
-
-        function renderRecurringPlanList() {
-            const list = document.getElementById('recurring-saved-list');
-            if (!list) return;
-            if (!window.recurringPlans.length) {
-                list.innerHTML = '<div class="cat-empty">저장된 설정이 없습니다.</div>';
-                return;
-            }
-            list.innerHTML = window.recurringPlans.map(plan => `
-                <div class="recurring-saved-row">
-                    <span class="badge-tag tag-${escapeHtml(plan.type)}">${escapeHtml(plan.type)}</span>
-                    <span class="recurring-saved-info">${escapeHtml(plan.name)} · ${escapeHtml(plan.desc || '내용 없음')} · ${formatWon(plan.amount)}/월 · ${escapeHtml(plan.start)} ~ ${escapeHtml(plan.end)}</span>
-                    <button class="btn" onclick="editRecurringPlan('${escapeHtml(plan.id)}')">수정</button>
-                    <button class="btn" onclick="deleteRecurringPlan('${escapeHtml(plan.id)}')">삭제</button>
-                </div>`).join('');
-        }
-
-        window.addRecurringPlanRow = function (plan = null) {
-            const list = document.getElementById('recurring-plan-list');
-            if (!list) return;
-            const row = document.createElement('div');
-            row.className = 'recurring-plan-row';
-            if (plan?.id) row.dataset.planId = plan.id;
-            const type = plan?.type || recurringDefaultType;
-            row.innerHTML = `
-                <input type="text" class="table-cell-input plan-type" list="recurring-type-options" value="${escapeHtml(type)}" placeholder="구분 입력" aria-label="구분">
-                <input type="text" class="table-cell-input plan-name" list="recurring-category-options" value="${escapeHtml(plan?.name || '')}" placeholder="카테고리 입력" maxlength="40" aria-label="카테고리">
-                <input type="text" class="table-cell-input plan-desc" value="${escapeHtml(plan?.desc || '')}" placeholder="내용 입력" aria-label="내용">
-                <input type="date" class="table-cell-input plan-start" value="${escapeHtml(plan?.start || '')}" aria-label="시작일">
-                <input type="date" class="table-cell-input plan-end" value="${escapeHtml(plan?.end || '')}" aria-label="종료일">
-                <input type="text" inputmode="numeric" class="table-cell-input plan-amount" value="${plan ? Number(plan.amount).toLocaleString('ko-KR') : ''}" oninput="formatRecurringPlanAmount(this)" placeholder="월 납입금액" aria-label="월 납입금액">
-                <button class="btn" type="button" aria-label="입력 행 삭제" onclick="removeRecurringPlanRow(this)">삭제</button>`;
-            row.addEventListener('input', updateRecurringPreview);
-            row.addEventListener('change', updateRecurringPreview);
-            list.appendChild(row);
-            updateRecurringPreview();
-        }
-
-        window.removeRecurringPlanRow = function (button) {
-            button.closest('.recurring-plan-row')?.remove();
-            if (!document.querySelector('.recurring-plan-row')) addRecurringPlanRow();
-            updateRecurringPreview();
-        }
-
-        window.editRecurringPlan = function (id) {
-            const plan = window.recurringPlans.find(item => item.id === id);
-            if (!plan) return;
-            recurringDefaultType = plan.type;
-            document.getElementById('recurring-plan-list').innerHTML = '';
-            addRecurringPlanRow(plan);
-            document.getElementById('recurring-form-title').textContent = '정기 납입 설정 수정';
-            updateRecurringPreview();
-        }
-
-        window.deleteRecurringPlan = function (id) {
-            const plan = window.recurringPlans.find(item => item.id === id);
-            if (!plan || !confirm(`'${plan.name}' 설정과 이 설정으로 생성된 미수정 거래내역을 삭제할까요?`)) return;
-            window.recurringPlans = window.recurringPlans.filter(item => item.id !== id);
-            window.transactions = window.transactions.filter(item => item.recurringPlanId !== id);
-            Array.from(document.querySelectorAll('.recurring-plan-row')).find(row => row.dataset.planId === id)?.remove();
-            if (!document.querySelector('.recurring-plan-row')) {
-                addRecurringPlanRow();
-                document.getElementById('recurring-form-title').textContent = '새 정기 납입 설정';
-            }
-            saveDataToCloud();
-            renderRecurringPlanList();
-            renderAll();
-            showToast('정기 납입 설정을 삭제했습니다.');
-        }
-
-        function getRecurringPlans() {
-            return Array.from(document.querySelectorAll('.recurring-plan-row')).map(row => ({
-                id: row.dataset.planId || '',
-                type: normalizeType(row.querySelector('.plan-type').value),
-                name: row.querySelector('.plan-name').value.trim(),
-                desc: row.querySelector('.plan-desc').value.trim(),
-                amount: parseAmount(row.querySelector('.plan-amount').value),
-                start: row.querySelector('.plan-start').value,
-                end: row.querySelector('.plan-end').value
-            }));
-        }
-
-        window.formatRecurringPlanAmount = function (input) {
-            const digits = input.value.replace(/[^0-9]/g, '');
-            input.value = digits ? Number(digits).toLocaleString('ko-KR') : '';
-        }
-
-        function recurringDates(start, end) {
-            if (!/^\d{4}-\d{2}-\d{2}$/.test(start) || !/^\d{4}-\d{2}-\d{2}$/.test(end) || start > end) return [];
-            const [startYear, startMonth, startDay] = start.split('-').map(Number);
-            const [endYear, endMonth] = end.split('-').map(Number);
-            const startDateCheck = new Date(startYear, startMonth - 1, startDay);
-            const endDateCheck = new Date(endYear, endMonth - 1, Number(end.slice(8, 10)));
-            if (startDateCheck.getFullYear() !== startYear || startDateCheck.getMonth() !== startMonth - 1 || startDateCheck.getDate() !== startDay ||
-                endDateCheck.getFullYear() !== endYear || endDateCheck.getMonth() !== endMonth - 1 || endDateCheck.getDate() !== Number(end.slice(8, 10))) return [];
-            const monthSpan = (endYear - startYear) * 12 + endMonth - startMonth + 1;
-            if (monthSpan < 1 || monthSpan > 600) return [];
-            const dates = [];
-            for (let offset = 0; offset < monthSpan; offset++) {
-                const monthIndex = startYear * 12 + startMonth - 1 + offset;
-                const year = Math.floor(monthIndex / 12);
-                const month = monthIndex % 12 + 1;
-                const day = Math.min(startDay, new Date(year, month, 0).getDate());
-                const date = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-                if (date >= start && date <= end) dates.push(date);
-            }
-            return dates;
-        }
-
-        function updateRecurringPreview() {
-            let count = 0, total = 0;
-            getRecurringPlans().forEach(plan => {
-                const dates = recurringDates(plan.start, plan.end);
-                if (plan.name && Number.isInteger(plan.amount) && plan.amount > 0) {
-                    count += dates.length;
-                    total += dates.length * plan.amount;
-                }
-            });
-            const preview = document.getElementById('recurring-preview');
-            if (preview) preview.textContent = count
-                ? `예상 ${count}건 · 합계 ${formatWon(total)}`
-                : '구분, 카테고리, 월 납입금액, 시작일과 종료일을 입력해주세요.';
-        }
-
-        function recurringDescription(template, date, installment) {
-            const [year, month] = date.split('-').map(Number);
-            const period = `${String(year).slice(-2)}/${month}`;
-            const text = String(template || '').trim();
-            let description = text.includes('{월}')
-                ? text.replaceAll('{월}', period)
-                : text.includes('월분')
-                    ? text.replace(/월분/g, `${period}월분`)
-                    : `${text} ${period}`.trim();
-            const installmentText = `${installment}회차`;
-            if (description.includes('{회차}')) description = description.replaceAll('{회차}', installmentText);
-            else description = `${description} - ${installmentText}`.trim();
-            return description;
-        }
-
-        window.generateRecurringTransactions = function () {
-            const plans = getRecurringPlans();
-            if (!plans.length || plans.some(plan => !['저축', '투자'].includes(plan.type) || !plan.name ||
-                !Number.isInteger(plan.amount) || plan.amount <= 0 || !recurringDates(plan.start, plan.end).length)) {
-                showToast('각 행의 구분, 카테고리, 월 납입금액, 시작일과 종료일을 확인해주세요.');
-                return;
-            }
-
-            let createdCount = 0, skipped = 0;
-            plans.forEach(input => {
-                const id = input.id || `rp_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
-                const oldGenerated = window.transactions.filter(item => item.recurringPlanId === id);
-                window.transactions = window.transactions.filter(item => item.recurringPlanId !== id);
-                const plan = { ...input, id };
-                window.recurringPlans = window.recurringPlans.filter(item => item.id !== id);
-                window.recurringPlans.push(plan);
-                if (!Array.isArray(window.categories[plan.type])) window.categories[plan.type] = [];
-                if (!window.categories[plan.type].includes(plan.name)) window.categories[plan.type].push(plan.name);
-
-                const dateKey = date => String(date || '').replace(/[^0-9]/g, '').slice(0, 8);
-                const existing = new Set(window.transactions
-                    .filter(item => !isBlankTransaction(item))
-                    .map(item => [item.type, item.category || '', dateKey(item.date), Number(item.amount)].join('|')));
-                recurringDates(plan.start, plan.end).forEach((date, index) => {
-                    const key = [plan.type, plan.name, dateKey(date), plan.amount].join('|');
-                    if (existing.has(key)) {
-                        skipped++;
-                        return;
-                    }
-                    existing.add(key);
-                    window.transactions.push({
-                        id: `tx_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`,
-                        date: formatDateWithDay(date),
-                        type: plan.type,
-                        category: plan.name,
-                        desc: recurringDescription(plan.desc, date, index + 1),
-                        amount: plan.amount,
-                        method: null,
-                        split: 1,
-                        recurringPlanId: id
-                    });
-                    createdCount++;
-                });
-                skipped += Math.max(0, oldGenerated.length - recurringDates(plan.start, plan.end).length);
-            });
-
-            saveDataToCloud();
-            renderRecurringPlanList();
-            renderAll();
-            document.getElementById('recurring-plan-list').innerHTML = '';
-            addRecurringPlanRow();
-            document.getElementById('recurring-form-title').textContent = '새 정기 납입 설정';
-            showToast(`설정을 저장했습니다. 새 내역 ${createdCount}건${skipped ? ` · 중복/기간 제외 ${skipped}건` : ''}`);
-        }
+        };
 
         window.renderCharts = function () {
             const monthlyData = {};
@@ -2382,7 +2170,9 @@
             for (let m = 1; m <= 12; m++) {
                 labels.push(`${m}월`);
                 incomeData.push(monthlyData[m]['수입']);
-                expenseData.push(monthlyData[m]['지출']);
+                const chartYear = (document.getElementById('filter-year')?.value !== 'all' && Number(document.getElementById('filter-year')?.value)) || (new Date()).getFullYear();
+                const mInst = getInstallmentMonthlySum(chartYear, m);
+                expenseData.push(monthlyData[m]['지출'] + mInst);
                 savingsData.push(monthlyData[m]['저축']);
                 investData.push(monthlyData[m]['투자']);
             }
@@ -2416,6 +2206,20 @@
                 const category = t.category || '기타';
                 categorySums[t.type][category] = (categorySums[t.type][category] || 0) + t.amount;
             });
+
+            // 할부 항목을 지출 카테고리 TOP에 반영
+            if (Array.isArray(window.installments)) {
+                const now = new Date();
+                const curY = now.getFullYear();
+                const curM = now.getMonth() + 1;
+                window.installments.forEach(inst => {
+                    const info = getInstallmentInfo(inst, now);
+                    if (info && info.isActive) {
+                        const cat = inst.category || '할부';
+                        categorySums['지출'][cat] = (categorySums['지출'][cat] || 0) + (Number(inst.amount) || 0);
+                    }
+                });
+            }
 
             categoryPanels.forEach(({ type, id }) => {
                 const list = document.getElementById(id);
