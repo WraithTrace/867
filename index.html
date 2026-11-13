@@ -2359,31 +2359,26 @@
                 : yearSelectValue === 'custom'
                     ? (/^\d{4}$/.test(customYearValue) ? Number(customYearValue) : null)
                     : Number(yearSelectValue);
-            const periodTransactions = selectedYear === null
-                ? window.transactions
-                : window.transactions.filter(t => parseYear(t.date) === selectedYear);
-
-            // 할부 누적액 계산 (선택 연도 기준 및 전체 연도 기준)
+            // 총 자산은 연도 필터와 무관하게 전체 거래 기간 누적으로 계산한다.
             const allTimeInstallments = getInstallmentTotalForPeriod(null);
-            const periodInstallments = getInstallmentTotalForPeriod(selectedYear);
 
             let net = 0;
-            periodTransactions.forEach(t => {
+            window.transactions.forEach(t => {
                 if (t.type === '수입' && window.assetFormula.income) net += t.amount;
                 else if (t.type === '지출' && window.assetFormula.expense && !(Number(t.split) > 1)) net -= t.amount;
                 else if (t.type === '저축' && window.assetFormula.savings) net += t.amount;
                 else if (t.type === '투자' && window.assetFormula.invest) net += t.amount;
             });
             if (window.assetFormula.extras) net += extrasTotal;
-            if (window.assetFormula.expense) net -= periodInstallments;
+            if (window.assetFormula.expense) net -= allTimeInstallments;
 
             document.getElementById('kpi-net-amount').textContent = formatWon(net);
             const periodLabel = document.getElementById('kpi-net-period-label');
-            if (periodLabel) periodLabel.textContent = selectedYear === null ? '전체 연도 기준' : `${selectedYear}년 기준`;
+            if (periodLabel) periodLabel.textContent = '전체 기간 누적 기준';
             document.getElementById('kpi-total-income').textContent = formatWon(inc);
             
             // 총 지출: 거래내역 지출 + 할부 지출 합산
-            const totalExpWithInst = exp + (selectedYear === null ? allTimeInstallments : periodInstallments);
+            const totalExpWithInst = exp + allTimeInstallments;
             document.getElementById('kpi-total-expense').textContent = formatWon(totalExpWithInst);
             
             document.getElementById('kpi-total-savings').textContent = formatWon(sav);
