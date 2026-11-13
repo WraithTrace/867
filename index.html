@@ -1265,8 +1265,6 @@
                 <div class="recurring-section-title">저장된 정기 납입</div>
                 <div class="recurring-saved-list" id="recurring-saved-list"></div>
                 <div class="recurring-section-title" id="recurring-form-title">새 정기 납입 설정</div>
-                <datalist id="recurring-type-options"><option value="저축"></option><option value="투자"></option></datalist>
-                <datalist id="recurring-category-options"></datalist>
                 <div class="recurring-plan-labels"><span>구분</span><span>카테고리</span><span>내용</span><span>시작일</span><span>종료일</span><span>월 납입금액</span><span></span></div>
                 <div class="recurring-plan-list" id="recurring-plan-list"></div>
                 <div class="recurring-modal-actions">
@@ -2164,14 +2162,18 @@
         function recurringRowHtml(plan = {}) {
             const id = plan.id ? ` data-plan-id="${escapeHtml(plan.id)}"` : '';
             const type = ['지출','저축','투자'].includes(plan.type) ? plan.type : currentRecurringType;
+            const categoryListId = `recurring-category-${Date.now()}-${Math.random().toString(36).slice(2,8)}`;
+            const categories = Array.isArray(window.categories?.[type]) ? window.categories[type] : [];
+            const categoryOptions = categories.map(category => `<option value="${escapeHtml(category)}"></option>`).join('');
             return `<div class="recurring-plan-row"${id}>
-                <select class="table-cell-input recurring-type">${recurringTypeOptions(type)}</select>
-                <input class="table-cell-input recurring-category" list="recurring-category-options" value="${escapeHtml(plan.category||'')}" placeholder="카테고리">
+                <select class="table-cell-input recurring-type" onchange="updateRecurringCategoryOptions(this)">${recurringTypeOptions(type)}</select>
+                <input class="table-cell-input recurring-category" list="${categoryListId}" value="${escapeHtml(plan.category||'')}" placeholder="카테고리">
                 <input class="table-cell-input recurring-desc" value="${escapeHtml(plan.desc||'')}" placeholder="항목명 / {월} {회차}" maxlength="100">
                 <input class="table-cell-input recurring-start" type="date" value="${escapeHtml(plan.startDate||'')}">
                 <input class="table-cell-input recurring-end" type="date" value="${escapeHtml(plan.endDate||'')}">
                 <input class="table-cell-input recurring-amount" type="number" min="1" step="1" value="${escapeHtml(plan.amount??'')}" placeholder="월 납입액">
                 <button class="btn" type="button" onclick="this.closest('.recurring-plan-row').remove()" aria-label="입력 행 삭제">×</button>
+                <datalist id="${categoryListId}">${categoryOptions}</datalist>
             </div>`;
         }
         function renderRecurringSavedPlans() {
@@ -2185,11 +2187,6 @@
             currentRecurringType = ['지출','저축','투자'].includes(type) ? type : '저축';
             const title = document.getElementById('recurring-modal-title');
             if (title) title.textContent = `${currentRecurringType} 정기 내역 관리`;
-            const typeList = document.getElementById('recurring-type-options');
-            if (typeList) typeList.innerHTML = ['지출','저축','투자'].map(x=>`<option value="${x}"></option>`).join('');
-            const cats = [...new Set([...(window.categories[currentRecurringType]||[]), ...(window.categories['지출']||[]), ...(window.categories['저축']||[]), ...(window.categories['투자']||[])])];
-            const catList = document.getElementById('recurring-category-options');
-            if (catList) catList.innerHTML = cats.map(x=>`<option value="${escapeHtml(x)}"></option>`).join('');
             renderRecurringSavedPlans();
             const rows = document.getElementById('recurring-plan-list');
             if (rows) rows.innerHTML = recurringRowHtml({type:currentRecurringType});
@@ -2200,6 +2197,15 @@
         };
         window.closeRecurringModal = function() { document.getElementById('recurring-modal-overlay')?.classList.remove('open'); };
         window.openInstallmentsFromRecurring = function() { window.closeRecurringModal(); window.openInstallmentModal(); };
+        window.updateRecurringCategoryOptions = function(typeSelect) {
+            const row = typeSelect?.closest('.recurring-plan-row');
+            const list = row?.querySelector('datalist');
+            if (!list) return;
+            const categories = Array.isArray(window.categories?.[typeSelect.value]) ? window.categories[typeSelect.value] : [];
+            const categoryInput = row.querySelector('.recurring-category');
+            if (categoryInput && !categories.includes(categoryInput.value)) categoryInput.value = '';
+            list.innerHTML = categories.map(category => `<option value="${escapeHtml(category)}"></option>`).join('');
+        };
         window.addRecurringPlanRow = function() {
             const rows = document.getElementById('recurring-plan-list');
             if (rows) rows.insertAdjacentHTML('beforeend', recurringRowHtml({type:currentRecurringType}));
